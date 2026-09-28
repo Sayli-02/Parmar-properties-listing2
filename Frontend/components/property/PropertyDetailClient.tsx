@@ -77,7 +77,7 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({ prop
     name: '',
     phone: '',
     email: '',
-    message: `I am interested in arranging a private viewing for ${property.title} (${property.bhk} - ${property.priceFormatted} + charges).`,
+    message: `I am interested in arranging a private viewing for ${property.title} (${property.bhk} - ${property.priceFormatted} onwards).`,
   });
 
   // Stores
@@ -266,31 +266,13 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({ prop
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4 lg:text-right">
-          <div>
-            <span className="text-xs uppercase tracking-wider text-[#5B605F] block font-medium mb-0.5">
-              Price Range
-            </span>
-            <span className="font-sans text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-[#15181A]">
-              {`₹${property.price.toFixed(2)} Cr – ₹${(property.price * 1.25).toFixed(2)} Cr`}
-            </span>
-          </div>
-
-          {/* Primary Lead Action Button */}
-          <button
-            onClick={() =>
-              openLeadGate(
-                'Schedule Private Residence Tour',
-                'Register with your name and mobile number to arrange an executive site visit escorted by a senior partner.',
-                'VIP Viewing',
-                'viewing'
-              )
-            }
-            className="px-5 py-3 bg-[#C5282F] hover:bg-[#A31D23] text-white text-xs uppercase tracking-widest font-semibold transition-all shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer active:scale-95"
-          >
-            <PhoneCall className="w-3.5 h-3.5" />
-            <span>Schedule Private Tour</span>
-          </button>
+        <div className="lg:text-right">
+          <span className="text-xs uppercase tracking-wider text-[#5B605F] block font-medium mb-0.5">
+            Starting Price
+          </span>
+          <span className="font-sans text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-[#C5282F]">
+            {property.priceFormatted} onwards
+          </span>
         </div>
       </div>
 
@@ -341,50 +323,47 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({ prop
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#CFD1CA] pb-4 mb-6">
             <div>
               <span className="text-[10px] uppercase tracking-[0.25em] font-semibold text-[#C5282F] block mb-1">
-                Unit Typologies &amp; Floor Elevation Options
+                Unit Typologies &amp; Layout Options
               </span>
               <h2 className="font-sans text-2xl sm:text-3xl font-bold tracking-tight text-[#15181A]">
                 Configuration Matrix &amp; Details
               </h2>
             </div>
-            <span className="text-xs text-[#5B605F] font-medium">
-              All prices subject to floor rise + charges
-            </span>
+            <div>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white border border-[#CFD1CA] text-xs font-semibold text-[#15181A]">
+                <Calendar className="w-3.5 h-3.5 text-[#C5282F]" />
+                <span>Construction Status:</span>
+                <span className="text-[#C5282F] font-bold">{property.possession}</span>
+              </div>
+            </div>
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs sm:text-sm border-collapse">
+            <table className="w-full text-left text-xs sm:text-sm border-collapse min-w-[680px]">
               <thead>
                 <tr className="border-b border-[#CFD1CA] bg-[#EDEEE9] text-[11px] uppercase tracking-wider text-[#5B605F] font-semibold">
-                  <th className="py-3.5 px-4">Typology / Variant</th>
-                  <th className="py-3.5 px-4">Carpet Area</th>
-                  <th className="py-3.5 px-4">Price Range (+ Charges)</th>
-                  <th className="py-3.5 px-4">Tower / Elevation</th>
-                  <th className="py-3.5 px-4 text-right">Pricing Schedule</th>
+                  <th className="py-3.5 px-5 text-left w-[30%]">Typology / Variant</th>
+                  <th className="py-3.5 px-5 text-left w-[25%]">Carpet Area</th>
+                  <th className="py-3.5 px-5 text-left w-[27%]">Price Range (Onwards)</th>
+                  <th className="py-3.5 px-5 text-right w-[18%]"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#CFD1CA]">
                 {layoutVariants.map((variant) => (
                   <tr key={variant.id} className="hover:bg-white/80 transition-colors">
-                    <td className="py-4 px-4 font-bold text-[#15181A]">
+                    <td className="py-4 px-5 font-bold text-[#15181A] text-left">
                       <div className="flex items-center gap-2">
                         <BedDouble className="w-4 h-4 text-[#C5282F] shrink-0" />
                         <span>{variant.title}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-4 text-[#5B605F] font-medium font-mono">
+                    <td className="py-4 px-5 text-[#5B605F] font-medium font-mono text-left">
                       {variant.area}
                     </td>
-                    <td className="py-4 px-4 font-bold text-[#15181A]">
-                      <span>{variant.price} + charges</span>
+                    <td className="py-4 px-5 font-bold text-[#15181A] text-left">
+                      <span>{variant.price} onwards</span>
                     </td>
-                    <td className="py-4 px-4 text-[#5B605F]">
-                      <span className="inline-flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        {variant.tower}
-                      </span>
-                    </td>
-                    <td className="py-4 px-4 text-right">
+                    <td className="py-4 px-5 text-right">
                       <button
                         type="button"
                         onClick={() =>
@@ -419,32 +398,54 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({ prop
                 <h2 className="font-sans text-2xl sm:text-3xl font-bold tracking-tight text-[#15181A]">
                   Project Overview
                 </h2>
-                <div className="flex flex-wrap items-center gap-2">
-                  <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-white border border-[#CFD1CA] text-xs font-semibold text-[#15181A]">
-                    <Calendar className="w-3.5 h-3.5 text-[#C5282F]" />
-                    <span>Construction Status:</span>
-                    <span className="text-[#C5282F] font-bold">{property.possession}</span>
-                  </div>
-                  <button
-                    onClick={() =>
-                      openLeadGate(
-                        'Download Full Brochure & Specifications',
-                        'Please register with your name and mobile number to receive the comprehensive PDF brochure with architectural specifications.',
-                        'Brochure Download',
-                        'brochure'
-                      )
-                    }
-                    className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-[#EDEEE9] hover:bg-[#CFD1CA] text-[#15181A] text-xs uppercase tracking-wider font-semibold border border-[#CFD1CA] transition-colors cursor-pointer"
-                  >
-                    <Download className="w-3.5 h-3.5 text-[#C5282F]" />
-                    <span>Download Brochure</span>
-                  </button>
-                </div>
+                <button
+                  onClick={() =>
+                    openLeadGate(
+                      'Download Full Brochure & Specifications',
+                      'Please register with your name and mobile number to receive the comprehensive PDF brochure with architectural specifications.',
+                      'Brochure Download',
+                      'brochure'
+                    )
+                  }
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#EDEEE9] hover:bg-[#CFD1CA] text-[#15181A] text-xs uppercase tracking-wider font-semibold border border-[#CFD1CA] transition-colors cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5 text-[#C5282F]" />
+                  <span>Download Brochure</span>
+                </button>
               </div>
 
-              <p className="text-sm sm:text-base text-[#5B605F] leading-relaxed font-sans">
-                {property.description}
-              </p>
+              <div className="space-y-4 text-sm sm:text-base text-[#5B605F] leading-relaxed font-sans">
+                {Array.isArray((property as any).paragraphs) && (property as any).paragraphs.length > 0 ? (
+                  (property as any).paragraphs.map((para: string, idx: number) => (
+                    <p key={idx}>{para}</p>
+                  ))
+                ) : (
+                  (property.description || '')
+                    .split(/\n\n+/)
+                    .map((para, idx) => <p key={idx}>{para}</p>)
+                )}
+              </div>
+
+              {Array.isArray((property as any).sections) && (property as any).sections.length > 0 && (
+                <div className="space-y-4 pt-4 border-t border-[#CFD1CA]">
+                  {(property as any).sections.map((sec: any, idx: number) => (
+                    <div key={idx} className="space-y-2">
+                      {sec.title && (
+                        <h4 className="text-xs uppercase tracking-widest font-semibold text-[#15181A]">
+                          {sec.title}
+                        </h4>
+                      )}
+                      {Array.isArray(sec.content) ? (
+                        sec.content.map((p: string, pIdx: number) => (
+                          <p key={pIdx} className="text-sm text-[#5B605F] leading-relaxed">{p}</p>
+                        ))
+                      ) : (
+                        <p className="text-sm text-[#5B605F] leading-relaxed">{sec.content || sec.description}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <div className="pt-4 border-t border-[#CFD1CA]">
                 <h3 className="text-xs uppercase tracking-widest font-semibold text-[#15181A] mb-4">
@@ -454,7 +455,7 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({ prop
                   {(property.highlights || []).map((item, idx) => (
                     <li key={idx} className="flex items-start gap-2.5 text-xs sm:text-sm text-[#15181A]">
                       <CheckCircle2 className="w-4 h-4 text-[#C5282F] shrink-0 mt-0.5" />
-                      <span>{item}</span>
+                      <span>{typeof item === 'string' ? item : (item as any).title || JSON.stringify(item)}</span>
                     </li>
                   ))}
                 </ul>
@@ -758,7 +759,7 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({ prop
                 Direct Inquiry Desk
               </span>
               <p className="font-sans text-2xl font-bold tracking-tight text-[#15181A]">
-                {property.priceFormatted} + charges
+                {property.priceFormatted} onwards
               </p>
               <span className="text-xs text-[#5B605F] font-mono block mt-1">
                 MahaRERA: {property.reraId}
@@ -829,8 +830,8 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({ prop
             <div className="pt-4 border-t border-[#CFD1CA] space-y-2 text-xs text-[#5B605F]">
               <div className="flex items-center gap-2">
                 <Phone className="w-3.5 h-3.5 text-[#C5282F]" />
-                <a href="tel:+912249887700" className="hover:text-[#15181A] font-medium">
-                  +91 (022) 4988 7700
+                <a href="tel:+912266669733" className="hover:text-[#15181A] font-medium">
+                  +91 (022) 6666 9733
                 </a>
               </div>
               <div className="flex items-center gap-2 text-[11px]">
@@ -845,7 +846,7 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({ prop
       {/* Developer Overview Section (2-3 lines before Similar Residences) */}
       <ScrollReveal animation="fade-up">
         <div className="bg-[#F7F7F4] border border-[#CFD1CA] p-8 mb-16 shadow-xs">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#CFD1CA] pb-4 mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#CFD1CA] pb-4 mb-6">
             <div>
               <span className="text-[10px] uppercase tracking-[0.25em] font-semibold text-[#C5282F] block mb-1">
                 Legacy of Architectural Excellence
@@ -854,31 +855,22 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({ prop
                 Developer Overview
               </h2>
             </div>
-            <div className="flex items-center gap-2 text-xs font-semibold text-emerald-700 bg-emerald-50 px-3 py-1.5 border border-emerald-200">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>Verified Tier-1 Developer</span>
+            <div className="flex items-center gap-2 text-xs font-semibold text-[#15181A] bg-[#EDEEE9] px-3.5 py-1.5 border border-[#CFD1CA]">
+              <ShieldCheck className="w-4 h-4 text-[#C5282F]" />
+              <span>{(property as any).developerBadge || (property as any).badge || 'Verified Tier-1 Developer'}</span>
             </div>
           </div>
-          <p className="text-sm sm:text-base text-[#5B605F] leading-relaxed font-sans">
-            Crafted by one of Mumbai&apos;s most reputed architectural conglomerates, renowned for over three decades of engineering excellence, timely structural handovers, and bespoke luxury benchmarks across prime micro-markets. Every development embodies earthquake-resistant RCC frameworks, IGBC green building certifications, and master-crafted spatial aesthetics designed for generations.
-          </p>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 mt-6 border-t border-[#CFD1CA] text-center">
-            <div className="p-3 bg-white border border-[#CFD1CA]">
-              <span className="text-lg font-bold text-[#15181A] block">30+ Years</span>
-              <span className="text-[10px] uppercase tracking-wider text-[#5B605F]">Industry Heritage</span>
-            </div>
-            <div className="p-3 bg-white border border-[#CFD1CA]">
-              <span className="text-lg font-bold text-[#15181A] block">15+ Mn Sq.Ft</span>
-              <span className="text-[10px] uppercase tracking-wider text-[#5B605F]">Delivered Portfolios</span>
-            </div>
-            <div className="p-3 bg-white border border-[#CFD1CA]">
-              <span className="text-lg font-bold text-[#15181A] block">100%</span>
-              <span className="text-[10px] uppercase tracking-wider text-[#5B605F]">RERA Compliance</span>
-            </div>
-            <div className="p-3 bg-white border border-[#CFD1CA]">
-              <span className="text-lg font-bold text-[#15181A] block">12,000+</span>
-              <span className="text-[10px] uppercase tracking-wider text-[#5B605F]">Satisfied Families</span>
-            </div>
+          <div className="space-y-4 text-sm sm:text-base text-[#5B605F] leading-relaxed font-sans">
+            <p>
+              {(property as any).developerOverview || (property as any).developerDescription ||
+                "Crafted by one of Mumbai's most reputed architectural conglomerates, renowned for engineering excellence, timely structural handovers, and bespoke luxury benchmarks across prime micro-markets. Every development embodies earthquake-resistant RCC frameworks, IGBC green building certifications, and master-crafted spatial aesthetics designed for generations."}
+            </p>
+            <p>
+              With an unwavering commitment to statutory compliance and transparency under MahaRERA governance, the group guarantees uncompromised quality standards from foundational excavation to final finishing touches. Every residence reflects thoughtful layout optimization, expansive natural illumination, and premium structural integrity.
+            </p>
+            <p>
+              Dedicated to delivering sustainable urban landmarks, our development footprint integrates eco-conscious construction practices, advanced water management systems, and curated open-air wellness hubs, crafting sanctuaries where discerning families thrive for decades to come.
+            </p>
           </div>
         </div>
       </ScrollReveal>
@@ -994,7 +986,7 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({ prop
                   <form onSubmit={handleVerifyOtp} className="space-y-4">
                     <div className="bg-[#EDEEE9]/60 p-3 border border-[#CFD1CA] mb-2 text-xs">
                       <p className="text-[#15181A] font-medium">Enter OTP sent to +91 {leadForm.phone}</p>
-                      <p className="text-[11px] text-[#C5282F] font-mono mt-0.5">Demo OTP: 4821</p>
+                      <p className="text-[11px] text-[#C5282F] font-sans font-bold mt-0.5">Demo OTP: 4821</p>
                     </div>
 
                     <div>
@@ -1008,7 +1000,7 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({ prop
                         value={otpCode}
                         onChange={(e) => setOtpCode(e.target.value)}
                         placeholder="4821"
-                        className="w-full px-3.5 py-2.5 bg-white border border-[#CFD1CA] text-base tracking-[0.3em] font-mono text-center focus:outline-none focus:border-[#C5282F]"
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#CFD1CA] text-base tracking-[0.3em] font-sans font-bold tabular-nums text-center focus:outline-none focus:border-[#C5282F]"
                       />
                     </div>
 

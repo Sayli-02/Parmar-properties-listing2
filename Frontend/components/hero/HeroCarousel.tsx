@@ -247,21 +247,18 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
             } ${reducedMotion ? 'transition-none' : ''}`}
             aria-hidden={!isActive}
           >
-            {/* Background Full-Bleed Image with Gentle Cinematic Zoom */}
+            {/* Background Full-Bleed Image - Natural presentation without artificial zoom or heavy contrast */}
             <div className="relative w-full h-full overflow-hidden">
               <Image
                 src={slide.image}
                 alt={slide.alt}
                 fill
                 priority={index === 0}
-                className={`object-cover object-center transition-transform duration-[5000ms] ease-out ${
-                  isActive ? 'scale-105' : 'scale-100'
-                }`}
+                className="object-cover object-center"
                 sizes="100vw"
               />
-              {/* Gradient Overlays for High Legibility & Cinematic Depth */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/45 to-black/55" />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-black/30" />
+              {/* Subtle natural overlay for text legibility without altering image vibrance */}
+              <div className="absolute inset-0 bg-black/30" />
             </div>
           </div>
         );
@@ -293,27 +290,43 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
               const hasMaxBudget = searchMaxBudget < 60;
               const hasStatus = Boolean(searchStatus && searchStatus !== 'All' && searchStatus !== 'All Status');
 
-              // If a user does not put any filter and simply just clicks, redirect to the BUY page
+              let targetTab: 'buy' | 'new-launches' | 'luxury-collection' = 'buy';
+              if (
+                searchStatus === 'Pre-Launch' ||
+                searchStatus === 'Pre Launch' ||
+                searchStatus === 'Under Construction' ||
+                searchStatus === 'New Launch'
+              ) {
+                targetTab = 'new-launches';
+              } else if (searchStatus === 'Luxury Collection') {
+                targetTab = 'luxury-collection';
+              } else {
+                targetTab = 'buy';
+              }
+
+              // If a user does not put any filter and simply clicks Search
               if (!hasLocation && !hasBhk && !hasMinBudget && !hasMaxBudget && !hasStatus) {
-                router.push('/properties?tab=buy');
+                router.push(`/properties?tab=${targetTab}`);
                 return;
               }
 
               const params = new URLSearchParams();
-              params.set('tab', 'buy');
+              params.set('tab', targetTab);
               if (hasLocation) params.set('location', searchLocation.trim());
               if (hasBhk) params.set('bhk', searchBhk);
               if (hasMinBudget) params.set('minPrice', searchMinBudget.toString());
               if (hasMaxBudget) params.set('maxPrice', searchMaxBudget.toString());
-              if (hasStatus) params.set('status', searchStatus);
+              if (hasStatus && searchStatus !== 'All' && searchStatus !== 'Luxury Collection') {
+                params.set('status', searchStatus);
+              }
               router.push(`/properties?${params.toString()}`);
             }}
             className="bg-black/35 hover:bg-black/45 backdrop-blur-xl border border-white/20 hover:border-white/35 shadow-[0_20px_50px_rgba(0,0,0,0.5),inset_0_1px_1px_rgba(255,255,255,0.12)] p-2 sm:p-2.5 transition-all duration-300 font-sans"
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2 sm:gap-0 items-center divide-y sm:divide-y-0 lg:divide-x divide-white/10">
               {/* 1. Location */}
-              <div className="hero-dropdown-container lg:col-span-3 px-3.5 py-2.5 hover:bg-white/[0.06] transition-colors group relative font-sans">
-                <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] font-extrabold text-white/80 mb-1 font-sans">
+              <div className="hero-dropdown-container lg:col-span-3 min-w-0 px-3.5 py-2.5 hover:bg-white/[0.06] transition-colors group relative font-sans">
+                <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] font-extrabold text-white/80 mb-1.5 font-sans h-4">
                   <MapPin className="w-3.5 h-3.5 text-[#C5282F]" />
                   <span>Location</span>
                 </label>
@@ -377,7 +390,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
 
               {/* 2. BHK (Custom Padded Dropdown) */}
               <div className="hero-dropdown-container lg:col-span-2 px-3.5 py-2.5 hover:bg-white/[0.06] transition-colors relative group font-sans">
-                <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] font-extrabold text-white/80 mb-1 font-sans">
+                <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] font-extrabold text-white/80 mb-1.5 font-sans h-4 whitespace-nowrap">
                   <BedDouble className="w-3.5 h-3.5 text-[#C5282F]" />
                   <span>Bedrooms</span>
                 </label>
@@ -387,13 +400,13 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
                   className="w-full bg-transparent text-sm font-bold text-white outline-none flex items-center justify-between cursor-pointer font-sans text-left"
                 >
                   <span className="truncate">{searchBhk === 'Any' ? 'Any BHK' : searchBhk}</span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-white/70 transition-transform duration-200 ${openDropdown === 'bhk' ? 'rotate-180 text-[#C5282F]' : ''}`} />
+                  <ChevronDown className={`w-3.5 h-3.5 text-white/70 transition-transform duration-200 shrink-0 ml-1 ${openDropdown === 'bhk' ? 'rotate-180 text-[#C5282F]' : ''}`} />
                 </button>
 
                 {openDropdown === 'bhk' && (
                   <div
                     style={{ backgroundColor: '#16181C' }}
-                    className="absolute top-[calc(100%+8px)] left-0 min-w-[280px] sm:min-w-[300px] bg-[#16181C] border border-white/25 shadow-[0_25px_60px_rgba(0,0,0,0.95),0_0_40px_rgba(0,0,0,0.8)] p-3 z-50 rounded-sm font-sans"
+                    className="absolute top-[calc(100%+8px)] left-0 min-w-[260px] sm:min-w-[280px] bg-[#16181C] border border-white/25 shadow-[0_25px_60px_rgba(0,0,0,0.95),0_0_40px_rgba(0,0,0,0.8)] p-3 z-50 rounded-sm font-sans"
                   >
                     <div className="px-3.5 pt-1 pb-2.5 text-[10px] uppercase tracking-[0.25em] text-white/50 font-bold border-b border-white/10 mb-2 flex items-center justify-between">
                       <span>Configuration</span>
@@ -427,25 +440,20 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
               </div>
 
               {/* 3. Budget (Single 2-Way Range Slider) */}
-              <div className="hero-dropdown-container lg:col-span-3 px-3.5 py-2.5 hover:bg-white/[0.06] transition-colors relative group font-sans">
-                <div className="flex items-center justify-between mb-2">
-                  <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] font-extrabold text-white/80 font-sans">
-                    <IndianRupee className="w-3.5 h-3.5 text-[#C5282F]" />
-                    <span>Budget Range</span>
-                  </label>
-                  <span className="text-xs font-sans font-bold text-[#C5282F]">
-                    ₹{searchMinBudget} Cr – {searchMaxBudget >= 60 ? '₹60 Cr+' : `₹${searchMaxBudget} Cr`}
-                  </span>
-                </div>
+              <div className="hero-dropdown-container lg:col-span-2 min-w-0 px-3 py-2.5 hover:bg-white/[0.06] transition-colors relative group font-sans">
+                <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] font-extrabold text-white/80 mb-1.5 font-sans h-4 whitespace-nowrap">
+                  <IndianRupee className="w-3.5 h-3.5 text-[#C5282F]" />
+                  <span>Budget Range</span>
+                </label>
 
                 {/* Single 2-Way Slider Track with Dual Thumbs */}
-                <div className="relative w-full h-5 flex items-center">
+                <div className="relative w-full h-5 flex items-center mt-1">
                   {/* Gray Background Track */}
-                  <div className="absolute w-full h-1.5 bg-white/20 rounded-full" />
+                  <div className="absolute w-full h-1.5 bg-white/25 rounded-full" />
                   
                   {/* Red Active Range Bar between min and max */}
                   <div
-                    className="absolute h-1.5 bg-[#C5282F] rounded-full pointer-events-none"
+                    className="absolute h-1.5 bg-[#C5282F] rounded-full pointer-events-none shadow-xs"
                     style={{
                       left: `${((searchMinBudget - 3) / (60 - 3)) * 100}%`,
                       width: `${((searchMaxBudget - searchMinBudget) / (60 - 3)) * 100}%`,
@@ -483,25 +491,28 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
                   />
                 </div>
 
-                <div className="flex justify-between text-[9px] text-white/50 mt-1 font-mono">
-                  <span>₹3 Cr</span>
-                  <span>₹60 Cr</span>
+                {/* Dynamic Numbers below the budget slider */}
+                <div className="flex justify-between items-center text-xs text-white/90 mt-1 font-sans font-semibold">
+                  <span className="tabular-nums">₹{searchMinBudget} Cr</span>
+                  <span className="tabular-nums">
+                    {searchMaxBudget >= 60 ? '₹60 Cr+' : `₹${searchMaxBudget} Cr`}
+                  </span>
                 </div>
               </div>
 
-              {/* 4. Construction Status (Dropdown) */}
-              <div className="hero-dropdown-container lg:col-span-2 px-3.5 py-2.5 hover:bg-white/[0.06] transition-colors relative group font-sans">
-                <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] font-extrabold text-white/80 mb-1 font-sans">
-                  <Building2 className="w-3.5 h-3.5 text-[#C5282F]" />
-                  <span>Construction Status</span>
+              {/* 4. Construction Status (Dropdown with 3 cols to eliminate overlap) */}
+              <div className="hero-dropdown-container lg:col-span-3 min-w-0 px-3.5 py-2.5 hover:bg-white/[0.06] transition-colors relative group font-sans">
+                <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em] font-extrabold text-white/80 mb-1.5 font-sans h-4 min-w-0">
+                  <Building2 className="w-3.5 h-3.5 text-[#C5282F] shrink-0" />
+                  <span className="truncate">Construction Status</span>
                 </label>
                 <button
                   type="button"
                   onClick={() => setOpenDropdown(openDropdown === 'status' ? null : 'status')}
-                  className="w-full bg-transparent text-sm font-bold text-white outline-none flex items-center justify-between cursor-pointer font-sans text-left"
+                  className="w-full bg-transparent text-sm font-bold text-white outline-none flex items-center justify-between cursor-pointer font-sans text-left min-w-0"
                 >
-                  <span className="truncate">{searchStatus === 'All' ? 'All Status' : searchStatus}</span>
-                  <ChevronDown className={`w-3.5 h-3.5 text-white/70 transition-transform duration-200 ${openDropdown === 'status' ? 'rotate-180 text-[#C5282F]' : ''}`} />
+                  <span className="truncate pr-1">{searchStatus === 'All' ? 'All Status' : searchStatus}</span>
+                  <ChevronDown className={`w-3.5 h-3.5 text-white/70 transition-transform duration-200 shrink-0 ml-1 ${openDropdown === 'status' ? 'rotate-180 text-[#C5282F]' : ''}`} />
                 </button>
 
                 {openDropdown === 'status' && (
@@ -509,16 +520,17 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
                     style={{ backgroundColor: '#16181C' }}
                     className="absolute top-[calc(100%+8px)] left-0 min-w-[280px] sm:min-w-[300px] bg-[#16181C] border border-white/25 shadow-[0_25px_60px_rgba(0,0,0,0.95),0_0_40px_rgba(0,0,0,0.8)] p-3 z-50 rounded-sm font-sans"
                   >
-                    <div className="px-3.5 pt-1 pb-2.5 text-[10px] uppercase tracking-[0.25em] text-white/50 font-bold border-b border-white/10 mb-2 flex items-center justify-between">
+                    <div className="px-3.5 pt-1 pb-2 text-[10px] uppercase tracking-[0.25em] text-white/50 font-bold border-b border-white/10 mb-2 flex items-center justify-between">
                       <span>Construction Status</span>
                       <span className="text-[9px] text-[#C5282F] font-semibold">Phase</span>
                     </div>
                     {[
-                      { label: 'All Status', val: 'All' },
-                      { label: 'Resale', val: 'Resale' },
-                      { label: 'Pre Launch', val: 'Pre Launch' },
-                      { label: 'Under Construction', val: 'Under Construction' },
-                      { label: 'Ready to Move In', val: 'Ready to Move In' },
+                      { label: 'All Status', val: 'All', tab: 'buy' },
+                      { label: 'Ready to Move In', val: 'Ready to Move', tab: 'buy' },
+                      { label: 'Under Construction', val: 'Under Construction', tab: 'new-launches' },
+                      { label: 'Pre-Launch', val: 'Pre-Launch', tab: 'new-launches' },
+                      { label: 'Luxury Collection', val: 'Luxury Collection', tab: 'luxury-collection' },
+                      { label: 'Resale', val: 'Resale', tab: 'buy' },
                     ].map((opt) => (
                       <button
                         key={opt.val}
@@ -526,6 +538,22 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
                         onClick={() => {
                           setSearchStatus(opt.val);
                           setOpenDropdown(null);
+
+                          // Instantly direct user to that particular page with active criteria
+                          const params = new URLSearchParams();
+                          params.set('tab', opt.tab);
+                          if (searchLocation && searchLocation.trim() && searchLocation !== 'All') {
+                            params.set('location', searchLocation.trim());
+                          }
+                          if (searchBhk && searchBhk !== 'Any') {
+                            params.set('bhk', searchBhk);
+                          }
+                          if (searchMinBudget > 3) params.set('minPrice', searchMinBudget.toString());
+                          if (searchMaxBudget < 60) params.set('maxPrice', searchMaxBudget.toString());
+                          if (opt.val !== 'All' && opt.val !== 'Luxury Collection') {
+                            params.set('status', opt.val);
+                          }
+                          router.push(`/properties?${params.toString()}`);
                         }}
                         className={`w-full text-left px-4 py-3 sm:py-3.5 text-xs sm:text-[13px] font-bold tracking-wide transition-all duration-200 flex items-center justify-between cursor-pointer rounded-xs ${
                           searchStatus === opt.val
@@ -534,7 +562,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
                         }`}
                       >
                         <span>{opt.label}</span>
-                        {searchStatus === opt.val && <Check className="w-4 h-4 text-white stroke-[2.5]" />}
+                        {searchStatus === opt.val && <Check className="w-4 h-4 text-white stroke-[2.5] shrink-0" />}
                       </button>
                     ))}
                   </div>
@@ -542,12 +570,12 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
               </div>
 
               {/* 5. Search Button */}
-              <div className="lg:col-span-2 p-1">
+              <div className="lg:col-span-2 min-w-0 p-1 flex items-center justify-center">
                 <button
                   type="submit"
-                  className="w-full h-11 bg-[#C5282F] hover:bg-[#A31D23] text-white text-xs uppercase tracking-[0.2em] font-extrabold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-md hover:shadow-lg active:scale-98"
+                  className="w-full h-11 bg-[#C5282F] hover:bg-[#A31D23] text-white text-xs uppercase tracking-[0.18em] font-extrabold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-md hover:shadow-lg active:scale-98 rounded-xs"
                 >
-                  <Search className="w-4 h-4 text-white stroke-[2.5]" />
+                  <Search className="w-4 h-4 text-white stroke-[2.5] shrink-0" />
                   <span>SEARCH</span>
                 </button>
               </div>

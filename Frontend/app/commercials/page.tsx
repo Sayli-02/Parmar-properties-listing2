@@ -40,9 +40,6 @@ function CommercialCard({ property }: { property: CommercialProperty }) {
 
         {/* Top Badges */}
         <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 z-10">
-          <span className="px-2.5 py-1 text-[10px] uppercase tracking-[0.15em] font-medium bg-[#15181A] text-white">
-            {property.propertyType}
-          </span>
           <span className="px-2.5 py-1 text-[10px] uppercase tracking-[0.15em] font-bold bg-[#C5282F] text-white">
             Grade-A
           </span>
@@ -87,7 +84,11 @@ function CommercialCard({ property }: { property: CommercialProperty }) {
           </div>
         </div>
 
-        <div className="pt-5 flex items-center gap-3">
+        <div className="pt-4 mt-auto border-t border-[#CFD1CA]/60 flex flex-col gap-2">
+          <div className="text-[10px] uppercase tracking-wider text-[#5B605F] font-mono flex items-center justify-between">
+            <span>MahaRERA:</span>
+            <span className="font-semibold text-[#15181A]">{(property as any).reraId || 'P51900018420'}</span>
+          </div>
           <button
             onClick={() => setModalOpen(true)}
             className="w-full py-2.5 px-4 bg-[#C5282F] hover:bg-[#A31D23] text-white text-xs font-sans uppercase tracking-[0.12em] font-semibold text-center transition-all flex items-center justify-center gap-2 cursor-pointer shadow-xs active:scale-98"
@@ -145,14 +146,14 @@ function CommercialCard({ property }: { property: CommercialProperty }) {
 
 function CommercialsContent() {
   const [selectedLocality, setSelectedLocality] = useState<string>('All');
-  const [selectedType, setSelectedType] = useState<string>('All');
+  const [minPrice, setMinPrice] = useState<number>(15);
   const [maxPrice, setMaxPrice] = useState<number>(65);
   const [sortBy, setSortBy] = useState<string>('featured');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
 
   const resetFilters = () => {
     setSelectedLocality('All');
-    setSelectedType('All');
+    setMinPrice(15);
     setMaxPrice(65);
     setSortBy('featured');
   };
@@ -160,8 +161,7 @@ function CommercialsContent() {
   const filteredProperties = useMemo(() => {
     let list = COMMERCIAL_PROPERTIES.filter((p) => {
       if (selectedLocality !== 'All' && p.location !== selectedLocality) return false;
-      if (selectedType !== 'All' && p.propertyType !== selectedType) return false;
-      if (p.price > maxPrice) return false;
+      if (p.price < minPrice || p.price > maxPrice) return false;
       return true;
     });
 
@@ -174,7 +174,7 @@ function CommercialsContent() {
     }
 
     return list;
-  }, [selectedLocality, selectedType, maxPrice, sortBy]);
+  }, [selectedLocality, minPrice, maxPrice, sortBy]);
 
   return (
     <div className="pt-28 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto min-h-screen bg-[#EDEEE9] text-[#15181A]">
@@ -230,15 +230,15 @@ function CommercialsContent() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left Filter Sidebar */}
         <aside className="hidden lg:block lg:col-span-3 space-y-6">
-          <div className="bg-[#F7F7F4] border border-[#CFD1CA] p-6 space-y-6 shadow-xs sticky top-24">
+          <div className="bg-[#F7F7F4] border border-[#CFD1CA] p-6 space-y-6 shadow-xs sticky top-24 font-sans">
             <div className="flex items-center justify-between pb-4 border-b border-[#CFD1CA]">
-              <span className="text-xs uppercase tracking-widest font-semibold text-[#15181A] flex items-center gap-2">
+              <span className="font-sans text-xs uppercase tracking-[0.2em] font-bold text-[#15181A] flex items-center gap-2">
                 <SlidersHorizontal className="w-4 h-4 text-[#C5282F]" />
                 Filter Commercials
               </span>
               <button
                 onClick={resetFilters}
-                className="text-xs text-[#C5282F] hover:text-[#A31D23] flex items-center gap-1 font-medium cursor-pointer"
+                className="text-xs text-[#C5282F] hover:text-[#A31D23] flex items-center gap-1 font-semibold uppercase tracking-wider cursor-pointer"
               >
                 <RotateCcw className="w-3 h-3" />
                 Reset
@@ -247,13 +247,13 @@ function CommercialsContent() {
 
             {/* Locality */}
             <div>
-              <label className="block text-xs uppercase tracking-wider font-semibold text-[#15181A] mb-2">
+              <label className="block text-xs uppercase tracking-wider font-semibold text-[#15181A] mb-2 font-sans">
                 Commercial Hub
               </label>
               <select
                 value={selectedLocality}
                 onChange={(e) => setSelectedLocality(e.target.value)}
-                className="w-full p-2.5 bg-[#EDEEE9] border border-[#CFD1CA] text-xs focus:outline-none focus:border-[#C5282F]"
+                className="w-full p-2.5 bg-[#EDEEE9] border border-[#CFD1CA] text-xs font-medium text-[#15181A] focus:outline-none focus:border-[#C5282F]"
               >
                 <option value="All">All Commercial Hubs</option>
                 <option value="BKC">Bandra Kurla Complex (BKC)</option>
@@ -265,47 +265,65 @@ function CommercialsContent() {
               </select>
             </div>
 
-            {/* Asset Class */}
+            {/* 2-Way Price Slider */}
             <div>
-              <label className="block text-xs uppercase tracking-wider font-semibold text-[#15181A] mb-2">
-                Asset Classification
-              </label>
-              <select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-                className="w-full p-2.5 bg-[#EDEEE9] border border-[#CFD1CA] text-xs focus:outline-none focus:border-[#C5282F]"
-              >
-                <option value="All">All Commercial Types</option>
-                <option value="Grade-A Office">Grade-A Corporate Office</option>
-                <option value="Corporate HQ">Full-Floor Corporate HQ</option>
-                <option value="High-Street Retail">High-Street Retail Suite</option>
-                <option value="Commercial Penthouse">Commercial Penthouse</option>
-                <option value="Boutique Office">Boutique Office Suite</option>
-              </select>
-            </div>
-
-            {/* Price Slider */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-3 font-sans">
                 <label className="text-xs uppercase tracking-wider font-semibold text-[#15181A]">
-                  Max Capital Budget
+                  Capital Budget Range
                 </label>
-                <span className="text-xs font-serif font-bold text-[#C5282F]">
-                  ₹{maxPrice} Cr
+                <span className="text-xs font-sans font-extrabold text-[#C5282F] tabular-nums tracking-wide">
+                  ₹{minPrice} Cr &ndash; {maxPrice >= 65 ? '₹65 Cr+' : `₹${maxPrice} Cr`}
                 </span>
               </div>
-              <input
-                type="range"
-                min="15"
-                max="65"
-                step="2"
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(Number(e.target.value))}
-                className="w-full accent-[#C5282F] cursor-pointer"
-              />
-              <div className="flex justify-between text-[10px] text-[#5B605F] mt-1">
-                <span>₹15 Cr</span>
-                <span>₹65 Cr+</span>
+
+              {/* Single 2-Way Slider Track with Dual Thumbs */}
+              <div className="relative w-full h-5 flex items-center">
+                {/* Gray Background Track */}
+                <div className="absolute w-full h-1.5 bg-[#CFD1CA] rounded-full" />
+
+                {/* Red Active Range Bar between min and max */}
+                <div
+                  className="absolute h-1.5 bg-[#C5282F] rounded-full pointer-events-none shadow-xs"
+                  style={{
+                    left: `${((minPrice - 15) / (65 - 15)) * 100}%`,
+                    width: `${((maxPrice - minPrice) / (65 - 15)) * 100}%`,
+                  }}
+                />
+
+                {/* Min Value Thumb Slider */}
+                <input
+                  type="range"
+                  min="15"
+                  max="65"
+                  step="2"
+                  value={minPrice}
+                  onChange={(e) => {
+                    const val = Math.min(Number(e.target.value), maxPrice - 2);
+                    setMinPrice(val);
+                  }}
+                  aria-label="Minimum Commercial Budget"
+                  className="absolute inset-0 w-full appearance-none bg-transparent pointer-events-none z-20 h-full m-0 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#C5282F] [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#C5282F] [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:cursor-pointer"
+                />
+
+                {/* Max Value Thumb Slider */}
+                <input
+                  type="range"
+                  min="15"
+                  max="65"
+                  step="2"
+                  value={maxPrice}
+                  onChange={(e) => {
+                    const val = Math.max(Number(e.target.value), minPrice + 2);
+                    setMaxPrice(val);
+                  }}
+                  aria-label="Maximum Commercial Budget"
+                  className="absolute inset-0 w-full appearance-none bg-transparent pointer-events-none z-30 h-full m-0 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#C5282F] [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#C5282F] [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:cursor-pointer"
+                />
+              </div>
+
+              <div className="flex justify-between items-center text-xs text-[#5B605F] mt-2 font-sans font-semibold tabular-nums">
+                <span>₹{minPrice} Cr</span>
+                <span>{maxPrice >= 65 ? '₹65 Cr+' : `₹${maxPrice} Cr`}</span>
               </div>
             </div>
           </div>
@@ -316,7 +334,7 @@ function CommercialsContent() {
           <div className="fixed inset-0 z-50 lg:hidden bg-black/60 backdrop-blur-sm flex justify-end">
             <div className="w-full max-w-sm bg-[#EDEEE9] h-full p-6 overflow-y-auto space-y-6">
               <div className="flex items-center justify-between pb-4 border-b border-[#CFD1CA]">
-                <span className="font-serif text-lg font-medium text-[#15181A]">Filter Commercials</span>
+                <span className="font-sans text-xs uppercase tracking-[0.2em] font-bold text-[#15181A]">Filter Commercials</span>
                 <button onClick={() => setMobileFilterOpen(false)} className="p-1">
                   <X className="w-5 h-5 text-[#15181A]" />
                 </button>
@@ -327,7 +345,7 @@ function CommercialsContent() {
                 <select
                   value={selectedLocality}
                   onChange={(e) => setSelectedLocality(e.target.value)}
-                  className="w-full p-2.5 bg-[#F7F7F4] border border-[#CFD1CA] text-xs"
+                  className="w-full p-2.5 bg-[#F7F7F4] border border-[#CFD1CA] text-xs font-medium"
                 >
                   <option value="All">All Commercial Hubs</option>
                   <option value="BKC">BKC</option>
@@ -338,19 +356,62 @@ function CommercialsContent() {
               </div>
 
               <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="font-semibold">Max Price</span>
-                  <span className="text-[#C5282F] font-bold font-serif">₹{maxPrice} Cr</span>
+                <div className="flex justify-between text-xs mb-3 font-sans">
+                  <span className="font-semibold">Budget Range</span>
+                  <span className="text-[#C5282F] font-bold tabular-nums">
+                    ₹{minPrice} Cr &ndash; {maxPrice >= 65 ? '₹65 Cr+' : `₹${maxPrice} Cr`}
+                  </span>
                 </div>
-                <input
-                  type="range"
-                  min="15"
-                  max="65"
-                  step="2"
-                  value={maxPrice}
-                  onChange={(e) => setMaxPrice(Number(e.target.value))}
-                  className="w-full accent-[#C5282F]"
-                />
+
+                {/* Single 2-Way Slider Track with Dual Thumbs */}
+                <div className="relative w-full h-5 flex items-center">
+                  {/* Gray Background Track */}
+                  <div className="absolute w-full h-1.5 bg-[#CFD1CA] rounded-full" />
+
+                  {/* Red Active Range Bar between min and max */}
+                  <div
+                    className="absolute h-1.5 bg-[#C5282F] rounded-full pointer-events-none shadow-xs"
+                    style={{
+                      left: `${((minPrice - 15) / (65 - 15)) * 100}%`,
+                      width: `${((maxPrice - minPrice) / (65 - 15)) * 100}%`,
+                    }}
+                  />
+
+                  {/* Min Value Thumb Slider */}
+                  <input
+                    type="range"
+                    min="15"
+                    max="65"
+                    step="2"
+                    value={minPrice}
+                    onChange={(e) => {
+                      const val = Math.min(Number(e.target.value), maxPrice - 2);
+                      setMinPrice(val);
+                    }}
+                    aria-label="Minimum Commercial Budget"
+                    className="absolute inset-0 w-full appearance-none bg-transparent pointer-events-none z-20 h-full m-0 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#C5282F] [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#C5282F] [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:cursor-pointer"
+                  />
+
+                  {/* Max Value Thumb Slider */}
+                  <input
+                    type="range"
+                    min="15"
+                    max="65"
+                    step="2"
+                    value={maxPrice}
+                    onChange={(e) => {
+                      const val = Math.max(Number(e.target.value), minPrice + 2);
+                      setMaxPrice(val);
+                    }}
+                    aria-label="Maximum Commercial Budget"
+                    className="absolute inset-0 w-full appearance-none bg-transparent pointer-events-none z-30 h-full m-0 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#C5282F] [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#C5282F] [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:cursor-pointer"
+                  />
+                </div>
+
+                <div className="flex justify-between items-center text-xs text-[#5B605F] mt-2 font-sans font-semibold tabular-nums">
+                  <span>₹{minPrice} Cr</span>
+                  <span>{maxPrice >= 65 ? '₹65 Cr+' : `₹${maxPrice} Cr`}</span>
+                </div>
               </div>
 
               <div className="pt-4 flex gap-3">

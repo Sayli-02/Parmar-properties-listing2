@@ -42,29 +42,26 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
 
         {/* Top Badges */}
         <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 z-10">
-          <span className="px-2.5 py-1 text-[10px] uppercase tracking-[0.15em] font-medium bg-[#15181A] text-white">
-            {property.propertyType}
-          </span>
-          {property.isNewLaunch && (
+          {property.isNewLaunch && property.propertyType !== 'Sea-Facing Apartment' && (
             <span className="px-2.5 py-1 text-[10px] uppercase tracking-[0.15em] font-bold bg-[#393187] text-white">
               {property.launchPhase || 'New Launch'}
             </span>
           )}
-          {property.isLuxuryCollection && (
+          {property.isLuxuryCollection && property.propertyType !== 'Sea-Facing Apartment' && (
             <span className="px-2.5 py-1 text-[10px] uppercase tracking-[0.15em] font-bold bg-[#A37B30] text-white">
               Luxury Collection
             </span>
           )}
-          {property.featured && !property.isLuxuryCollection && !property.isNewLaunch && (
+          {property.featured && !property.isLuxuryCollection && !property.isNewLaunch && property.propertyType !== 'Sea-Facing Apartment' && (
             <span className="px-2.5 py-1 text-[10px] uppercase tracking-[0.15em] font-medium bg-[#C5282F] text-white">
               Prime
             </span>
           )}
         </div>
 
-        {/* Bottom Left Price Badge (matching reference mockup: From ₹X Cr on Ink black) */}
-        <div className="absolute bottom-0 left-0 bg-[#15181A] text-white px-3.5 py-1.5 z-10">
-          <span className="font-sans text-xs sm:text-sm font-bold tracking-wide">
+        {/* Bottom Left Price Badge - Increased size and prominence */}
+        <div className="absolute bottom-0 left-0 bg-[#15181A] text-white px-4 py-2 sm:px-5 sm:py-2.5 z-10 shadow-lg">
+          <span className="font-sans text-sm sm:text-base md:text-lg font-extrabold tracking-wide text-white">
             {property.priceFormatted}
           </span>
         </div>
@@ -102,18 +99,19 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
           </div>
         </div>
 
-        {/* Card Footer: Brick Action Button matching reference mockup */}
-        <div className="pt-5 flex items-center justify-between gap-4">
+        {/* Card Footer: RERA number above, full-width horizontal action button */}
+        <div className="pt-4 flex flex-col gap-2.5">
+          <div className="flex items-center justify-between text-[11px] text-[#5B605F] font-sans">
+            <span className="text-[10px] uppercase tracking-wider font-semibold text-[#5B605F]">MahaRERA</span>
+            <span className="font-mono font-medium">{property.reraId}</span>
+          </div>
           <Link
             href={`/properties/${property.slug}`}
-            className="flex-1 py-2.5 px-4 bg-[#C5282F] hover:bg-[#A31D23] text-white text-xs font-sans uppercase tracking-[0.12em] font-semibold text-center transition-all flex items-center justify-center gap-2 hover:shadow-md active:scale-98"
+            className="w-full py-2.5 px-4 bg-[#C5282F] hover:bg-[#A31D23] text-white text-xs font-sans uppercase tracking-[0.12em] font-semibold text-center transition-all flex items-center justify-center gap-2 hover:shadow-md active:scale-98"
           >
             <span>View Residence</span>
             <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1.5 transition-transform duration-300" />
           </Link>
-          <span className="text-[10px] text-[#5B605F] font-mono shrink-0">
-            {property.reraId}
-          </span>
         </div>
       </div>
     </div>

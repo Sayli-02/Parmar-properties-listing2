@@ -54,9 +54,11 @@ export const FEATURED_INSIGHTS: MarketInsight[] = [
   },
 ];
 
+import { useRouter } from 'next/navigation';
 import { HOME_PAGE_CONTENT } from '@/data/content/home.content';
 
 export function MarketIntelligenceSection() {
+  const router = useRouter();
   const miContent = HOME_PAGE_CONTENT.marketIntelligence;
 
   return (
@@ -89,9 +91,15 @@ export function MarketIntelligenceSection() {
         {FEATURED_INSIGHTS.map((insight, idx) => {
           return (
             <ScrollReveal key={insight.id} animation="fade-up" delay={idx * 100}>
-              <Link
-                href={`/market-intelligence/${insight.id}`}
-                className="group block bg-[#F7F7F4] border border-[#CFD1CA] p-8 sm:p-10 hover:border-[#15181A] hover:bg-white transition-all duration-300 shadow-xs hover:shadow-md relative flex flex-col justify-between min-h-[220px]"
+              <div
+                role="button"
+                tabIndex={0}
+                onDoubleClick={() => router.push(`/market-intelligence/${insight.id}`)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') router.push(`/market-intelligence/${insight.id}`);
+                }}
+                title="Double click to open article"
+                className="group block bg-[#F7F7F4] border border-[#CFD1CA] p-8 sm:p-10 hover:border-[#15181A] hover:bg-white transition-all duration-300 shadow-xs hover:shadow-md relative flex flex-col justify-between min-h-[220px] cursor-pointer select-none"
               >
                 <div>
                   {/* Category in small tracking uppercase */}
@@ -115,12 +123,16 @@ export function MarketIntelligenceSection() {
                   <span className="font-mono text-[11px] uppercase tracking-wider text-[#15181A] font-medium">
                     {insight.tag}
                   </span>
-                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#15181A] group-hover:text-[#C5282F] transition-colors">
+                  <Link
+                    href={`/market-intelligence/${insight.id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#15181A] group-hover:text-[#C5282F] transition-colors"
+                  >
                     <span>Read Detailed Article</span>
                     <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                  </span>
+                  </Link>
                 </div>
-              </Link>
+              </div>
             </ScrollReveal>
           );
         })}

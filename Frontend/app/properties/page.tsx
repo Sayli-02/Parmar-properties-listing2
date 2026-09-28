@@ -42,8 +42,10 @@ function PropertiesContent() {
   // Filter States
   const [selectedLocality, setSelectedLocality] = useState<string>(searchParams?.get('location') || 'All');
   const [selectedBhk, setSelectedBhk] = useState<string>(searchParams?.get('bhk') || 'All');
-  const [selectedType, setSelectedType] = useState<string>(searchParams?.get('type') || 'All');
-  const [selectedPossession, setSelectedPossession] = useState<string>(searchParams?.get('possession') || 'All');
+  const [selectedPossession, setSelectedPossession] = useState<string>(
+    searchParams?.get('status') || searchParams?.get('possession') || 'All'
+  );
+  const [minPrice, setMinPrice] = useState<number>(Number(searchParams?.get('minPrice')) || 10);
   const [maxPrice, setMaxPrice] = useState<number>(Number(searchParams?.get('maxPrice')) || 60);
   const [selectedAmenity, setSelectedAmenity] = useState<string>(searchParams?.get('amenity') || 'All');
   const [sortBy, setSortBy] = useState<string>(searchParams?.get('sort') || 'featured');
@@ -62,8 +64,8 @@ function PropertiesContent() {
     if (activeTab !== 'buy') params.set('tab', activeTab);
     if (selectedLocality !== 'All') params.set('location', selectedLocality);
     if (selectedBhk !== 'All') params.set('bhk', selectedBhk);
-    if (selectedType !== 'All') params.set('type', selectedType);
-    if (selectedPossession !== 'All') params.set('possession', selectedPossession);
+    if (selectedPossession !== 'All') params.set('status', selectedPossession);
+    if (minPrice > 10) params.set('minPrice', minPrice.toString());
     if (maxPrice < 60) params.set('maxPrice', maxPrice.toString());
     if (selectedAmenity !== 'All') params.set('amenity', selectedAmenity);
     if (sortBy !== 'featured') params.set('sort', sortBy);
@@ -71,13 +73,13 @@ function PropertiesContent() {
     const query = params.toString();
     const newPath = query ? `/properties?${query}` : '/properties';
     router.replace(newPath, { scroll: false });
-  }, [activeTab, selectedLocality, selectedBhk, selectedType, selectedPossession, maxPrice, selectedAmenity, sortBy, router]);
+  }, [activeTab, selectedLocality, selectedBhk, selectedPossession, minPrice, maxPrice, selectedAmenity, sortBy, router]);
 
   const resetFilters = () => {
     setSelectedLocality('All');
     setSelectedBhk('All');
-    setSelectedType('All');
     setSelectedPossession('All');
+    setMinPrice(10);
     setMaxPrice(60);
     setSelectedAmenity('All');
     setSortBy('featured');
@@ -109,9 +111,23 @@ function PropertiesContent() {
     let list = baseCategoryProperties.filter((p) => {
       if (selectedLocality !== 'All' && p.location !== selectedLocality) return false;
       if (selectedBhk !== 'All' && !p.bhk.includes(selectedBhk)) return false;
-      if (selectedType !== 'All' && p.propertyType !== selectedType) return false;
-      if (selectedPossession !== 'All' && p.possession !== selectedPossession) return false;
-      if (p.price > maxPrice) return false;
+      
+      // Construction status filter matching
+      if (selectedPossession !== 'All' && selectedPossession !== 'All Status') {
+        const filterLower = selectedPossession.toLowerCase();
+        const propPossLower = (p.possession || '').toLowerCase();
+        if (filterLower.includes('ready') || filterLower.includes('move') || filterLower === 'resale') {
+          if (!propPossLower.includes('ready') && !propPossLower.includes('immediate')) return false;
+        } else if (filterLower.includes('under') || filterLower.includes('construction')) {
+          if (!propPossLower.includes('under') && !propPossLower.includes('construction')) return false;
+        } else if (filterLower.includes('pre') || filterLower.includes('launch')) {
+          if (!propPossLower.includes('pre') && !propPossLower.includes('launch') && !p.isNewLaunch) return false;
+        } else if (!propPossLower.includes(filterLower)) {
+          return false;
+        }
+      }
+
+      if (p.price < minPrice || p.price > maxPrice) return false;
       if (selectedAmenity !== 'All' && !p.amenities.includes(selectedAmenity)) return false;
       return true;
     });
@@ -127,7 +143,7 @@ function PropertiesContent() {
     }
 
     return list;
-  }, [baseCategoryProperties, selectedLocality, selectedBhk, selectedType, selectedPossession, maxPrice, selectedAmenity, sortBy]);
+  }, [baseCategoryProperties, selectedLocality, selectedBhk, selectedPossession, minPrice, maxPrice, selectedAmenity, sortBy]);
 
   const allAmenities = [
     'All',
@@ -266,32 +282,7 @@ function PropertiesContent() {
           </button>
         </div>
 
-        {/* Tab Context Banner */}
-        {activeTab === 'new-launches' && (
-          <div className="mt-4 p-4 bg-[#393187]/10 border border-[#393187]/25 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#393187] animate-pulse shrink-0" />
-              <span className="font-semibold text-[#15181A]">
-                Pre-Launch EOI Window Open:
-              </span>
-              <span className="text-[#5B605F]">
-                Priority floor allocation, launch phase payment flexibilities &amp; MahaRERA approved milestones.
-              </span>
-            </div>
-            <a
-              href="#contact-eoi"
-              onClick={(e) => {
-                e.preventDefault();
-                const el = document.getElementById('contact');
-                if (el) el.scrollIntoView({ behavior: 'smooth' });
-                else router.push('/contact');
-              }}
-              className="text-[#393187] font-bold uppercase tracking-wider text-[11px] hover:underline shrink-0"
-            >
-              Register Pre-Launch EOI &rarr;
-            </a>
-          </div>
-        )}
+
 
 
       </div>
@@ -340,88 +331,111 @@ function PropertiesContent() {
               </select>
             </div>
 
-            {/* BHK Filter */}
+            {/* BHK Filter Dropdown */}
             <div>
               <label className="block text-xs uppercase tracking-wider font-semibold text-[#15181A] mb-2">
                 Configuration (BHK)
               </label>
-              <div className="grid grid-cols-4 gap-1.5">
-                {['All', '3', '4', '5'].map((bhk) => (
-                  <button
-                    key={bhk}
-                    onClick={() => setSelectedBhk(bhk)}
-                    className={`py-1.5 text-xs font-semibold border transition-colors cursor-pointer ${
-                      selectedBhk === bhk
-                        ? 'bg-[#C5282F] text-white border-[#C5282F]'
-                        : 'bg-[#EDEEE9] text-[#5B605F] border-[#CFD1CA] hover:bg-[#CFD1CA]'
-                    }`}
-                  >
-                    {bhk === 'All' ? 'All' : `${bhk} BHK`}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Property Type Filter */}
-            <div>
-              <label className="block text-xs uppercase tracking-wider font-semibold text-[#15181A] mb-2">
-                Property Type
-              </label>
               <select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
+                value={selectedBhk}
+                onChange={(e) => setSelectedBhk(e.target.value)}
                 className="w-full p-2.5 bg-[#EDEEE9] border border-[#CFD1CA] text-xs focus:outline-none focus:border-[#C5282F]"
               >
-                <option value="All">All Types</option>
-                <option value="Sea-Facing Apartment">Sea-Facing Apartment</option>
-                <option value="Penthouse">Penthouse</option>
-                <option value="Sky Villa">Sky Villa</option>
-                <option value="Duplex">Duplex</option>
-                <option value="Luxury Estate">Luxury Estate</option>
+                <option value="All">All Configurations</option>
+                <option value="3">3 BHK</option>
+                <option value="4">4 BHK</option>
+                <option value="5">5 BHK</option>
+                <option value="6">6+ BHK / Penthouse</option>
               </select>
             </div>
 
-            {/* Price Range Slider */}
+            {/* 2-Way Budget Slider */}
             <div>
-              <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center justify-between mb-3 font-sans">
                 <label className="text-xs uppercase tracking-wider font-semibold text-[#15181A]">
-                  Max Budget
+                  Budget Range
                 </label>
-                <span className="text-xs font-serif font-bold text-[#C5282F]">
-                  ₹{maxPrice} Cr
+                <span className="text-xs font-sans font-extrabold text-[#C5282F] tabular-nums tracking-wide">
+                  ₹{minPrice} Cr &ndash; {maxPrice >= 60 ? '₹60 Cr+' : `₹${maxPrice} Cr`}
                 </span>
               </div>
-              <input
-                type="range"
-                min="12"
-                max="60"
-                step="2"
-                value={maxPrice}
-                onChange={(e) => setMaxPrice(Number(e.target.value))}
-                className="w-full accent-[#C5282F] cursor-pointer"
-              />
-              <div className="flex justify-between text-[10px] text-[#5B605F] mt-1">
-                <span>₹12 Cr</span>
-                <span>₹60 Cr</span>
+
+              {/* Single 2-Way Slider Track with Dual Thumbs */}
+              <div className="relative w-full h-5 flex items-center">
+                {/* Gray Background Track */}
+                <div className="absolute w-full h-1.5 bg-[#CFD1CA] rounded-full" />
+
+                {/* Red Active Range Bar between min and max */}
+                <div
+                  className="absolute h-1.5 bg-[#C5282F] rounded-full pointer-events-none shadow-xs"
+                  style={{
+                    left: `${((minPrice - 10) / (60 - 10)) * 100}%`,
+                    width: `${((maxPrice - minPrice) / (60 - 10)) * 100}%`,
+                  }}
+                />
+
+                {/* Min Value Thumb Slider */}
+                <input
+                  type="range"
+                  min="10"
+                  max="60"
+                  step="2"
+                  value={minPrice}
+                  onChange={(e) => {
+                    const val = Math.min(Number(e.target.value), maxPrice - 2);
+                    setMinPrice(val);
+                  }}
+                  aria-label="Minimum Budget"
+                  className="absolute inset-0 w-full appearance-none bg-transparent pointer-events-none z-20 h-full m-0 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#C5282F] [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#C5282F] [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:cursor-pointer"
+                />
+
+                {/* Max Value Thumb Slider */}
+                <input
+                  type="range"
+                  min="10"
+                  max="60"
+                  step="2"
+                  value={maxPrice}
+                  onChange={(e) => {
+                    const val = Math.max(Number(e.target.value), minPrice + 2);
+                    setMaxPrice(val);
+                  }}
+                  aria-label="Maximum Budget"
+                  className="absolute inset-0 w-full appearance-none bg-transparent pointer-events-none z-30 h-full m-0 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#C5282F] [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#C5282F] [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:cursor-pointer"
+                />
+              </div>
+
+              <div className="flex justify-between items-center text-xs text-[#5B605F] mt-2 font-sans font-semibold tabular-nums">
+                <span>₹{minPrice} Cr</span>
+                <span>{maxPrice >= 60 ? '₹60 Cr+' : `₹${maxPrice} Cr`}</span>
               </div>
             </div>
 
-            {/* Possession Filter */}
+            {/* Construction Status Filter */}
             <div>
               <label className="block text-xs uppercase tracking-wider font-semibold text-[#15181A] mb-2">
-                Possession Timeline
+                Construction Status
               </label>
               <div className="space-y-1.5 text-xs text-[#15181A]">
-                {['All', 'Ready to Move', 'Under Construction', 'Pre-Launch'].map((pos) => (
-                  <label key={pos} className="flex items-center gap-2 cursor-pointer">
+                {[
+                  { label: 'All Status', val: 'All' },
+                  { label: 'Ready to Move In / Resale', val: 'Ready to Move' },
+                  { label: 'Under Construction', val: 'Under Construction' },
+                  { label: 'Pre-Launch / New Launch', val: 'Pre-Launch' },
+                ].map((item) => (
+                  <label key={item.val} className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="radio"
-                      name="possession"
-                      checked={selectedPossession === pos}
-                      onChange={() => setSelectedPossession(pos)}
+                      name="constructionStatus"
+                      checked={
+                        selectedPossession === item.val ||
+                        (item.val === 'Ready to Move' && (selectedPossession === 'Resale' || selectedPossession === 'Ready to Move In')) ||
+                        (item.val === 'Pre-Launch' && (selectedPossession === 'New Launch' || selectedPossession === 'Pre Launch'))
+                      }
+                      onChange={() => setSelectedPossession(item.val)}
                       className="accent-[#C5282F]"
                     />
-                    <span>{pos === 'All' ? 'Any Possession' : pos}</span>
+                    <span>{item.label}</span>
                   </label>
                 ))}
               </div>
@@ -482,39 +496,94 @@ function PropertiesContent() {
 
               <div>
                 <label className="block text-xs uppercase tracking-wider font-semibold mb-2">
-                  BHK
+                  Configuration (BHK)
                 </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {['All', '3', '4', '5'].map((bhk) => (
-                    <button
-                      key={bhk}
-                      onClick={() => setSelectedBhk(bhk)}
-                      className={`py-2 text-xs font-semibold border ${
-                        selectedBhk === bhk
-                          ? 'bg-[#C5282F] text-white border-[#C5282F]'
-                          : 'bg-[#F7F7F4] border-[#CFD1CA]'
-                      }`}
-                    >
-                      {bhk === 'All' ? 'All' : `${bhk} BHK`}
-                    </button>
-                  ))}
+                <select
+                  value={selectedBhk}
+                  onChange={(e) => setSelectedBhk(e.target.value)}
+                  className="w-full p-2.5 bg-[#F7F7F4] border border-[#CFD1CA] text-xs"
+                >
+                  <option value="All">All Configurations</option>
+                  <option value="3">3 BHK</option>
+                  <option value="4">4 BHK</option>
+                  <option value="5">5 BHK</option>
+                  <option value="6">6+ BHK / Penthouse</option>
+                </select>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-xs mb-3 font-sans">
+                  <span className="font-semibold">Budget Range</span>
+                  <span className="text-[#C5282F] font-bold tabular-nums">
+                    ₹{minPrice} Cr &ndash; {maxPrice >= 60 ? '₹60 Cr+' : `₹${maxPrice} Cr`}
+                  </span>
+                </div>
+
+                {/* Single 2-Way Slider Track with Dual Thumbs */}
+                <div className="relative w-full h-5 flex items-center">
+                  {/* Gray Background Track */}
+                  <div className="absolute w-full h-1.5 bg-[#CFD1CA] rounded-full" />
+
+                  {/* Red Active Range Bar between min and max */}
+                  <div
+                    className="absolute h-1.5 bg-[#C5282F] rounded-full pointer-events-none shadow-xs"
+                    style={{
+                      left: `${((minPrice - 10) / (60 - 10)) * 100}%`,
+                      width: `${((maxPrice - minPrice) / (60 - 10)) * 100}%`,
+                    }}
+                  />
+
+                  {/* Min Value Thumb Slider */}
+                  <input
+                    type="range"
+                    min="10"
+                    max="60"
+                    step="2"
+                    value={minPrice}
+                    onChange={(e) => {
+                      const val = Math.min(Number(e.target.value), maxPrice - 2);
+                      setMinPrice(val);
+                    }}
+                    aria-label="Minimum Budget"
+                    className="absolute inset-0 w-full appearance-none bg-transparent pointer-events-none z-20 h-full m-0 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#C5282F] [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#C5282F] [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:cursor-pointer"
+                  />
+
+                  {/* Max Value Thumb Slider */}
+                  <input
+                    type="range"
+                    min="10"
+                    max="60"
+                    step="2"
+                    value={maxPrice}
+                    onChange={(e) => {
+                      const val = Math.max(Number(e.target.value), minPrice + 2);
+                      setMaxPrice(val);
+                    }}
+                    aria-label="Maximum Budget"
+                    className="absolute inset-0 w-full appearance-none bg-transparent pointer-events-none z-30 h-full m-0 [&::-webkit-slider-thumb]:pointer-events-auto [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#C5282F] [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:cursor-pointer [&::-webkit-slider-thumb]:shadow-md [&::-moz-range-thumb]:pointer-events-auto [&::-moz-range-thumb]:appearance-none [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-[#C5282F] [&::-moz-range-thumb]:border-2 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:cursor-pointer"
+                  />
+                </div>
+
+                <div className="flex justify-between items-center text-xs text-[#5B605F] mt-2 font-sans font-semibold tabular-nums">
+                  <span>₹{minPrice} Cr</span>
+                  <span>{maxPrice >= 60 ? '₹60 Cr+' : `₹${maxPrice} Cr`}</span>
                 </div>
               </div>
 
               <div>
-                <div className="flex justify-between text-xs mb-1">
-                  <span className="font-semibold">Max Price</span>
-                  <span className="text-[#C5282F] font-bold font-serif">₹{maxPrice} Cr</span>
-                </div>
-                <input
-                  type="range"
-                  min="12"
-                  max="60"
-                  step="2"
-                  value={maxPrice}
-                  onChange={(e) => setMaxPrice(Number(e.target.value))}
-                  className="w-full accent-[#C5282F]"
-                />
+                <label className="block text-xs uppercase tracking-wider font-semibold mb-2">
+                  Construction Status
+                </label>
+                <select
+                  value={selectedPossession}
+                  onChange={(e) => setSelectedPossession(e.target.value)}
+                  className="w-full p-2.5 bg-[#F7F7F4] border border-[#CFD1CA] text-xs"
+                >
+                  <option value="All">All Status</option>
+                  <option value="Ready to Move">Ready to Move / Resale</option>
+                  <option value="Under Construction">Under Construction</option>
+                  <option value="Pre-Launch">Pre-Launch / New Launch</option>
+                </select>
               </div>
 
               <div className="pt-4 flex gap-3">

@@ -187,7 +187,7 @@ export function PrivateOpportunities({ minimal = true }: PrivateOpportunitiesPro
                   <form onSubmit={handleVerifyOtp} className="space-y-4">
                     <div className="bg-[#EDEEE9]/60 p-3 border border-[#CFD1CA] mb-2 text-xs">
                       <p className="text-[#15181A] font-medium">Enter OTP sent to +91 {phone}</p>
-                      <p className="text-[11px] text-[#C5282F] font-mono mt-0.5">Demo OTP: 4821</p>
+                      <p className="text-[11px] text-[#C5282F] font-sans font-bold mt-0.5">Demo OTP: 4821</p>
                     </div>
 
                     <div>
@@ -201,7 +201,7 @@ export function PrivateOpportunities({ minimal = true }: PrivateOpportunitiesPro
                         value={otpCode}
                         onChange={(e) => setOtpCode(e.target.value)}
                         placeholder="4821"
-                        className="w-full px-3.5 py-2.5 bg-white border border-[#CFD1CA] focus:border-[#C5282F] focus:outline-none text-base tracking-[0.3em] font-mono text-center text-[#15181A]"
+                        className="w-full px-3.5 py-2.5 bg-white border border-[#CFD1CA] focus:border-[#C5282F] focus:outline-none text-base tracking-[0.3em] font-sans font-bold tabular-nums text-center text-[#15181A]"
                       />
                     </div>
 

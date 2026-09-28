@@ -5,8 +5,6 @@ import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin, ArrowLeft, ArrowRight, ShieldCheck, Building2, TrendingUp, Phone, Mail } from 'lucide-react';
-import { Navbar } from '@/components/layout/Navbar';
-import { Footer } from '@/components/layout/Footer';
 import { PropertyCard } from '@/components/property/PropertyCard';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { PROPERTIES } from '@/data/properties';
@@ -73,6 +71,66 @@ const LOCATION_DATA: Record<string, LocationInfo> = {
     lifestyle: 'Old Bombay Heritage, Back Bay Panoramas, Diplomatic Enclaves',
     keyEnclaves: ['Walkeshwar Road', 'Ridge Road', 'Nepeansea Road', 'Carmichael Road'],
   },
+  prabhadevi: {
+    name: 'Prabhadevi',
+    slug: 'prabhadevi',
+    tagline: 'Refined Coastal Grandeur Near Siddhivinayak',
+    description:
+      'A prestigious South Mumbai beachfront and skyline enclave offering seamless Sea Link connectivity, tranquil residential avenues, and unobstructed sunsets.',
+    coverImage: '/properties/prabhadevi-verve/cover.jpg',
+    priceRange: '₹18 Cr - ₹55 Cr+',
+    averageRate: '₹62,000 - ₹1,05,000 / sq.ft',
+    lifestyle: 'Beachfront Promenade, Temple Heritage, High-Rise Penthouses',
+    keyEnclaves: ['Siddhivinayak Horizon', 'Kirti College Seafront', 'Sayani Road High-Rises'],
+  },
+  'lower-parel': {
+    name: 'Lower Parel',
+    slug: 'lower-parel',
+    tagline: 'Midtown High-Rise Sky Suites & Financial District',
+    description:
+      'Mumbai’s premier corporate corridor and luxury vertical community. Home to world-class dining, luxury retail gallerias, and multi-acre integrated residential estates.',
+    coverImage: '/properties/lower-parel-pavilion/cover.jpg',
+    priceRange: '₹12 Cr - ₹45 Cr+',
+    averageRate: '₹55,000 - ₹95,000 / sq.ft',
+    lifestyle: 'Vertical Cities, Luxury Mall Access, High-Speed Financial Hub',
+    keyEnclaves: ['Senapati Bapat Marg', 'Curry Road Avenue', 'Delisle Road Enclaves'],
+  },
+  powai: {
+    name: 'Powai',
+    slug: 'powai',
+    tagline: 'Lakeside Sanctuary & Modern Architectural Boulevard',
+    description:
+      'Mumbai’s prime neoclassical sanctuary. Lush hillside panoramic views, Powai Lake shorelines, elite international schooling, and gated condominium estates.',
+    coverImage: '/properties/powai-lake/cover.jpg',
+    priceRange: '₹8 Cr - ₹25 Cr+',
+    averageRate: '₹38,000 - ₹65,000 / sq.ft',
+    lifestyle: 'Lakefront Jogging, Neoclassical Promenades, Tech Executive Estates',
+    keyEnclaves: ['Hiranandani Gardens', 'Powai Lake Promenade', 'Cliff Avenue'],
+  },
+  sewri: {
+    name: 'Sewri',
+    slug: 'sewri',
+    tagline: 'Eastern Waterfront Gateway Facing Atal Setu',
+    description:
+      'The focal point of Mumbai’s eastern bay transformation. Direct Atal Setu (MTHL) transit, expansive mangrove bird sanctuaries, and massive high-rise capital appreciation.',
+    coverImage: '/hero/hero-3-crisp.jpg',
+    priceRange: '₹10 Cr - ₹28 Cr+',
+    averageRate: '₹40,000 - ₹70,000 / sq.ft',
+    lifestyle: 'MTHL Connectivity, Harbor Views, Flamingo Sanctuary Panoramas',
+    keyEnclaves: ['Sewri Seafront Promenade', 'Eastern Bay Corridor', 'Port Trust Bay'],
+  },
+  'cuffe-parade': {
+    name: 'Cuffe Parade',
+    slug: 'cuffe-parade',
+    tagline: 'Exclusive Southern Promontory & Diplomatic Heritage',
+    description:
+      'The southern tip of Mumbai’s legacy luxury district. Waterfront high-rises, diplomatic consulates, world trade towers, and timeless Colaba proximity.',
+    coverImage: '/hero/hero-2-crisp.jpg',
+    priceRange: '₹22 Cr - ₹85 Cr+',
+    averageRate: '₹75,000 - ₹1,40,000 / sq.ft',
+    lifestyle: 'Yacht Club Proximity, Diplomatic Corridors, Coastal Skyline',
+    keyEnclaves: ['Prakash Pethe Marg', 'Cuffe Parade Promontory', 'Captain Prakash Pethe Marg'],
+  },
 };
 
 // Fallback mock properties if location doesn't have enough matching seed items
@@ -129,6 +187,266 @@ const MOCK_LOCATION_FALLBACKS: Record<string, Partial<Property>[]> = {
       coordinates: { lat: 19.005, lng: 72.818 },
     },
   ],
+  prabhadevi: [
+    {
+      id: 'mock-prabhadevi-1',
+      slug: 'verve-belvedere-prabhadevi',
+      title: 'Verve Belvedere',
+      tagline: 'Refined Coastal Grandeur Near Siddhivinayak',
+      location: 'Prabhadevi',
+      subLocation: 'Prabhadevi Seafront, South Mumbai',
+      price: 21.8,
+      priceFormatted: '₹21.80 Cr',
+      bhk: '3 BHK',
+      carpetArea: 2600,
+      superArea: 3400,
+      propertyType: 'Sea-Facing Apartment',
+      possession: 'Ready to Move',
+      floor: '28th Floor of 40',
+      featured: true,
+      recentlyAdded: true,
+      recommended: true,
+      coverImage: '/properties/prabhadevi-verve/cover.jpg',
+      images: ['/properties/prabhadevi-verve/cover.jpg', '/hero/hero-2-crisp.jpg'],
+      amenities: ['State-of-the-Art Gymnasium', 'Yoga Pavilion', 'Private Elevators', 'Lush Podium Gardens'],
+      description: 'Perfect harmony between cultural heritage and ultra-modern coastal architecture.',
+      highlights: ['Unbroken view of Sea Link', 'LEED Platinum Certified', 'Vastu-compliant'],
+      coordinates: { lat: 19.0166, lng: 72.8295 },
+    },
+    {
+      id: 'mock-prabhadevi-2',
+      slug: 'prabhadevi-ocean-heights',
+      title: 'Ocean Heights Signature Residence',
+      tagline: 'Direct Seafront Promenade Living in South Mumbai',
+      location: 'Prabhadevi',
+      subLocation: 'Kirti College Seafront, Prabhadevi',
+      price: 28.5,
+      priceFormatted: '₹28.50 Cr',
+      bhk: '4 BHK',
+      carpetArea: 3250,
+      superArea: 4100,
+      propertyType: 'Penthouse',
+      possession: 'Ready to Move',
+      floor: '35th Floor of 45',
+      featured: true,
+      recentlyAdded: false,
+      recommended: true,
+      coverImage: '/hero/hero-2-crisp.jpg',
+      images: ['/hero/hero-2-crisp.jpg', '/properties/prabhadevi-verve/cover.jpg'],
+      amenities: ['Private Plunge Pool', 'Double-Height Foyer', 'Concierge Service', '4 Car Bays'],
+      description: 'A masterpiece on the Prabhadevi coastline with uninterrupted Arabian Sea horizon.',
+      highlights: ['Panoramic sea deck', 'Bespoke Italian finishes', 'Private lift lobby'],
+      coordinates: { lat: 19.017, lng: 72.828 },
+    },
+  ],
+  'lower-parel': [
+    {
+      id: 'mock-lp-1',
+      slug: 'the-pavilion-sky-villas-lower-parel',
+      title: 'The Pavilion Sky Villas',
+      tagline: 'Modern Opulence Above Mumbai’s Corporate & Lifestyle Epicenter',
+      location: 'Lower Parel',
+      subLocation: 'Senapati Bapat Marg, Lower Parel',
+      price: 19.5,
+      priceFormatted: '₹19.50 Cr',
+      bhk: '4 BHK',
+      carpetArea: 2900,
+      superArea: 3750,
+      propertyType: 'Sky Villa',
+      possession: 'Ready to Move',
+      floor: '55th Floor of 70',
+      featured: true,
+      recentlyAdded: true,
+      recommended: true,
+      coverImage: '/properties/lower-parel-pavilion/cover.jpg',
+      images: ['/properties/lower-parel-pavilion/cover.jpg', '/hero/hero-1-crisp.jpg'],
+      amenities: ['Olympic Heated Pool', 'Screening Theatre', 'Squash Court', 'Helipad Access'],
+      description: 'Rising grandly above Lower Parel, this sky villa commands breathtaking day-and-night skyline vistas.',
+      highlights: ['Floor-to-ceiling glass curtain walls', 'Dedicated lifestyle concierge', 'Zero common walls'],
+      coordinates: { lat: 18.9986, lng: 72.8315 },
+    },
+    {
+      id: 'mock-lp-2',
+      slug: 'lower-parel-grand-horizon',
+      title: 'Grand Horizon Residences',
+      tagline: 'Integrated Luxury Living in Central Mumbai’s Financial Hub',
+      location: 'Lower Parel',
+      subLocation: 'Curry Road Avenue, Lower Parel',
+      price: 15.75,
+      priceFormatted: '₹15.75 Cr',
+      bhk: '3 BHK',
+      carpetArea: 2200,
+      superArea: 2900,
+      propertyType: 'Sky Villa',
+      possession: 'Ready to Move',
+      floor: '41st Floor of 60',
+      featured: false,
+      recentlyAdded: true,
+      recommended: true,
+      coverImage: '/hero/hero-3-crisp.jpg',
+      images: ['/hero/hero-3-crisp.jpg', '/properties/lower-parel-pavilion/cover.jpg'],
+      amenities: ['Clubhouse & Spa', 'Valet Parking', 'Childrens Play Arena', 'Business Center'],
+      description: 'Effortless luxury in the heart of Mumbai midtown, adjacent to premier Michelin dining and high-street shopping.',
+      highlights: ['Central connectivity', 'Double-height sundeck', 'Multi-tier biometric security'],
+      coordinates: { lat: 18.995, lng: 72.83 },
+    },
+  ],
+  powai: [
+    {
+      id: 'mock-powai-1',
+      slug: 'lake-panache-estates-powai',
+      title: 'The Panache Sky Suites',
+      tagline: 'Tranquil Urban Luxury Overlooking Powai Lake',
+      location: 'Powai',
+      subLocation: 'Hiranandani Gardens, Powai',
+      price: 14.5,
+      priceFormatted: '₹14.50 Cr',
+      bhk: '4 BHK',
+      carpetArea: 2800,
+      superArea: 3600,
+      propertyType: 'Duplex',
+      possession: 'Ready to Move',
+      floor: '22nd & 23rd Duplex',
+      featured: true,
+      recentlyAdded: true,
+      recommended: true,
+      coverImage: '/properties/powai-lake/cover.jpg',
+      images: ['/properties/powai-lake/cover.jpg', '/hero/hero-3-crisp.jpg'],
+      amenities: ['Lakeview Terrace', 'Private Spa Suite', 'Biophilic Atrium', 'Tennis Academy Access'],
+      description: 'A bespoke double-storey duplex overlooking serene waters of Powai Lake and forested hill slopes.',
+      highlights: ['Direct lakefront promenade views', 'Double-height cathedral ceilings', 'Minutes from Powai business centers'],
+      coordinates: { lat: 19.1176, lng: 72.906 },
+    },
+    {
+      id: 'mock-powai-2',
+      slug: 'powai-cliff-sanctuary',
+      title: 'Cliffside Sovereign Residences',
+      tagline: 'Neoclassical Lakefront Mansions with Hillside Horizons',
+      location: 'Powai',
+      subLocation: 'Cliff Avenue, Powai',
+      price: 11.2,
+      priceFormatted: '₹11.20 Cr',
+      bhk: '3 BHK',
+      carpetArea: 2150,
+      superArea: 2850,
+      propertyType: 'Luxury Estate',
+      possession: 'Ready to Move',
+      floor: '18th Floor of 30',
+      featured: false,
+      recentlyAdded: true,
+      recommended: true,
+      coverImage: '/hero/hero-1-crisp.jpg',
+      images: ['/hero/hero-1-crisp.jpg', '/properties/powai-lake/cover.jpg'],
+      amenities: ['Infinity Lake View Pool', 'Private Forest Trails', 'Club Royale', 'Automated EV Bays'],
+      description: 'Lush greenery meets classical European stone architecture in Powai’s most prestigious elevated sector.',
+      highlights: ['Unobstructed lake panorama', 'Lush biodiversity surrounds', 'Close to top international schools'],
+      coordinates: { lat: 19.12, lng: 72.91 },
+    },
+  ],
+  sewri: [
+    {
+      id: 'mock-sewri-1',
+      slug: 'one-bayview-towers-sewri',
+      title: 'One Bayview Promenade',
+      tagline: 'Upcoming Coastal Tower Connected to Atal Setu (MTHL)',
+      location: 'Sewri',
+      subLocation: 'Marine Bay Corridor, Sewri',
+      price: 12.8,
+      priceFormatted: '₹12.80 Cr',
+      bhk: '3 BHK',
+      carpetArea: 1950,
+      superArea: 2550,
+      propertyType: 'Sea-Facing Apartment',
+      possession: 'Pre-Launch',
+      floor: 'Choice of High-Rise Floors',
+      featured: true,
+      recentlyAdded: true,
+      recommended: true,
+      coverImage: '/hero/hero-3-crisp.jpg',
+      images: ['/hero/hero-3-crisp.jpg', '/properties/lower-parel-pavilion/cover.jpg'],
+      amenities: ['Flamingo Bay Panoramas', 'Direct Atal Setu Expressway Ramp', '50,000 sq.ft Podium Club'],
+      description: 'Poised to become the eastern coastal icon of South-Central Mumbai with panoramic sea and flamingo sanctuary vistas.',
+      highlights: ['Pre-launch priority pricing', 'High-capital-appreciation corridor', 'Direct connector to Navi Mumbai'],
+      coordinates: { lat: 19.001, lng: 72.855 },
+    },
+    {
+      id: 'mock-sewri-2',
+      slug: 'sewri-harbor-crest',
+      title: 'Harbor Crest Sky Residences',
+      tagline: 'Front-Line Eastern Seaboard Sunrise Penthouses',
+      location: 'Sewri',
+      subLocation: 'Eastern Bay Promenade, Sewri',
+      price: 16.5,
+      priceFormatted: '₹16.50 Cr',
+      bhk: '4 BHK',
+      carpetArea: 2700,
+      superArea: 3500,
+      propertyType: 'Sky Villa',
+      possession: 'Under Construction',
+      floor: '32nd Floor of 48',
+      featured: false,
+      recentlyAdded: true,
+      recommended: true,
+      coverImage: '/properties/worli-aurum/cover.jpg',
+      images: ['/properties/worli-aurum/cover.jpg', '/hero/hero-3-crisp.jpg'],
+      amenities: ['Bay-Facing Decks', 'Private Elevators', 'Rooftop Sky Lounge', 'Concierge & Valet'],
+      description: 'Unbroken panoramic sunrise vistas over Mumbai harbor and the engineering marvel of Atal Setu.',
+      highlights: ['Front-line harbor vistas', 'High speed city connectivity', 'Luxury clubhouse'],
+      coordinates: { lat: 19.003, lng: 72.857 },
+    },
+  ],
+  'cuffe-parade': [
+    {
+      id: 'mock-cp-1',
+      slug: 'cuffe-parade-regalia',
+      title: 'Cuffe Parade Regalia',
+      tagline: 'Colaba Waterfront Haven with Arabian Sea Horizon',
+      location: 'Cuffe Parade',
+      subLocation: 'Cuffe Parade, South Mumbai',
+      price: 36.0,
+      priceFormatted: '₹36.00 Cr',
+      bhk: '4 BHK',
+      carpetArea: 3500,
+      superArea: 4400,
+      propertyType: 'Sea-Facing Apartment',
+      possession: 'Ready to Move',
+      floor: '31st Floor of 36',
+      featured: true,
+      recentlyAdded: false,
+      recommended: true,
+      coverImage: '/hero/hero-2-crisp.jpg',
+      images: ['/hero/hero-2-crisp.jpg', '/properties/bandra-palisades/cover.jpg'],
+      amenities: ['Deep Sea Facing Balconies', 'Private Foyer Elevators', 'Indoor Temperature Pool', 'Diplomatic Security Desk'],
+      description: 'Commanding front-line sea frontage at the southern tip of Mumbai with maritime architecture and sunset views.',
+      highlights: ['Front-line Arabian Sea frontage', 'Walkable to Colaba clubs', 'Ultra-low density community'],
+      coordinates: { lat: 18.91, lng: 72.82 },
+    },
+    {
+      id: 'mock-cp-2',
+      slug: 'cuffe-promontory-penthouse',
+      title: 'The Southern Promontory Penthouse',
+      tagline: 'Diplomatic Enclave Trophy Penthouse Overlooking Harbor & Ocean',
+      location: 'Cuffe Parade',
+      subLocation: 'Captain Prakash Pethe Marg, Cuffe Parade',
+      price: 48.0,
+      priceFormatted: '₹48.00 Cr',
+      bhk: '5 BHK',
+      carpetArea: 4800,
+      superArea: 6200,
+      propertyType: 'Penthouse',
+      possession: 'Ready to Move',
+      floor: '34th Floor Signature Duplex',
+      featured: true,
+      recentlyAdded: true,
+      recommended: true,
+      coverImage: '/properties/worli-aurum/cover.jpg',
+      images: ['/properties/worli-aurum/cover.jpg', '/hero/hero-2-crisp.jpg'],
+      amenities: ['Private Rooftop Helipad Transfer', 'Private Heated Pool', 'Wine Cellar', '6 Car Reserved Parking'],
+      description: 'One of South Mumbai’s most exclusive private addresses, offering generational prestige and 360-degree ocean views.',
+      highlights: ['360-degree ocean & harbor vistas', 'Private rooftop observatory', 'Diplomatic security'],
+      coordinates: { lat: 18.908, lng: 72.822 },
+    },
+  ],
 };
 
 export default function LocationPropertiesPage() {
@@ -162,17 +480,20 @@ export default function LocationPropertiesPage() {
       return pLoc.includes(target) || pSub.includes(target) || target.includes(pLoc);
     });
 
-    if (matched.length > 0) return matched;
+    const fallbacks = (MOCK_LOCATION_FALLBACKS[slug] || []) as Property[];
+    const combined = [...matched];
+    for (const fb of fallbacks) {
+      if (!combined.some((item) => item.id === fb.id || item.slug === fb.slug)) {
+        combined.push(fb as Property);
+      }
+    }
 
-    // Use mock fallback if none matched
-    const fallbacks = (MOCK_LOCATION_FALLBACKS[slug] || MOCK_LOCATION_FALLBACKS.worli) as Property[];
-    return fallbacks;
+    if (combined.length > 0) return combined;
+    return (MOCK_LOCATION_FALLBACKS.worli || []) as Property[];
   }, [location, slug]);
 
   return (
     <div className="w-full min-h-screen bg-[#EDEEE9] text-[#15181A] pt-24">
-      <Navbar />
-
       {/* Hero Banner for Location */}
       <section className="relative bg-[#15181A] text-white py-16 sm:py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="absolute inset-0 opacity-25">
@@ -295,19 +616,7 @@ export default function LocationPropertiesPage() {
             ))}
           </div>
         </div>
-
-        {/* Future Pipeline Note */}
-        <div className="mt-8 py-4 px-6 bg-[#F7F7F4] border border-[#CFD1CA] flex items-center gap-2 text-xs">
-          <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-[#C5282F]">
-            FUTURE LOCATIONS :
-          </span>
-          <span className="text-[#5B605F] font-medium">
-            Sewri, Lower Parel, Prabhadevi, Powai, Cuffe Parade and upcoming enclaves
-          </span>
-        </div>
       </section>
-
-      <Footer />
     </div>
   );
 }
