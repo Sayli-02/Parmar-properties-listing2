@@ -40,24 +40,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
           </div>
         )}
 
-        {/* Top Badges */}
-        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 z-10">
-          {property.isNewLaunch && property.propertyType !== 'Sea-Facing Apartment' && (
-            <span className="px-2.5 py-1 text-[10px] uppercase tracking-[0.15em] font-bold bg-[#393187] text-white">
-              {property.launchPhase || 'New Launch'}
-            </span>
-          )}
-          {property.isLuxuryCollection && property.propertyType !== 'Sea-Facing Apartment' && (
-            <span className="px-2.5 py-1 text-[10px] uppercase tracking-[0.15em] font-bold bg-[#A37B30] text-white">
-              Luxury Collection
-            </span>
-          )}
-          {property.featured && !property.isLuxuryCollection && !property.isNewLaunch && property.propertyType !== 'Sea-Facing Apartment' && (
-            <span className="px-2.5 py-1 text-[10px] uppercase tracking-[0.15em] font-medium bg-[#C5282F] text-white">
-              Prime
-            </span>
-          )}
-        </div>
+
 
         {/* Bottom Left Price Badge - Increased size and prominence */}
         <div className="absolute bottom-0 left-0 bg-[#15181A] text-white px-4 py-2 sm:px-5 sm:py-2.5 z-10 shadow-lg">

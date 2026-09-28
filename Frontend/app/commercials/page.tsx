@@ -38,12 +38,7 @@ function CommercialCard({ property }: { property: CommercialProperty }) {
           className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
         />
 
-        {/* Top Badges */}
-        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5 z-10">
-          <span className="px-2.5 py-1 text-[10px] uppercase tracking-[0.15em] font-bold bg-[#C5282F] text-white">
-            Grade-A
-          </span>
-        </div>
+
 
         {/* Price Badge */}
         <div className="absolute bottom-0 left-0 bg-[#15181A] text-white px-3.5 py-1.5 z-10">
