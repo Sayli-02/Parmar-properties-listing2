@@ -51,28 +51,67 @@ async function attachRelations(
   const propertyIds = [
     ...new Set(leads.map((lead) => lead.property_id).filter(Boolean)),
   ] as string[];
+  const commercialIds = [
+    ...new Set(leads.map((lead) => lead.commercial_id).filter(Boolean)),
+  ] as string[];
+  const articleIds = [
+    ...new Set(leads.map((lead) => lead.article_id).filter(Boolean)),
+  ] as string[];
   const advisorIds = [
     ...new Set(leads.map((lead) => lead.assigned_to).filter(Boolean)),
   ] as string[];
 
-  const [sources, statuses, properties, advisors] = await Promise.all([
-    listLeadSources(),
-    listLeadStatuses(),
-    propertyIds.length > 0
-      ? supabase.from("properties").select("id, name, slug").in("id", propertyIds)
-      : Promise.resolve({ data: [], error: null }),
-    advisorIds.length > 0
-      ? supabase.from("profiles").select("id, full_name, email").in("id", advisorIds)
-      : Promise.resolve({ data: [], error: null }),
-  ]);
+  const [sources, statuses, properties, commercials, articles, advisors] =
+    await Promise.all([
+      listLeadSources(),
+      listLeadStatuses(),
+      propertyIds.length > 0
+        ? supabase
+            .from("properties")
+            .select("id, name, slug, title")
+            .in("id", propertyIds)
+        : Promise.resolve({ data: [], error: null }),
+      commercialIds.length > 0
+        ? supabase
+            .from("commercial_properties")
+            .select("id, title, slug")
+            .in("id", commercialIds)
+        : Promise.resolve({ data: [], error: null }),
+      articleIds.length > 0
+        ? supabase
+            .from("insights_articles")
+            .select("id, title, slug")
+            .in("id", articleIds)
+        : Promise.resolve({ data: [], error: null }),
+      advisorIds.length > 0
+        ? supabase
+            .from("profiles")
+            .select("id, full_name, email")
+            .in("id", advisorIds)
+        : Promise.resolve({ data: [], error: null }),
+    ]);
 
   const sourceById = new Map(sources.map((row) => [row.id, row]));
   const statusById = new Map(statuses.map((row) => [row.id, row]));
   const propertyById = new Map(
     ((properties.data ?? []) as unknown as Pick<
       Property,
-      "id" | "name" | "slug"
+      "id" | "name" | "slug" | "title"
     >[]).map((row) => [row.id, row])
+  );
+  const commercialById = new Map(
+    ((commercials.data ?? []) as unknown as {
+      id: string;
+      title: string;
+      slug: string;
+    }[]).map((row) => [row.id, row])
+  );
+  const articleById = new Map(
+    ((articles.data ?? []) as unknown as {
+      id: string;
+      title: string;
+      slug: string;
+    }[]).map((row) => [row.id, row])
   );
   const advisorById = new Map(
     ((advisors.data ?? []) as unknown as Pick<
@@ -87,6 +126,12 @@ async function attachRelations(
     status: lead.status_id ? statusById.get(lead.status_id) ?? null : null,
     property: lead.property_id
       ? propertyById.get(lead.property_id) ?? null
+      : null,
+    commercial: lead.commercial_id
+      ? commercialById.get(lead.commercial_id) ?? null
+      : null,
+    article: lead.article_id
+      ? articleById.get(lead.article_id) ?? null
       : null,
     assignee: lead.assigned_to ? advisorById.get(lead.assigned_to) ?? null : null,
   }));

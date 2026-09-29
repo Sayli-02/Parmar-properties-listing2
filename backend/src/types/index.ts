@@ -162,6 +162,8 @@ export interface Property extends AuditFields {
   recently_added: boolean;
   is_recommended: boolean;
   is_new_launch: boolean;
+  /** Editorial Luxury Collection inclusion (also derived from price ≥ ₹25 Cr). */
+  is_luxury_collection: boolean;
   launch_phase_id: string | null;
   cover_image: string | null;
   rera_id: string | null;
@@ -260,6 +262,23 @@ export interface PropertyConfiguration {
   updated_at: string;
 }
 
+/**
+ * Cost-sheet line for a master matrix typology
+ * (`property_configuration_price_breakdowns`).
+ */
+export interface PropertyConfigurationPriceBreakdown extends AuditFields {
+  id: string;
+  configuration_id: string;
+  label: string;
+  amount: number;
+  display_order: number;
+}
+
+export interface PropertyConfigurationWithBreakdowns
+  extends PropertyConfiguration {
+  price_breakdowns?: PropertyConfigurationPriceBreakdown[];
+}
+
 export interface InventoryUnit extends AuditFields {
   id: string;
   property_id: string;
@@ -294,6 +313,8 @@ export interface Lead {
   source_id: string;
   status_id: string | null;
   property_id: string | null;
+  commercial_id: string | null;
+  article_id: string | null;
   asset_class: string | null;
   budget_range: string | null;
   message: string | null;
@@ -307,7 +328,9 @@ export interface Lead {
 export interface LeadWithRelations extends Lead {
   source?: LookupItem | null;
   status?: LookupItem | null;
-  property?: Pick<Property, "id" | "name" | "slug"> | null;
+  property?: Pick<Property, "id" | "name" | "slug" | "title"> | null;
+  commercial?: Pick<CommercialProperty, "id" | "title" | "slug"> | null;
+  article?: Pick<InsightsArticle, "id" | "title" | "slug"> | null;
   assignee?: Pick<Profile, "id" | "full_name" | "email"> | null;
 }
 
@@ -369,6 +392,108 @@ export interface SiteBranding {
   meta_desc: string;
   social_links: Record<string, string>;
   updated_at: string;
+}
+
+/** `page_content` — one row per public route (MASTER_BACKEND_SPEC §B). */
+export interface PageContent {
+  id: string;
+  title: string;
+  subtitle: string | null;
+  breadcrumb: string | null;
+  badge: string | null;
+  meta_title: string;
+  meta_description: string;
+  sections_data: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+  updated_by?: string | null;
+}
+
+/** Commercial catalog (`commercial_properties`, MASTER_BACKEND_SPEC §C.5). */
+export interface CommercialProperty extends AuditFields {
+  id: string;
+  slug: string;
+  title: string;
+  tagline: string;
+  hub_id: string;
+  sub_location: string;
+  price: number;
+  carpet_area: number;
+  commercial_type_id: string;
+  floor: string;
+  possession: string;
+  grade_id: string | null;
+  cover_image: string;
+  rera_id: string;
+  description: string;
+  highlights: string[];
+  status: PublicationStatus;
+  sort_order: number;
+  meta_title: string | null;
+  meta_description: string | null;
+}
+
+export interface CommercialPropertyWithRelations extends CommercialProperty {
+  hub?: LookupItem | null;
+  commercial_type?: LookupItem | null;
+  grade?: LookupItem | null;
+}
+
+export interface CommercialFilters {
+  search?: string;
+  status?: PublicationStatus | "";
+  hub_id?: string;
+  sort?: "newest" | "oldest" | "title" | "price" | "updated";
+  page?: number;
+  pageSize?: number;
+}
+
+/** Market Intelligence articles (`insights_articles`, §C.7). */
+export interface InsightsArticle extends AuditFields {
+  id: string;
+  slug: string;
+  category_header: string;
+  category_id: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  tag: string;
+  date_tag: string;
+  image_path: string;
+  author_name: string;
+  author_role: string;
+  author_desk: string;
+  key_takeaways: string[];
+  status: PublicationStatus;
+  sort_order: number;
+  meta_title: string | null;
+  meta_description: string | null;
+}
+
+export interface ArticleSection {
+  id: string;
+  article_id: string;
+  section_order: number;
+  heading: string;
+  paragraphs: string[];
+  table_data: Record<string, unknown> | null;
+  highlight_quote: string | null;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface InsightsArticleWithRelations extends InsightsArticle {
+  category?: LookupItem | null;
+  sections?: ArticleSection[];
+}
+
+export interface InsightsFilters {
+  search?: string;
+  status?: PublicationStatus | "";
+  category_id?: string;
+  sort?: "newest" | "oldest" | "title" | "updated";
+  page?: number;
+  pageSize?: number;
 }
 
 export interface PropertyWithRelations extends Property {

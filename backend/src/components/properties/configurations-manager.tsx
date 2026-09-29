@@ -11,6 +11,7 @@ import {
   deleteConfiguration,
   listConfigurationsWithBreakdowns,
   reorderConfigurations,
+  savePriceBreakdowns,
 } from "@/lib/api/configurations";
 import { Button } from "@/components/ui/button";
 import {
@@ -80,9 +81,11 @@ export function ConfigurationsManager({
     <Card>
       <CardHeader className="flex-row items-start justify-between gap-4">
         <div className="space-y-1.5">
-          <CardTitle>Configurations</CardTitle>
+          <CardTitle>Unit pricing</CardTitle>
           <CardDescription>
-            Unit types with their own carpet area, pricing and cost sheet.
+            Optional unit-type pricing and cost sheets (base price, floor rise,
+            taxes). This is separate from the public Configuration Matrix &amp;
+            Details tab — use Configurations for the typology matrix buyers see.
           </CardDescription>
         </div>
         <Button
@@ -93,7 +96,7 @@ export function ConfigurationsManager({
           }}
         >
           <Plus />
-          Add configuration
+          Add unit type
         </Button>
       </CardHeader>
 
@@ -105,8 +108,8 @@ export function ConfigurationsManager({
         ) : configurations.length === 0 ? (
           <EmptyState
             icon={<Layers />}
-            title="No configurations yet"
-            description="Add the unit types available in this project, such as 2 BHK and 3 BHK."
+            title="No unit types yet"
+            description="Optional: add internal unit pricing with carpet area and cost sheets. For the public Configuration Matrix, use the Configurations tab instead."
             action={
               <Button
                 type="button"
@@ -117,7 +120,7 @@ export function ConfigurationsManager({
                 }}
               >
                 <Plus />
-                Add configuration
+                Add unit type
               </Button>
             }
           />
@@ -213,10 +216,15 @@ export function ConfigurationsManager({
                   {isOpen ? (
                     <div className="px-4 pb-4">
                       <PriceBreakdownEditor
-                        configurationId={configuration.id}
                         breakdowns={configuration.price_breakdowns ?? []}
                         currency={currency}
-                        onSaved={reload}
+                        onSave={(rows) =>
+                          savePriceBreakdowns(configuration.id, rows)
+                        }
+                        onSaved={() => {
+                          reload();
+                          onChanged?.();
+                        }}
                       />
                     </div>
                   ) : null}

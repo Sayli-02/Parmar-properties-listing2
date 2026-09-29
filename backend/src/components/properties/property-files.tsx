@@ -9,6 +9,7 @@ import { getErrorMessage } from "@/lib/utils";
 import { updatePropertyMedia } from "@/lib/api/properties";
 import { deleteFile, storageFolders } from "@/lib/api/storage";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Card,
   CardContent,
@@ -16,7 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Field } from "@/components/shared/field";
+import { Field, FieldGrid } from "@/components/shared/field";
 import { Spinner } from "@/components/shared/states";
 import {
   MediaPicker,
@@ -26,8 +27,8 @@ import {
 } from "@/components/shared/media-picker";
 
 /**
- * Brochure and RERA QR uploads. Kept apart from the details form because these
- * are file columns rather than validated text fields.
+ * Brochure and MahaRERA QR — property file columns, never gallery rows.
+ * MahaRERA registration number is edited on the Details → Compliance section.
  */
 export function PropertyFiles({
   property,
@@ -41,7 +42,13 @@ export function PropertyFiles({
   const [reraQr, setReraQr] = React.useState<FileSelection>(unchangedSelection);
   const [saving, setSaving] = React.useState(false);
 
+  React.useEffect(() => {
+    setBrochure(unchangedSelection);
+    setReraQr(unchangedSelection);
+  }, [property.id, property.brochure_url, property.rera_qr_url]);
+
   const dirty = brochure.kind !== "unchanged" || reraQr.kind !== "unchanged";
+  const reraNumber = property.rera_id || property.rera_number || "";
 
   async function handleSave() {
     setSaving(true);
@@ -56,7 +63,6 @@ export function PropertyFiles({
         reraQr: uploadedQr,
       });
 
-      // Clean up whatever was replaced only after the row points elsewhere.
       if (uploadedBrochure !== undefined && property.brochure_path) {
         await deleteFile(property.brochure_path);
       }
@@ -66,7 +72,7 @@ export function PropertyFiles({
 
       setBrochure(unchangedSelection);
       setReraQr(unchangedSelection);
-      toast.success("Files updated");
+      toast.success("Compliance documents saved");
       onSaved?.();
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -78,17 +84,45 @@ export function PropertyFiles({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Documents</CardTitle>
+        <CardTitle>Compliance &amp; documents</CardTitle>
         <CardDescription>
-          The brochure buyers download, and the RERA QR code shown on the
-          listing.
+          MahaRERA QR and brochure are stored on the property itself — not in
+          the image gallery. The public MahaRERA block and Download Brochure
+          action use these fields.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        <FieldGrid>
+          <Field
+            label="MahaRERA number"
+            hint="Edited under Details → Compliance. Shown here for reference only."
+          >
+            <Input
+              value={reraNumber || "Not set yet"}
+              readOnly
+              disabled
+              aria-label="MahaRERA number (read-only)"
+            />
+          </Field>
+        </FieldGrid>
+
         <div className="grid gap-6 lg:grid-cols-2">
           <Field
+            label="MahaRERA QR code"
+            hint="Image only (JPEG/PNG/WebP). Separate from the registration number above. Preview, replace or remove, then save."
+          >
+            <MediaPicker
+              existingUrl={property.rera_qr_url ?? property.rera_qr_image}
+              selection={reraQr}
+              onSelectionChange={setReraQr}
+              disabled={saving}
+              emptyLabel="Upload RERA QR image"
+            />
+          </Field>
+
+          <Field
             label="Brochure"
-            hint="PDF preferred. Replaces the current file when saved."
+            hint="PDF preferred (also JPEG/PNG). Powers the public Download Brochure action. Not a gallery image."
           >
             <MediaPicker
               variant="document"
@@ -99,20 +133,7 @@ export function PropertyFiles({
               selection={brochure}
               onSelectionChange={setBrochure}
               disabled={saving}
-              emptyLabel="Upload the brochure"
-            />
-          </Field>
-
-          <Field
-            label="RERA QR code"
-            hint="Image of the QR code issued with your RERA registration."
-          >
-            <MediaPicker
-              existingUrl={property.rera_qr_url}
-              selection={reraQr}
-              onSelectionChange={setReraQr}
-              disabled={saving}
-              emptyLabel="Upload the QR code"
+              emptyLabel="Upload brochure PDF"
             />
           </Field>
         </div>
@@ -120,12 +141,16 @@ export function PropertyFiles({
         <div className="flex items-center justify-end gap-3">
           {dirty ? (
             <p className="text-xs text-muted-foreground">
-              Changes are applied when you save.
+              Upload or remove files, then save to apply.
             </p>
-          ) : null}
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              No unsaved document changes.
+            </p>
+          )}
           <Button type="button" onClick={handleSave} disabled={saving || !dirty}>
             {saving ? <Spinner /> : <Save />}
-            Save files
+            Save documents
           </Button>
         </div>
       </CardContent>

@@ -1,11 +1,21 @@
 import type { Amenity, LookupItem, PropertyAmenity } from "@/types";
-import type { AmenityInput } from "@/lib/validations";
+import type { AmenityInput, LookupItemInput } from "@/lib/validations";
+import { slugify } from "@/lib/utils";
 
 import { getSupabase, nullifyEmpty, throwOnError } from "./client";
+import {
+  createLookupItem,
+  deleteLookupItem,
+  listLookupAmenities,
+  setLookupItemActive,
+  updateLookupItem,
+} from "./lookups";
 
 const TABLE = "amenities";
+const LOOKUP_TABLE = "lookup_amenities" as const;
 const LINK_TABLE = "property_amenities";
 
+/** @deprecated Prefer listLookupAmenities — legacy amenities catalog. */
 export async function listAmenities(): Promise<Amenity[]> {
   const supabase = getSupabase();
   const { data, error } = await supabase
@@ -15,6 +25,15 @@ export async function listAmenities(): Promise<Amenity[]> {
 
   throwOnError(error, "Loading amenities");
   return (data ?? []) as unknown as Amenity[];
+}
+
+/**
+ * Master amenity catalogue used by property amenity pickers.
+ */
+export async function listMasterAmenities(
+  activeOnly = false
+): Promise<LookupItem[]> {
+  return listLookupAmenities(activeOnly);
 }
 
 export async function listActiveAmenities(): Promise<Amenity[]> {
@@ -38,7 +57,25 @@ export async function createAmenity(input: AmenityInput): Promise<Amenity> {
     .single();
 
   throwOnError(error, "Creating amenity");
+
+  // Mirror into master lookup catalogue so property pickers see it.
+  try {
+    await createLookupItem(LOOKUP_TABLE, {
+      slug: slugify(input.name),
+      name: input.name,
+      is_active: input.is_active ?? true,
+    });
+  } catch {
+    // Lookup may already exist from a prior dual-write; ignore slug collision.
+  }
+
   return data as unknown as Amenity;
+}
+
+export async function createMasterAmenity(
+  input: LookupItemInput
+): Promise<LookupItem> {
+  return createLookupItem(LOOKUP_TABLE, input);
 }
 
 export async function updateAmenity(
@@ -57,10 +94,21 @@ export async function updateAmenity(
   return data as unknown as Amenity;
 }
 
+export async function updateMasterAmenity(
+  id: string,
+  input: LookupItemInput
+): Promise<LookupItem> {
+  return updateLookupItem(LOOKUP_TABLE, id, input);
+}
+
 export async function deleteAmenity(id: string): Promise<void> {
   const supabase = getSupabase();
   const { error } = await supabase.from(TABLE).delete().eq("id", id);
   throwOnError(error, "Deleting amenity");
+}
+
+export async function deleteMasterAmenity(id: string): Promise<void> {
+  return deleteLookupItem(LOOKUP_TABLE, id);
 }
 
 export async function setAmenityActive(
@@ -76,6 +124,13 @@ export async function setAmenityActive(
   throwOnError(error, "Updating amenity");
 }
 
+export async function setMasterAmenityActive(
+  id: string,
+  isActive: boolean
+): Promise<void> {
+  return setLookupItemActive(LOOKUP_TABLE, id, isActive);
+}
+
 export async function countPropertiesForAmenity(
   amenityId: string
 ): Promise<number> {
@@ -84,6 +139,19 @@ export async function countPropertiesForAmenity(
     .from(LINK_TABLE)
     .select("id", { count: "exact", head: true })
     .eq("amenity_id", amenityId);
+
+  throwOnError(error, "Counting linked properties");
+  return count ?? 0;
+}
+
+export async function countPropertiesForLookupAmenity(
+  lookupAmenityId: string
+): Promise<number> {
+  const supabase = getSupabase();
+  const { count, error } = await supabase
+    .from(LINK_TABLE)
+    .select("id", { count: "exact", head: true })
+    .eq("lookup_amenity_id", lookupAmenityId);
 
   throwOnError(error, "Counting linked properties");
   return count ?? 0;

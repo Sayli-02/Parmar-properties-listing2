@@ -147,10 +147,13 @@ export function FloorPlansManager({
     <Card>
       <CardHeader className="flex-row items-start justify-between gap-4">
         <div className="space-y-1.5">
-          <CardTitle>Floor and master plans</CardTitle>
+          <CardTitle>Floor plans</CardTitle>
           <CardDescription>
-            Layout artwork buyers can zoom into, optionally tied to a
-            configuration.
+            Master plan, floor plate and individual layout artwork for the
+            public property page. Use plan type Master Plan, Floor Plan or
+            Configuration Plan. Active plans can be shown; inactive ones stay
+            hidden. These are separate from gallery images and from the
+            Configuration Matrix typologies.
           </CardDescription>
         </div>
         <Button
@@ -161,7 +164,7 @@ export function FloorPlansManager({
           }}
         >
           <Plus />
-          Add plan
+          Add floor plan
         </Button>
       </CardHeader>
 
@@ -173,8 +176,8 @@ export function FloorPlansManager({
         ) : plans.length === 0 ? (
           <EmptyState
             icon={<ImageIcon />}
-            title="No plans yet"
-            description="Upload floor plans, a master plan, or configuration-specific layouts."
+            title="No floor plans yet"
+            description="Upload a Master Plan, Floor Plan or Configuration Plan image (and optional PDF). Gated/blurred display on the public site is controlled by the website lead gate — keep plans Active when they should be available after unlock."
             action={
               <Button
                 type="button"
@@ -185,7 +188,7 @@ export function FloorPlansManager({
                 }}
               >
                 <Plus />
-                Add plan
+                Add floor plan
               </Button>
             }
           />
@@ -405,10 +408,10 @@ function FloorPlanDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>{plan ? "Edit plan" : "New plan"}</DialogTitle>
+          <DialogTitle>{plan ? "Edit floor plan" : "New floor plan"}</DialogTitle>
           <DialogDescription>
-            Upload an image for on-page display, and optionally a
-            higher-resolution file to download.
+            Choose Master Plan, Floor Plan or Configuration Plan, upload the
+            on-page image, and optionally a higher-resolution downloadable file.
           </DialogDescription>
         </DialogHeader>
 

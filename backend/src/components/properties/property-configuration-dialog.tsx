@@ -46,8 +46,8 @@ import {
   type FileSelection,
 } from "@/components/shared/media-picker";
 
-type LayoutValues = z.input<typeof propertyConfigurationSchema>;
-type LayoutOutput = z.output<typeof propertyConfigurationSchema>;
+type ConfigValues = z.input<typeof propertyConfigurationSchema>;
+type ConfigOutput = z.output<typeof propertyConfigurationSchema>;
 
 interface PropertyConfigurationDialogProps {
   propertyId: string;
@@ -67,7 +67,7 @@ export function PropertyConfigurationDialog({
   const [selection, setSelection] =
     React.useState<FileSelection>(unchangedSelection);
 
-  const form = useForm<LayoutValues, unknown, LayoutOutput>({
+  const form = useForm<ConfigValues, unknown, ConfigOutput>({
     resolver: zodResolver(propertyConfigurationSchema),
     defaultValues: {
       plan_type: "individual",
@@ -101,7 +101,12 @@ export function PropertyConfigurationDialog({
     });
   }, [open, configuration, form]);
 
-  async function onSubmit(values: LayoutOutput) {
+  async function onSubmit(values: ConfigOutput) {
+    if (!propertyId) {
+      toast.error("Save the property first before adding configurations.");
+      return;
+    }
+
     try {
       const uploaded = await uploadSelection(
         selection,
@@ -123,14 +128,17 @@ export function PropertyConfigurationDialog({
         if (uploaded !== undefined && configuration.image_path) {
           await deleteFile(configuration.image_path);
         }
-        toast.success("Layout updated");
+        toast.success("Configuration updated");
       } else {
         await createPropertyConfiguration(propertyId, {
           ...values,
           image_path: imagePath,
           display_order: await getNextPropertyConfigurationOrder(propertyId),
         });
-        toast.success("Layout added");
+        toast.success("Configuration added", {
+          description:
+            "It will appear in Configuration Matrix & Details on the public property page.",
+        });
       }
 
       onSaved();
@@ -146,10 +154,15 @@ export function PropertyConfigurationDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-xl">
         <DialogHeader>
-          <DialogTitle>{configuration ? "Edit layout" : "New layout"}</DialogTitle>
+          <DialogTitle>
+            {configuration ? "Edit configuration" : "New configuration"}
+          </DialogTitle>
           <DialogDescription>
-            One tab on the property detail page, with the plan drawing buyers
-            see.
+            One typology row in the public{" "}
+            <span className="font-medium text-foreground">
+              Configuration Matrix &amp; Details
+            </span>{" "}
+            section (for example “2 BHK Luxury Residence” or “4 BHK Sky Suite”).
           </DialogDescription>
         </DialogHeader>
 
@@ -160,11 +173,19 @@ export function PropertyConfigurationDialog({
           noValidate
         >
           <FieldGrid>
-            <Field label="Plan type" error={errors.plan_type?.message}>
+            <Field
+              label="Plan type"
+              required
+              hint="Master plan, floor plate, or individual unit layout."
+              error={errors.plan_type?.message}
+            >
               <Select
                 value={form.watch("plan_type") ?? "individual"}
                 onValueChange={(value) =>
-                  form.setValue("plan_type", value as LayoutValues["plan_type"])
+                  form.setValue("plan_type", value as ConfigValues["plan_type"], {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
                 }
               >
                 <SelectTrigger aria-label="Plan type">
@@ -180,17 +201,23 @@ export function PropertyConfigurationDialog({
               </Select>
             </Field>
 
-            <Field label="Variant" error={errors.variant_code?.message}>
+            <Field
+              label="Variant code"
+              required
+              hint="BHK bucket used for the matrix tabs."
+              error={errors.variant_code?.message}
+            >
               <Select
                 value={form.watch("variant_code") ?? "3bhk"}
                 onValueChange={(value) =>
                   form.setValue(
                     "variant_code",
-                    value as LayoutValues["variant_code"]
+                    value as ConfigValues["variant_code"],
+                    { shouldDirty: true, shouldValidate: true }
                   )
                 }
               >
-                <SelectTrigger aria-label="Variant">
+                <SelectTrigger aria-label="Variant code">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -205,13 +232,13 @@ export function PropertyConfigurationDialog({
 
             <Field
               label="Tab label"
-              htmlFor="layout-tab-label"
+              htmlFor="config-tab-label"
               required
-              hint="Short label on the tab, e.g. “3 BHK”."
+              hint="Short label on the matrix tab, e.g. “3 BHK”."
               error={errors.tab_label?.message}
             >
               <Input
-                id="layout-tab-label"
+                id="config-tab-label"
                 placeholder="3 BHK"
                 aria-invalid={Boolean(errors.tab_label)}
                 {...form.register("tab_label")}
@@ -219,14 +246,15 @@ export function PropertyConfigurationDialog({
             </Field>
 
             <Field
-              label="Title"
-              htmlFor="layout-title"
+              label="Title / typology"
+              htmlFor="config-title"
               required
+              hint="Shown as the primary name in the matrix, e.g. “3 BHK Grande”."
               error={errors.title?.message}
             >
               <Input
-                id="layout-title"
-                placeholder="3 BHK Sky Residence"
+                id="config-title"
+                placeholder="3 BHK Grande"
                 aria-invalid={Boolean(errors.title)}
                 {...form.register("title")}
               />
@@ -234,60 +262,83 @@ export function PropertyConfigurationDialog({
 
             <Field
               label="Area range"
-              htmlFor="layout-area-range"
+              htmlFor="config-area-range"
+              hint="e.g. 850–1,020 sq.ft"
               error={errors.area_range?.message}
             >
               <Input
-                id="layout-area-range"
-                placeholder="1,450 – 1,820 sq ft"
+                id="config-area-range"
+                placeholder="850–1,020 sq.ft"
                 {...form.register("area_range")}
               />
             </Field>
 
             <Field
               label="Carpet area"
-              htmlFor="layout-carpet-area"
+              htmlFor="config-carpet-area"
+              hint="e.g. 1,820 Sq.Ft"
               error={errors.carpet_area?.message}
             >
               <Input
-                id="layout-carpet-area"
-                placeholder="1,820 sq ft"
+                id="config-carpet-area"
+                placeholder="1,820 Sq.Ft"
                 {...form.register("carpet_area")}
               />
             </Field>
 
             <Field
               label="Price indicator"
-              htmlFor="layout-price-indicator"
+              htmlFor="config-price-indicator"
+              hint="e.g. ₹3.85 Cr – ₹4.50 Cr onwards"
               error={errors.price_indicator?.message}
             >
               <Input
-                id="layout-price-indicator"
-                placeholder="₹7.80 Cr – ₹9.20 Cr"
+                id="config-price-indicator"
+                placeholder="₹3.85 Cr – ₹4.50 Cr onwards"
                 {...form.register("price_indicator")}
               />
             </Field>
 
             <Field
-              label="Tower or zone"
-              htmlFor="layout-tower-zone"
+              label="Tower / zone"
+              htmlFor="config-tower-zone"
+              hint="e.g. High-Rise Sky Suites (Levels 22–48)"
               error={errors.tower_zone?.message}
             >
               <Input
-                id="layout-tower-zone"
+                id="config-tower-zone"
                 placeholder="High-Rise Sky Suites (Levels 22–48)"
                 {...form.register("tower_zone")}
               />
             </Field>
+
+            <Field
+              label="Display order"
+              htmlFor="config-display-order"
+              hint="Lower numbers appear first. Reordering in the list also updates this."
+              error={errors.display_order?.message}
+            >
+              <Input
+                id="config-display-order"
+                type="number"
+                min={0}
+                step={1}
+                {...form.register("display_order")}
+              />
+            </Field>
           </FieldGrid>
 
-          <Field label="Plan drawing" error={errors.image_path?.message}>
+          <Field
+            label="Configuration / floor-plan image"
+            hint="Plan drawing shown with this typology on the public detail page."
+            error={errors.image_path?.message}
+          >
             <MediaPicker
               existingUrl={resolvePublicUrl(configuration?.image_path)}
               selection={selection}
               onSelectionChange={setSelection}
               disabled={isSubmitting}
-              emptyLabel="Upload the plan"
+              emptyLabel="Upload configuration image"
             />
           </Field>
         </form>
@@ -307,7 +358,7 @@ export function PropertyConfigurationDialog({
             disabled={isSubmitting}
           >
             {isSubmitting ? <Spinner /> : null}
-            {configuration ? "Save changes" : "Add layout"}
+            {configuration ? "Save changes" : "Add configuration"}
           </Button>
         </DialogFooter>
       </DialogContent>

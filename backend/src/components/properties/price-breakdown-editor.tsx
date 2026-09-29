@@ -4,9 +4,8 @@ import * as React from "react";
 import { Plus, Save, Trash } from "lucide-react";
 import { toast } from "sonner";
 
-import type { PriceBreakdown } from "@/types";
+import type { PriceBreakdownInput } from "@/lib/validations";
 import { formatCurrency, getErrorMessage } from "@/lib/utils";
-import { savePriceBreakdowns } from "@/lib/api/configurations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/shared/states";
@@ -17,7 +16,13 @@ interface Row {
   amount: string;
 }
 
-function toRows(breakdowns: PriceBreakdown[]): Row[] {
+export interface PriceBreakdownEditorRow {
+  id: string;
+  label: string;
+  amount: number;
+}
+
+function toRows(breakdowns: PriceBreakdownEditorRow[]): Row[] {
   return breakdowns.map((row) => ({
     key: row.id,
     label: row.label,
@@ -34,25 +39,31 @@ function newRow(): Row {
 }
 
 /**
- * Editable cost sheet for one configuration — base price, floor rise, taxes and
- * so on. Rows are saved as a set, so reordering and removing stay simple.
+ * Editable cost-sheet UI. Persistence is injected so the same editor can save
+ * either legacy `price_breakdowns` or master
+ * `property_configuration_price_breakdowns`.
  */
 export function PriceBreakdownEditor({
-  configurationId,
   breakdowns,
   currency,
+  onSave,
   onSaved,
+  title = "Cost sheet",
+  emptyHint = "No cost lines yet. Add base price, floor rise, GST and other charges so buyers see the full picture.",
+  saveLabel = "Save cost sheet",
 }: {
-  configurationId: string;
-  breakdowns: PriceBreakdown[];
+  breakdowns: PriceBreakdownEditorRow[];
   currency: string;
+  onSave: (rows: PriceBreakdownInput[]) => Promise<void>;
   onSaved: () => void;
+  title?: string;
+  emptyHint?: string;
+  saveLabel?: string;
 }) {
   const [rows, setRows] = React.useState<Row[]>(() => toRows(breakdowns));
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
-  // Start over from the saved rows whenever the parent reloads them.
   const [loadedFrom, setLoadedFrom] = React.useState(breakdowns);
   if (loadedFrom !== breakdowns) {
     setLoadedFrom(breakdowns);
@@ -70,6 +81,16 @@ export function PriceBreakdownEditor({
     );
   }
 
+  function moveRow(from: number, to: number) {
+    if (to < 0 || to >= rows.length) return;
+    setRows((current) => {
+      const next = [...current];
+      const [item] = next.splice(from, 1);
+      next.splice(to, 0, item);
+      return next;
+    });
+  }
+
   async function handleSave() {
     const filled = rows.filter((row) => row.label.trim() !== "");
 
@@ -81,8 +102,7 @@ export function PriceBreakdownEditor({
     setError(null);
     setSaving(true);
     try {
-      await savePriceBreakdowns(
-        configurationId,
+      await onSave(
         filled.map((row, index) => ({
           label: row.label.trim(),
           amount: Number(row.amount || 0),
@@ -102,7 +122,7 @@ export function PriceBreakdownEditor({
     <div className="space-y-3 rounded-lg border border-border bg-muted/30 p-3">
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          Cost sheet
+          {title}
         </p>
         <Button
           type="button"
@@ -116,19 +136,40 @@ export function PriceBreakdownEditor({
       </div>
 
       {rows.length === 0 ? (
-        <p className="py-2 text-sm text-muted-foreground">
-          No cost lines yet. Add base price, floor rise, GST and other charges so
-          buyers see the full picture.
-        </p>
+        <p className="py-2 text-sm text-muted-foreground">{emptyHint}</p>
       ) : (
         <div className="space-y-2">
-          {rows.map((row) => (
+          {rows.map((row, index) => (
             <div key={row.key} className="flex items-center gap-2">
+              <div className="flex shrink-0 flex-col gap-0.5">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Move line up"
+                  disabled={index === 0}
+                  onClick={() => moveRow(index, index - 1)}
+                >
+                  ↑
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label="Move line down"
+                  disabled={index === rows.length - 1}
+                  onClick={() => moveRow(index, index + 1)}
+                >
+                  ↓
+                </Button>
+              </div>
               <Input
                 value={row.label}
                 placeholder="Base price"
                 aria-label="Cost line label"
-                onChange={(event) => update(row.key, { label: event.target.value })}
+                onChange={(event) =>
+                  update(row.key, { label: event.target.value })
+                }
               />
               <Input
                 value={row.amount}
@@ -173,7 +214,7 @@ export function PriceBreakdownEditor({
         </p>
         <Button type="button" size="sm" onClick={handleSave} disabled={saving}>
           {saving ? <Spinner /> : <Save />}
-          Save cost sheet
+          {saveLabel}
         </Button>
       </div>
     </div>

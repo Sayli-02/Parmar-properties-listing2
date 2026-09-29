@@ -95,6 +95,7 @@ function toFormValues(property?: Property): DefaultValues<PropertyValues> {
     recently_added: property?.recently_added ?? false,
     is_recommended: property?.is_recommended ?? false,
     is_new_launch: property?.is_new_launch ?? false,
+    is_luxury_collection: property?.is_luxury_collection ?? false,
     launch_phase_id: property?.launch_phase_id ?? "",
     rera_id: property?.rera_id ?? property?.rera_number ?? "",
     latitude: property?.latitude ?? null,
@@ -168,10 +169,11 @@ export function PropertyForm({ property, onSaved }: PropertyFormProps) {
       } else {
         const created = await createMasterProperty(values);
         toast.success("Property created", {
-          description: "Now add images, layouts and amenities.",
+          description:
+            "Opening Media & Documents so you can upload cover, gallery, RERA QR, brochure and floor plans. Configurations remain a sibling tab.",
         });
         onSaved?.(created);
-        router.push(`/admin/properties/${created.id}`);
+        router.push(`/admin/properties/${created.id}?tab=media`);
       }
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -276,8 +278,8 @@ export function PropertyForm({ property, onSaved }: PropertyFormProps) {
           <CardDescription>
             Editorial body and signature highlights shown in the Project
             Overview section on the public Property Detail page. Construction
-            status and MahaRERA number are edited in Classification and RERA
-            below — they are not duplicated here.
+            status and MahaRERA number are edited in Classification and
+            Compliance below — they are not duplicated here.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -625,12 +627,40 @@ export function PropertyForm({ property, onSaved }: PropertyFormProps) {
         </CardContent>
       </Card>
 
-      {/* —— Flags & Publishing —— */}
+      {/* —— Compliance —— */}
       <Card>
         <CardHeader>
-          <CardTitle>Flags &amp; Publishing</CardTitle>
+          <CardTitle>Compliance</CardTitle>
           <CardDescription>
-            Where this residence appears, and in which collection.
+            Project MahaRERA number shown in Project Overview. Upload the QR
+            image and brochure under Media &amp; Documents — those stay separate
+            from the gallery.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Field
+            label="MahaRERA number"
+            htmlFor="rera_id"
+            required
+            error={errors.rera_id?.message}
+          >
+            <Input
+              id="rera_id"
+              placeholder="P51900012345"
+              aria-invalid={Boolean(errors.rera_id)}
+              {...form.register("rera_id")}
+            />
+          </Field>
+        </CardContent>
+      </Card>
+
+      {/* —— Publishing / SEO —— */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Publishing &amp; SEO</CardTitle>
+          <CardDescription>
+            Where this residence appears, collection flags, and search engine
+            overrides.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -734,6 +764,20 @@ export function PropertyForm({ property, onSaved }: PropertyFormProps) {
                 />
               }
             />
+            <ToggleField
+              label="Luxury collection"
+              description="Include in Luxury Collection (also auto for ₹25 Cr+)."
+              control={
+                <Switch
+                  checked={form.watch("is_luxury_collection") ?? false}
+                  onCheckedChange={(checked) =>
+                    form.setValue("is_luxury_collection", checked, {
+                      shouldDirty: true,
+                    })
+                  }
+                />
+              }
+            />
           </div>
 
           <Field
@@ -764,45 +808,7 @@ export function PropertyForm({ property, onSaved }: PropertyFormProps) {
               </SelectContent>
             </Select>
           </Field>
-        </CardContent>
-      </Card>
 
-      {/* —— RERA —— */}
-      <Card>
-        <CardHeader>
-          <CardTitle>RERA</CardTitle>
-          <CardDescription>
-            Project MahaRERA number shown in Project Overview. Upload the QR
-            image and brochure under the Documents tab — those stay separate
-            from the gallery.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Field
-            label="MahaRERA number"
-            htmlFor="rera_id"
-            required
-            error={errors.rera_id?.message}
-          >
-            <Input
-              id="rera_id"
-              placeholder="P51900012345"
-              aria-invalid={Boolean(errors.rera_id)}
-              {...form.register("rera_id")}
-            />
-          </Field>
-        </CardContent>
-      </Card>
-
-      {/* —— SEO —— */}
-      <Card>
-        <CardHeader>
-          <CardTitle>SEO</CardTitle>
-          <CardDescription>
-            Overrides the title and description used by search engines.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
           <Field
             label="Meta title"
             htmlFor="meta_title"
@@ -837,7 +843,7 @@ export function PropertyForm({ property, onSaved }: PropertyFormProps) {
               ? isDirty
                 ? "You have unsaved changes."
                 : "All changes saved."
-              : "Images, layouts and amenities can be added after saving."}
+              : "After saving, you will open Media & Documents to upload cover, gallery, RERA QR, brochure and floor plans."}
           </p>
           <div className="flex items-center gap-2">
             <Button

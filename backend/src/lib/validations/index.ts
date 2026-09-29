@@ -168,6 +168,7 @@ export const masterPropertySchema = z.object({
   recently_added: z.boolean().default(false),
   is_recommended: z.boolean().default(false),
   is_new_launch: z.boolean().default(false),
+  is_luxury_collection: z.boolean().default(false),
   launch_phase_id: z.string().uuid().optional().nullable().or(z.literal("")),
   rera_id: z.string().min(1, "RERA number is required").max(50),
   latitude: optionalNumber(z.coerce.number().min(-90).max(90)),
@@ -181,16 +182,22 @@ export const masterPropertySchema = z.object({
 });
 
 export const propertyConfigurationSchema = z.object({
-  plan_type: z.enum(["master", "floor", "individual"]),
-  variant_code: z.enum(["2bhk", "3bhk", "4bhk", "5bhk", "custom"]),
+  plan_type: z.enum(["master", "floor", "individual"], {
+    required_error: "Select a plan type",
+    invalid_type_error: "Select a valid plan type",
+  }),
+  variant_code: z.enum(["2bhk", "3bhk", "4bhk", "5bhk", "custom"], {
+    required_error: "Select a variant code",
+    invalid_type_error: "Select a valid variant code",
+  }),
   tab_label: z.string().min(1, "Tab label is required").max(30),
-  title: z.string().min(1, "Title is required").max(100),
+  title: z.string().min(1, "Title / typology is required").max(100),
   area_range: z.string().max(60).default(""),
   carpet_area: z.string().max(50).default(""),
   price_indicator: z.string().max(60).default(""),
   tower_zone: z.string().max(100).default(""),
   image_path: z.string().max(2000).optional().default(""),
-  display_order: z.coerce.number().int().min(0).default(0),
+  display_order: z.coerce.number().int().min(0, "Display order must be 0 or greater").default(0),
 });
 
 export const configurationSchema = z.object({
@@ -254,6 +261,122 @@ export const businessSettingsSchema = z.object({
     .default({}),
 });
 
+export const siteBrandingSchema = z.object({
+  brand_name: z.string().min(1, "Brand name is required").max(100),
+  est_year: z.coerce.number().int().min(1900).max(2100),
+  est_badge: z.string().min(1).max(30),
+  brand_tagline: z.string().min(1).max(200),
+  contact_landline: z.string().min(1).max(30),
+  contact_mobile: z.string().max(30).optional().nullable(),
+  whatsapp_number: z
+    .string()
+    .min(10)
+    .max(20)
+    .regex(/^[0-9]{10,15}$/, "Digits only, 10–15 characters"),
+  contact_email: z.string().email("Enter a valid email").max(120),
+  advisory_email: z.string().email("Enter a valid email").max(120),
+  office_building: z.string().min(1).max(150),
+  office_street: z.string().min(1).max(150),
+  office_city_pin: z.string().min(1).max(100),
+  working_hours: z.string().min(1).max(100),
+  firm_rera_number: z.string().min(1).max(50),
+  official_website: z.string().url("Enter a valid URL").max(255),
+  nav_cta_label: z.string().min(1).max(50),
+  meta_title: z.string().min(1).max(100),
+  meta_desc: z.string().min(1).max(255),
+  social_links: z
+    .object({
+      linkedin: z.string().url().optional().or(z.literal("")),
+      instagram: z.string().url().optional().or(z.literal("")),
+      x: z.string().url().optional().or(z.literal("")),
+      youtube: z.string().url().optional().or(z.literal("")),
+    })
+    .default({ linkedin: "", instagram: "", x: "" }),
+});
+
+export const pageContentSchema = z.object({
+  title: z.string().min(1, "Title is required").max(150),
+  subtitle: z.string().max(2000).optional().nullable(),
+  breadcrumb: z.string().max(100).optional().nullable(),
+  badge: z.string().max(80).optional().nullable(),
+  meta_title: z.string().min(1, "Meta title is required").max(120),
+  meta_description: z.string().min(1, "Meta description is required").max(255),
+  sections_data: z.record(z.unknown()).default({}),
+});
+
+export const commercialPropertySchema = z.object({
+  title: z.string().min(1, "Title is required").max(150),
+  slug: z
+    .string()
+    .min(1, "Slug is required")
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase letters, numbers, and hyphens"),
+  tagline: z.string().min(1, "Tagline is required").max(200),
+  hub_id: z.string().uuid("Select a commercial hub"),
+  sub_location: z.string().min(1, "Sub-location is required").max(150),
+  price: z.coerce.number().gt(0, "Price must be greater than 0"),
+  carpet_area: z.coerce.number().int().gt(0, "Carpet area is required"),
+  commercial_type_id: z.string().uuid("Select a commercial type"),
+  floor: z.string().min(1, "Floor details are required").max(80),
+  possession: z.string().min(1, "Possession is required").max(50),
+  grade_id: z.string().uuid().optional().nullable().or(z.literal("")),
+  cover_image: z.string().max(2000).optional().default(""),
+  rera_id: z.string().max(50).optional().default(""),
+  description: z.string().min(1, "Description is required").max(10000),
+  highlights: z.array(z.string().min(1).max(200)).max(8).default([]),
+  status: z.enum(["draft", "published", "archived"]).default("published"),
+  sort_order: z.coerce.number().int().min(0).default(0),
+  meta_title: z.string().max(120).optional().nullable(),
+  meta_description: z.string().max(255).optional().nullable(),
+});
+
+export const insightsArticleSchema = z.object({
+  title: z.string().min(1, "Title is required").max(150),
+  slug: z
+    .string()
+    .min(1, "Slug is required")
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase letters, numbers, and hyphens"),
+  category_header: z.string().min(1, "Category header is required").max(80),
+  category_id: z.string().uuid("Select a category"),
+  subtitle: z.string().max(200).optional().default(""),
+  description: z.string().min(1, "Description is required").max(2000),
+  tag: z.string().max(50).optional().default(""),
+  date_tag: z.string().max(50).optional().default(""),
+  image_path: z.string().max(2000).optional().default(""),
+  author_name: z.string().min(1).max(100).default("Advisory Research Desk"),
+  author_role: z.string().max(100).optional().default(""),
+  author_desk: z.string().max(100).optional().default("Parmar Properties Research"),
+  key_takeaways: z.array(z.string().min(1).max(300)).max(8).default([]),
+  status: z.enum(["draft", "published", "archived"]).default("published"),
+  sort_order: z.coerce.number().int().min(0).default(0),
+  meta_title: z.string().max(120).optional().nullable(),
+  meta_description: z.string().max(255).optional().nullable(),
+});
+
+export const articleSectionSchema = z.object({
+  heading: z.string().min(1, "Heading is required").max(150),
+  paragraphs: z.array(z.string().min(1)).default([]),
+  table_data: z
+    .object({
+      headers: z.array(z.string()).optional(),
+      rows: z.array(z.array(z.string())).optional(),
+    })
+    .nullable()
+    .optional(),
+  highlight_quote: z.string().max(1000).optional().nullable(),
+  section_order: z.coerce.number().int().min(0).default(0),
+});
+
+export const lookupItemSchema = z.object({
+  slug: z
+    .string()
+    .min(1, "Slug is required")
+    .max(80)
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase letters, numbers, and hyphens"),
+  name: z.string().min(1, "Name is required").max(100),
+  display_order: z.coerce.number().int().min(0).default(0),
+  is_active: z.boolean().default(true),
+});
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type HeroSlideInput = z.infer<typeof heroSlideSchema>;
 export type LocationInput = z.infer<typeof locationSchema>;
@@ -267,3 +390,9 @@ export type FloorPlanInput = z.infer<typeof floorPlanSchema>;
 export type InventoryUnitInput = z.infer<typeof inventoryUnitSchema>;
 export type AmenityInput = z.infer<typeof amenitySchema>;
 export type BusinessSettingsInput = z.infer<typeof businessSettingsSchema>;
+export type SiteBrandingInput = z.infer<typeof siteBrandingSchema>;
+export type PageContentInput = z.infer<typeof pageContentSchema>;
+export type CommercialPropertyInput = z.infer<typeof commercialPropertySchema>;
+export type InsightsArticleInput = z.infer<typeof insightsArticleSchema>;
+export type ArticleSectionInput = z.infer<typeof articleSectionSchema>;
+export type LookupItemInput = z.infer<typeof lookupItemSchema>;

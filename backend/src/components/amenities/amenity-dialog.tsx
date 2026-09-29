@@ -6,10 +6,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import type { z } from "zod";
 
-import type { Amenity } from "@/types";
-import { amenitySchema } from "@/lib/validations";
-import { getErrorMessage } from "@/lib/utils";
-import { createAmenity, updateAmenity } from "@/lib/api/amenities";
+import type { LookupItem } from "@/types";
+import { lookupItemSchema } from "@/lib/validations";
+import { getErrorMessage, slugify } from "@/lib/utils";
+import {
+  createMasterAmenity,
+  updateMasterAmenity,
+} from "@/lib/api/amenities";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -21,14 +24,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Field, ToggleField } from "@/components/shared/field";
+import { Field, FieldGrid, ToggleField } from "@/components/shared/field";
 import { Spinner } from "@/components/shared/states";
 
-type AmenityValues = z.input<typeof amenitySchema>;
-type AmenityOutput = z.output<typeof amenitySchema>;
+type AmenityValues = z.input<typeof lookupItemSchema>;
+type AmenityOutput = z.output<typeof lookupItemSchema>;
 
 interface AmenityDialogProps {
-  amenity: Amenity | null;
+  amenity: LookupItem | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSaved: () => void;
@@ -40,28 +43,44 @@ export function AmenityDialog({
   onOpenChange,
   onSaved,
 }: AmenityDialogProps) {
+  const [slugLocked, setSlugLocked] = React.useState(Boolean(amenity));
+
   const form = useForm<AmenityValues, unknown, AmenityOutput>({
-    resolver: zodResolver(amenitySchema),
-    defaultValues: { name: "", icon: "", is_active: true },
+    resolver: zodResolver(lookupItemSchema),
+    defaultValues: {
+      name: "",
+      slug: "",
+      display_order: 0,
+      is_active: true,
+    },
   });
 
   React.useEffect(() => {
     if (!open) return;
 
+    setSlugLocked(Boolean(amenity));
     form.reset({
       name: amenity?.name ?? "",
-      icon: amenity?.icon ?? "",
+      slug: amenity?.slug ?? "",
+      display_order: amenity?.display_order ?? 0,
       is_active: amenity?.is_active ?? true,
     });
   }, [open, amenity, form]);
 
+  const nameValue = form.watch("name");
+
+  React.useEffect(() => {
+    if (slugLocked) return;
+    form.setValue("slug", slugify(nameValue ?? ""), { shouldValidate: false });
+  }, [nameValue, slugLocked, form]);
+
   async function onSubmit(values: AmenityOutput) {
     try {
       if (amenity) {
-        await updateAmenity(amenity.id, values);
+        await updateMasterAmenity(amenity.id, values);
         toast.success("Amenity updated");
       } else {
-        await createAmenity(values);
+        await createMasterAmenity(values);
         toast.success("Amenity added");
       }
 
@@ -70,13 +89,13 @@ export function AmenityDialog({
     } catch (error) {
       const message = getErrorMessage(error);
       if (message.includes("already taken")) {
-        form.setError("name", { message: "An amenity with that name exists." });
+        form.setError("slug", { message: "That slug is already taken." });
       }
       toast.error(message);
     }
   }
 
-  const { isSubmitting } = form.formState;
+  const { isSubmitting, errors } = form.formState;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -84,8 +103,8 @@ export function AmenityDialog({
         <DialogHeader>
           <DialogTitle>{amenity ? "Edit amenity" : "New amenity"}</DialogTitle>
           <DialogDescription>
-            Amenities are shared across properties, so naming them consistently
-            keeps listings tidy.
+            Amenities live in lookup_amenities and are shared across every
+            property amenity picker.
           </DialogDescription>
         </DialogHeader>
 
@@ -99,24 +118,46 @@ export function AmenityDialog({
             label="Name"
             htmlFor="name"
             required
-            error={form.formState.errors.name?.message}
+            error={errors.name?.message}
           >
             <Input
               id="name"
-              placeholder="Swimming pool"
-              aria-invalid={Boolean(form.formState.errors.name)}
+              placeholder="Infinity Sky Pool"
+              aria-invalid={Boolean(errors.name)}
               {...form.register("name")}
             />
           </Field>
 
-          <Field
-            label="Icon"
-            htmlFor="icon"
-            hint="Optional icon name for the website, e.g. waves or dumbbell."
-            error={form.formState.errors.icon?.message}
-          >
-            <Input id="icon" placeholder="waves" {...form.register("icon")} />
-          </Field>
+          <FieldGrid>
+            <Field
+              label="Slug"
+              htmlFor="slug"
+              required
+              error={errors.slug?.message}
+            >
+              <Input
+                id="slug"
+                placeholder="infinity-sky-pool"
+                aria-invalid={Boolean(errors.slug)}
+                {...form.register("slug", {
+                  onChange: () => setSlugLocked(true),
+                })}
+              />
+            </Field>
+            <Field
+              label="Display order"
+              htmlFor="display_order"
+              error={errors.display_order?.message}
+            >
+              <Input
+                id="display_order"
+                type="number"
+                min={0}
+                step={1}
+                {...form.register("display_order")}
+              />
+            </Field>
+          </FieldGrid>
 
           <ToggleField
             label="Available for selection"

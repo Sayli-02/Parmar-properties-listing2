@@ -113,7 +113,9 @@ export async function listProperties(
   if (filters.collection === "new-launches") {
     query = query.eq("is_new_launch", true);
   } else if (filters.collection === "luxury") {
-    query = query.gte("price", LUXURY_PRICE_THRESHOLD_CR);
+    query = query.or(
+      `is_luxury_collection.eq.true,price.gte.${LUXURY_PRICE_THRESHOLD_CR}`
+    );
   }
   // "buy" = all non-deleted properties (no extra filter)
 
@@ -335,6 +337,7 @@ function toMasterPropertyPayload(
     recently_added: input.recently_added,
     is_recommended: input.is_recommended,
     is_new_launch: input.is_new_launch,
+    is_luxury_collection: input.is_luxury_collection,
     launch_phase_id: launchPhaseId,
     rera_id: input.rera_id,
     latitude: input.latitude ?? null,

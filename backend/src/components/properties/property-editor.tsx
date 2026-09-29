@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   Boxes,
   Building,
@@ -10,7 +10,6 @@ import {
   Copy,
   Ellipsis,
   Eye,
-  FileText,
   Image as ImageIcon,
   Layers,
   LayoutPanelTop,
@@ -50,18 +49,46 @@ import {
   PublicationStatusBadge,
 } from "@/components/shared/status-badge";
 import { PropertyForm } from "@/components/properties/property-form";
-import { ImagesManager } from "@/components/properties/images-manager";
+import { MediaDocumentsPanel } from "@/components/properties/media-documents-panel";
 import { ConfigurationsManager } from "@/components/properties/configurations-manager";
 import { PropertyConfigurationsManager } from "@/components/properties/property-configurations-manager";
-import { FloorPlansManager } from "@/components/properties/floor-plans-manager";
 import { AmenitiesPicker } from "@/components/properties/amenities-picker";
 import { InventoryManager } from "@/components/properties/inventory-manager";
-import { PropertyFiles } from "@/components/properties/property-files";
 import { PropertyPreview } from "@/components/properties/property-preview";
+
+const EDITOR_TABS = [
+  "details",
+  "media",
+  "configurations",
+  "amenities",
+  "unit-pricing",
+  "inventory",
+  "preview",
+] as const;
+
+type EditorTab = (typeof EDITOR_TABS)[number];
+
+/** Older bookmarks / redirects still supported. */
+const TAB_ALIASES: Record<string, EditorTab> = {
+  images: "media",
+  documents: "media",
+  files: "media",
+  plans: "media",
+  layouts: "configurations",
+};
+
+function resolveTab(value: string | null): EditorTab {
+  if (!value) return "details";
+  if (EDITOR_TABS.includes(value as EditorTab)) return value as EditorTab;
+  return TAB_ALIASES[value] ?? "details";
+}
 
 export function PropertyEditor({ propertyId }: { propertyId: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [deleteOpen, setDeleteOpen] = React.useState(false);
+
+  const activeTab = resolveTab(searchParams.get("tab"));
 
   const fetchProperty = React.useCallback(async () => {
     const [property, currency] = await Promise.all([
@@ -94,6 +121,23 @@ export function PropertyEditor({ propertyId }: { propertyId: string }) {
     },
     [setData]
   );
+
+  function setTab(value: string) {
+    const next = resolveTab(value);
+    const params = new URLSearchParams(searchParams.toString());
+    if (next === "details") {
+      params.delete("tab");
+    } else {
+      params.set("tab", next);
+    }
+    const query = params.toString();
+    router.replace(
+      query
+        ? `/admin/properties/${propertyId}?${query}`
+        : `/admin/properties/${propertyId}`,
+      { scroll: false }
+    );
+  }
 
   if (loading) return <LoadingBlock label="Loading property…" />;
   if (error || !property) {
@@ -135,7 +179,7 @@ export function PropertyEditor({ propertyId }: { propertyId: string }) {
         description:
           "Configurations and amenities were copied. Images need to be uploaded again.",
       });
-      router.push(`/admin/properties/${copy.id}`);
+      router.push(`/admin/properties/${copy.id}?tab=media`);
     } catch (caught) {
       toast.error(getErrorMessage(caught));
     }
@@ -216,8 +260,9 @@ export function PropertyEditor({ propertyId }: { propertyId: string }) {
       </div>
 
       <Tabs
-        defaultValue="details"
+        value={activeTab}
         onValueChange={(value) => {
+          setTab(value);
           if (value === "preview") void reload();
         }}
       >
@@ -226,33 +271,25 @@ export function PropertyEditor({ propertyId }: { propertyId: string }) {
             <Building />
             Details
           </TabsTrigger>
-          <TabsTrigger value="images">
+          <TabsTrigger value="media">
             <ImageIcon />
-            Images
-          </TabsTrigger>
-          <TabsTrigger value="layouts">
-            <LayoutPanelTop />
-            Layouts
+            Media &amp; Documents
           </TabsTrigger>
           <TabsTrigger value="configurations">
-            <Layers />
+            <LayoutPanelTop />
             Configurations
-          </TabsTrigger>
-          <TabsTrigger value="plans">
-            <FileText />
-            Plans
           </TabsTrigger>
           <TabsTrigger value="amenities">
             <Boxes />
             Amenities
           </TabsTrigger>
+          <TabsTrigger value="unit-pricing">
+            <Layers />
+            Unit pricing
+          </TabsTrigger>
           <TabsTrigger value="inventory">
             <Boxes />
             Inventory
-          </TabsTrigger>
-          <TabsTrigger value="files">
-            <FileText />
-            Documents
           </TabsTrigger>
           <TabsTrigger value="preview">
             <Eye />
@@ -267,42 +304,38 @@ export function PropertyEditor({ propertyId }: { propertyId: string }) {
           />
         </TabsContent>
 
-        <TabsContent value="images">
-          <ImagesManager
-            propertyId={property.id}
-            propertyTitle={propertyDisplayTitle(property)}
-            onChanged={reload}
-          />
+        <TabsContent value="media">
+          <MediaDocumentsPanel property={property} onChanged={reload} />
         </TabsContent>
 
-        <TabsContent value="layouts">
+        <TabsContent value="configurations" className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Manage the typologies shown under{" "}
+            <span className="font-medium text-foreground">
+              Configuration Matrix &amp; Details
+            </span>{" "}
+            on the public property page.
+          </p>
           <PropertyConfigurationsManager
             propertyId={property.id}
+            currency={currency}
             onChanged={reload}
           />
-        </TabsContent>
-
-        <TabsContent value="configurations">
-          <ConfigurationsManager
-            propertyId={property.id}
-            currency={currency}
-          />
-        </TabsContent>
-
-        <TabsContent value="plans">
-          <FloorPlansManager propertyId={property.id} />
         </TabsContent>
 
         <TabsContent value="amenities">
           <AmenitiesPicker propertyId={property.id} />
         </TabsContent>
 
-        <TabsContent value="inventory">
-          <InventoryManager propertyId={property.id} currency={currency} />
+        <TabsContent value="unit-pricing">
+          <ConfigurationsManager
+            propertyId={property.id}
+            currency={currency}
+          />
         </TabsContent>
 
-        <TabsContent value="files">
-          <PropertyFiles property={property} onSaved={reload} />
+        <TabsContent value="inventory">
+          <InventoryManager propertyId={property.id} currency={currency} />
         </TabsContent>
 
         <TabsContent value="preview">

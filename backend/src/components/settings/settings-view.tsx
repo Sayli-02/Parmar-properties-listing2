@@ -32,6 +32,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/shared/page-header";
 import { Field, FieldGrid } from "@/components/shared/field";
 import { ErrorState, LoadingBlock, Spinner } from "@/components/shared/states";
+import { SiteBrandingForm } from "@/components/settings/site-branding-form";
 
 type SettingsValues = z.input<typeof businessSettingsSchema>;
 type SettingsOutput = z.output<typeof businessSettingsSchema>;
@@ -99,15 +100,20 @@ export function SettingsView() {
     <div className="space-y-6">
       <PageHeader
         title="Settings"
-        description="Business details used across the public website, plus your own account."
+        description="Corporate branding, legacy business details, and your account."
       />
 
-      <Tabs defaultValue="business">
+      <Tabs defaultValue="branding">
         <TabsList>
-          <TabsTrigger value="business">Business</TabsTrigger>
+          <TabsTrigger value="branding">Site branding</TabsTrigger>
+          <TabsTrigger value="business">Legacy business</TabsTrigger>
           <TabsTrigger value="social">Social links</TabsTrigger>
           <TabsTrigger value="account">Your account</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="branding" className="space-y-4">
+          <SiteBrandingForm />
+        </TabsContent>
 
         <form onSubmit={form.handleSubmit(onSubmit)} noValidate>
           <TabsContent value="business" className="space-y-4">

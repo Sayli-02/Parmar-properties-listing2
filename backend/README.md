@@ -24,12 +24,14 @@ editor and run, in order:
 | `supabase/migrations/004_master_schema.sql` | Leads inbox, `page_content`, core lookup catalogues                |
 | `supabase/migrations/005_master_collections.sql` | `site_branding`, commercial + insights collections, remaining lookups, lead FKs |
 | `supabase/migrations/006_evolve_properties_locations.sql` | Master columns on `properties` and `locations`, the `property_configurations` layout tabs, and the `lookup_amenities` link — with backfills from the legacy columns |
+| `supabase/migrations/007_content_completeness.sql` | Luxury collection flag, 2 BHK lookup, audit columns on remaining lookups/article sections |
+| `supabase/migrations/008_property_configuration_price_breakdowns.sql` | Cost-sheet lines for master `property_configurations` (separate from legacy `price_breakdowns`) |
 | `supabase/seed_master.sql`                | Lookup catalogue values and page copy from the master spec           |
 | `supabase/seed.sql`                       | Optional sample properties, locations, amenities and metrics         |
 
 If the Admin CMS already shows permission errors after login, run **`003_fix_authorization.sql` first** — that is the fix for profile/amenities/properties load failures. Do **not** disable RLS and do **not** put the service role key in the browser.
 
-`004`, `005` and `006` are additive: nothing is dropped or recreated. Legacy CMS tables from `001` (`properties`, `locations`, `amenities`, key/value `site_settings`, `market_intelligence`) remain in place, and `006` adds the master columns next to them — `title`, `price` in ₹ Cr, the `lookup_*` foreign keys, `publication_status`, `highlights` — backfilling each one from its legacy equivalent. The property and location forms now write the master columns and dual-write the legacy ones, so both the public website and any older query keep working.
+`004`, `005`, `006` and `007` are additive: nothing is dropped or recreated. Legacy CMS tables from `001` (`properties`, `locations`, `amenities`, key/value `site_settings`, `market_intelligence`) remain in place, and `006`/`007` add the master columns next to them — `title`, `price` in ₹ Cr, the `lookup_*` foreign keys, `publication_status`, `highlights`, `is_luxury_collection` — backfilling each one from its legacy equivalent. The property and location forms now write the master columns and dual-write the legacy ones, so both the public website and any older query keep working.
 
 ### 2. Configure environment variables
 
@@ -107,18 +109,23 @@ into a tabbed editor:
   floor; RERA number; publication status, sort order and the badge toggles
   (featured, recently added, recommended, new launch with its launch phase); meta
   title and description; and a map picker for the pin used on the website
-- **Images** — drag-and-drop gallery with reordering, alt text and a primary
-  image that becomes the listing thumbnail and the property's cover image
-- **Layouts** — the 2–5 BHK tabs on the public property page, each with its plan
-  drawing, area range, carpet area, price band and tower or zone
-- **Configurations** — unit types with their own pricing, plus a cost sheet
-  (base price, floor rise, taxes, registration) that totals as you type
-- **Plans** — master plans, floor plans and configuration plans, as images or PDFs
+- **Media & Documents** — cover image and gallery (`property_images`, primary
+  syncs to `cover_image`); MahaRERA QR and brochure on the property file
+  columns; floor / master / configuration plans (`floor_plans`). RERA number
+  stays on Details → Compliance.
+- **Configurations** — the public **Configuration Matrix & Details** typologies
+  (plan type, BHK variant, tab label, title, area range, carpet area, price
+  indicator, tower/zone, plan image), with add/edit/delete/reorder
+- **Unit pricing** — optional internal unit types with cost sheets (separate
+  from the public configuration matrix)
 - **Amenities** — tick items from the `lookup_amenities` catalogue; the order here
   is the order the website shows
 - **Inventory** — individual units with floor, facing, price and status, with bulk
   creation for a whole floor or wing
-- **Documents** — brochure and RERA QR code uploads
+
+After creating a property from **Add Property**, the editor opens on the
+Media & Documents tab so assets can be uploaded immediately. Configurations
+remain a sibling tab (`?tab=configurations`).
 
 **Featured Properties** — arranges the properties highlighted on the home page.
 
@@ -132,11 +139,25 @@ each with ordering and a live/hidden toggle.
 capital rate, lifestyle tags and key enclaves, plus whether the area is one of the
 four shown on the home page or part of the future pipeline strip.
 
-**Amenities** — the legacy catalog. Property amenities now come from
-`lookup_amenities`, so renaming one there renames it everywhere.
+**Commercials** — Grade-A offices and retail assets with hub, type, grade,
+price in ₹ Cr, carpet area, RERA, highlights and publication status.
 
-**Settings** — business name, contact details, office address, currency and social
-links, plus your own profile and password.
+**Insights** — Market Intelligence articles with category, author card, key
+takeaways and structured sections (paragraphs, optional comparison tables,
+pull-quotes). Estimated read time is derived in the app, never stored.
+
+**Page content** — one editable row per public route (`home`, `buy`,
+`new-launches`, `luxury-collection`, `commercials`, `locations`, `insights`,
+`about`, `compare`, `saved`) with meta fields and JSON `sections_data`.
+
+**Amenities** — the shared `lookup_amenities` catalogue used by property
+amenity pickers.
+
+**Headline metrics** — legacy home-page number widgets (`market_intelligence`).
+
+**Settings** — Site branding singleton (`site_branding`: firm RERA, office,
+contacts, SEO defaults), plus legacy business key/value settings and your
+account.
 
 ---
 

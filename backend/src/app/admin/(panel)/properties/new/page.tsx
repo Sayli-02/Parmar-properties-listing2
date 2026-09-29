@@ -22,7 +22,7 @@ export default function NewPropertyPage() {
 
       <PageHeader
         title="New property"
-        description="Save the basics first. Images, configurations, floor plans and inventory unlock once the listing exists."
+        description="Save the property details first. You will then land on Media & Documents to upload cover/gallery images, MahaRERA QR, brochure and floor plans. Configurations and amenities stay available as sibling tabs on the same editor."
       />
 
       <PropertyForm />

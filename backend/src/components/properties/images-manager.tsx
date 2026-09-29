@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { Image as ImageIcon, Star, Trash, Upload } from "lucide-react";
 import { toast } from "sonner";
 
@@ -35,13 +36,17 @@ import {
 import { ConfirmDialog, useConfirm } from "@/components/shared/confirm-dialog";
 import { OrderControls, moveItem } from "@/components/shared/order-controls";
 
+/**
+ * Cover image + gallery (`property_images`). Primary image syncs to
+ * `properties.cover_image`. RERA QR / brochure / floor plans are managed
+ * separately and must not be uploaded here.
+ */
 export function ImagesManager({
   propertyId,
   propertyTitle,
   onChanged,
 }: {
   propertyId: string;
-  /** Used as the default alt text for newly uploaded gallery images. */
   propertyTitle?: string;
   onChanged?: () => void;
 }) {
@@ -62,6 +67,8 @@ export function ImagesManager({
     error,
     reload,
   } = useResource<PropertyImage[]>(fetchImages, []);
+
+  const cover = images.find((image) => image.is_primary) ?? images[0] ?? null;
 
   async function handleUpload(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -86,14 +93,19 @@ export function ImagesManager({
     setUploading(true);
     let uploaded = 0;
     try {
-      // Sequential so display_order stays predictable.
       const defaultAlt = propertyTitle?.trim() || undefined;
       for (const file of accepted) {
         await addPropertyImage(propertyId, file, defaultAlt);
         uploaded += 1;
       }
       toast.success(
-        `${uploaded} ${uploaded === 1 ? "image" : "images"} uploaded`
+        `${uploaded} ${uploaded === 1 ? "image" : "images"} uploaded`,
+        {
+          description:
+            images.length === 0
+              ? "The first image is set as the cover."
+              : undefined,
+        }
       );
     } catch (caught) {
       toast.error(getErrorMessage(caught));
@@ -122,11 +134,11 @@ export function ImagesManager({
     }
   }
 
-  async function handleSetPrimary(image: PropertyImage) {
+  async function handleSetCover(image: PropertyImage) {
     setBusy(true);
     try {
       await setPrimaryImage(propertyId, image.id);
-      toast.success("Primary image updated");
+      toast.success("Cover image updated");
       reload();
       onChanged?.();
     } catch (caught) {
@@ -160,11 +172,12 @@ export function ImagesManager({
     <Card>
       <CardHeader className="flex-row items-start justify-between gap-4">
         <div className="space-y-1.5">
-          <CardTitle>Images</CardTitle>
+          <CardTitle>Property images</CardTitle>
           <CardDescription>
-            Property gallery stored as property_images. The primary image syncs
-            to the cover used on listing cards. Floor plans, RERA QR and brochure
-            uploads stay on their own tabs — do not mix them here.
+            Cover image and gallery for the public Property Detail page. The
+            cover (primary) is used on listing cards and the hero thumbnail.
+            Do not upload RERA QR codes, brochures or floor plans here — those
+            have dedicated sections below.
           </CardDescription>
         </div>
         <div>
@@ -187,7 +200,7 @@ export function ImagesManager({
         </div>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="space-y-6">
         {error ? (
           <ErrorState message={error} onRetry={reload} />
         ) : loading ? (
@@ -195,8 +208,8 @@ export function ImagesManager({
         ) : images.length === 0 ? (
           <EmptyState
             icon={<ImageIcon />}
-            title="No images yet"
-            description={`Upload JPEG, PNG or WebP files up to ${MAX_IMAGE_SIZE_MB}MB each. You can select several at once.`}
+            title="No cover or gallery images yet"
+            description={`Upload JPEG, PNG or WebP up to ${MAX_IMAGE_SIZE_MB}MB. The first upload becomes the cover image; add more for the gallery.`}
             action={
               <Button
                 type="button"
@@ -204,82 +217,111 @@ export function ImagesManager({
                 onClick={() => inputRef.current?.click()}
               >
                 <Upload />
-                Upload images
+                Upload cover / gallery
               </Button>
             }
           />
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {images.map((image, index) => (
-              <div
-                key={image.id}
-                className="overflow-hidden rounded-lg border border-border"
-              >
-                <div className="relative">
+          <>
+            {cover ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="text-sm font-semibold">Cover image</h3>
+                  <Badge variant="warning">
+                    <Star className="fill-current" />
+                    Cover
+                  </Badge>
+                </div>
+                <div className="overflow-hidden rounded-lg border border-border sm:max-w-md">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={image.url}
-                    alt={image.alt_text ?? ""}
+                    src={cover.url}
+                    alt={cover.alt_text ?? "Cover"}
                     className="aspect-video w-full bg-muted object-cover"
                   />
-                  {image.is_primary ? (
-                    <Badge
-                      variant="warning"
-                      className="absolute top-2 left-2 shadow-sm"
-                    >
-                      <Star className="fill-current" />
-                      Primary
-                    </Badge>
-                  ) : null}
-                </div>
-
-                <div className="space-y-2 p-3">
-                  <Input
-                    defaultValue={image.alt_text ?? ""}
-                    placeholder="Describe the image (required)"
-                    aria-label="Image alt text"
-                    required
-                    onBlur={(event) =>
-                      void handleAltSave(image, event.target.value)
-                    }
-                  />
-
-                  <div className="flex items-center justify-between gap-2">
-                    <OrderControls
-                      index={index}
-                      total={images.length}
-                      disabled={busy}
-                      onMove={handleMove}
-                    />
-                    <div className="flex items-center gap-1">
-                      {!image.is_primary ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          disabled={busy}
-                          onClick={() => void handleSetPrimary(image)}
-                        >
-                          <Star />
-                          Primary
-                        </Button>
-                      ) : null}
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        aria-label="Delete image"
-                        className="text-destructive hover:bg-destructive/10"
-                        onClick={() => confirm.ask(image)}
-                      >
-                        <Trash />
-                      </Button>
-                    </div>
-                  </div>
+                  <p className="border-t border-border px-3 py-2 text-xs text-muted-foreground">
+                    Synced to the property cover field. Set another gallery
+                    image as cover to replace it.
+                  </p>
                 </div>
               </div>
-            ))}
-          </div>
+            ) : null}
+
+            <div className="space-y-3">
+              <h3 className="text-sm font-semibold">Gallery</h3>
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {images.map((image, index) => (
+                  <div
+                    key={image.id}
+                    className="overflow-hidden rounded-lg border border-border"
+                  >
+                    <div className="relative">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={image.url}
+                        alt={image.alt_text ?? ""}
+                        className="aspect-video w-full bg-muted object-cover"
+                      />
+                      {image.is_primary ? (
+                        <Badge
+                          variant="warning"
+                          className="absolute top-2 left-2 shadow-sm"
+                        >
+                          <Star className="fill-current" />
+                          Cover
+                        </Badge>
+                      ) : null}
+                    </div>
+
+                    <div className="space-y-2 p-3">
+                      <Input
+                        defaultValue={image.alt_text ?? ""}
+                        placeholder="Describe the image (required)"
+                        aria-label="Image alt text"
+                        required
+                        onBlur={(event) =>
+                          void handleAltSave(image, event.target.value)
+                        }
+                      />
+
+                      <div className="flex items-center justify-between gap-2">
+                        <OrderControls
+                          index={index}
+                          total={images.length}
+                          disabled={busy}
+                          onMove={handleMove}
+                        />
+                        <div className="flex items-center gap-1">
+                          {!image.is_primary ? (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              disabled={busy}
+                              onClick={() => void handleSetCover(image)}
+                            >
+                              <Star />
+                              Set cover
+                            </Button>
+                          ) : null}
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            aria-label="Delete image"
+                            className="text-destructive hover:bg-destructive/10"
+                            onClick={() => confirm.ask(image)}
+                          >
+                            <Trash />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
         )}
       </CardContent>
 
@@ -287,7 +329,7 @@ export function ImagesManager({
         open={confirm.open}
         onOpenChange={confirm.setOpen}
         title="Delete this image?"
-        description="The file is removed from storage and cannot be recovered."
+        description="The file is removed from storage and cannot be recovered. If it was the cover, another gallery image becomes cover."
         confirmLabel="Delete image"
         destructive
         onConfirm={async () => {

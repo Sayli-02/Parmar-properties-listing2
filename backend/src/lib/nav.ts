@@ -1,11 +1,15 @@
 import type { ComponentType } from "react";
 import {
+  Boxes,
+  Briefcase,
   Building,
+  FileText,
   Gem,
   Images,
   Inbox,
   LayoutDashboard,
   MapPin,
+  Newspaper,
   Plus,
   Rocket,
   Settings,
@@ -61,6 +65,12 @@ export const navSections: NavSection[] = [
         icon: Gem,
       },
       {
+        href: "/admin/commercials",
+        label: "Commercials",
+        description: "Grade-A offices and retail assets",
+        icon: Briefcase,
+      },
+      {
         href: "/admin/properties/new",
         label: "Add Property",
         description: "Create a new listing",
@@ -96,10 +106,28 @@ export const navSections: NavSection[] = [
         icon: MapPin,
       },
       {
+        href: "/admin/insights",
+        label: "Insights",
+        description: "Market intelligence articles",
+        icon: Newspaper,
+      },
+      {
         href: "/admin/market-intelligence",
-        label: "Market intelligence",
-        description: "Headline numbers (legacy widgets)",
+        label: "Headline metrics",
+        description: "Legacy home-page number widgets",
         icon: TrendingUp,
+      },
+      {
+        href: "/admin/page-content",
+        label: "Page content",
+        description: "Per-route editorial copy and SEO",
+        icon: FileText,
+      },
+      {
+        href: "/admin/amenities",
+        label: "Amenities",
+        description: "Shared amenity catalogue",
+        icon: Boxes,
       },
     ],
   },
@@ -120,7 +148,7 @@ export const navSections: NavSection[] = [
       {
         href: "/admin/settings",
         label: "Settings",
-        description: "Business details and contact information",
+        description: "Brand, contact and account",
         icon: Settings,
       },
     ],

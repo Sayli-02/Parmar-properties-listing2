@@ -20,6 +20,9 @@ export const storageFolders = {
   propertyBrochure: (propertyId: string) =>
     `properties/${propertyId}/brochure`,
   propertyRera: (propertyId: string) => `properties/${propertyId}/rera`,
+  commercialCover: (commercialId: string) =>
+    `commercials/${commercialId}/cover`,
+  insightsCover: (articleId: string) => `insights/${articleId}/cover`,
 } as const;
 
 function buildObjectName(fileName: string): string {

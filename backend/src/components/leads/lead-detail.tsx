@@ -198,12 +198,37 @@ export function LeadDetail({ leadId }: { leadId: string }) {
                       className="inline-flex items-center gap-1.5 hover:underline"
                     >
                       <Building className="size-3.5" />
-                      {lead.property.name}
+                      {lead.property.title || lead.property.name}
                     </Link>
                   ) : (
                     <span className="text-muted-foreground">
                       No specific listing
                     </span>
+                  )}
+                </DetailRow>
+                <DetailRow label="Commercial">
+                  {lead.commercial ? (
+                    <Link
+                      href={`/admin/commercials`}
+                      className="inline-flex items-center gap-1.5 hover:underline"
+                    >
+                      <Building className="size-3.5" />
+                      {lead.commercial.title}
+                    </Link>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
+                  )}
+                </DetailRow>
+                <DetailRow label="Article">
+                  {lead.article ? (
+                    <Link
+                      href={`/admin/insights/${lead.article.id}`}
+                      className="inline-flex items-center gap-1.5 hover:underline"
+                    >
+                      {lead.article.title}
+                    </Link>
+                  ) : (
+                    <span className="text-muted-foreground">—</span>
                   )}
                 </DetailRow>
                 <DetailRow label="Asset class">

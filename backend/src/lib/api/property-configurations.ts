@@ -1,9 +1,17 @@
-import type { PropertyConfiguration } from "@/types";
-import type { PropertyConfigurationInput } from "@/lib/validations";
+import type {
+  PropertyConfiguration,
+  PropertyConfigurationPriceBreakdown,
+  PropertyConfigurationWithBreakdowns,
+} from "@/types";
+import type {
+  PriceBreakdownInput,
+  PropertyConfigurationInput,
+} from "@/lib/validations";
 
 import { getSupabase, throwOnError } from "./client";
 
 const TABLE = "property_configurations";
+const BREAKDOWN_TABLE = "property_configuration_price_breakdowns";
 
 /**
  * Every text column on this table is NOT NULL with an empty-string default, so
@@ -36,6 +44,37 @@ export async function listPropertyConfigurations(
 
   throwOnError(error, "Loading property configurations");
   return (data ?? []) as unknown as PropertyConfiguration[];
+}
+
+/**
+ * Matrix typologies with their master price-breakdown line items attached.
+ */
+export async function listPropertyConfigurationsWithBreakdowns(
+  propertyId: string
+): Promise<PropertyConfigurationWithBreakdowns[]> {
+  const configurations = await listPropertyConfigurations(propertyId);
+  if (configurations.length === 0) return [];
+
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from(BREAKDOWN_TABLE)
+    .select("*")
+    .in(
+      "configuration_id",
+      configurations.map((row) => row.id)
+    )
+    .order("display_order", { ascending: true });
+
+  throwOnError(error, "Loading configuration price breakdowns");
+  const breakdowns =
+    (data ?? []) as unknown as PropertyConfigurationPriceBreakdown[];
+
+  return configurations.map((configuration) => ({
+    ...configuration,
+    price_breakdowns: breakdowns.filter(
+      (row) => row.configuration_id === configuration.id
+    ),
+  }));
 }
 
 export async function getNextPropertyConfigurationOrder(
@@ -101,4 +140,112 @@ export async function reorderPropertyConfigurations(
       throwOnError(error, "Reordering configurations");
     })
   );
+}
+
+// ---------------------------------------------------------------- breakdowns
+
+export async function listPropertyConfigurationPriceBreakdowns(
+  configurationId: string
+): Promise<PropertyConfigurationPriceBreakdown[]> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from(BREAKDOWN_TABLE)
+    .select("*")
+    .eq("configuration_id", configurationId)
+    .order("display_order", { ascending: true });
+
+  throwOnError(error, "Loading configuration price breakdown");
+  return (data ?? []) as unknown as PropertyConfigurationPriceBreakdown[];
+}
+
+export async function createPropertyConfigurationPriceBreakdown(
+  configurationId: string,
+  input: PriceBreakdownInput
+): Promise<PropertyConfigurationPriceBreakdown> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from(BREAKDOWN_TABLE)
+    .insert({
+      configuration_id: configurationId,
+      label: input.label,
+      amount: input.amount,
+      display_order: input.display_order ?? 0,
+    })
+    .select("*")
+    .single();
+
+  throwOnError(error, "Adding price line");
+  return data as unknown as PropertyConfigurationPriceBreakdown;
+}
+
+export async function updatePropertyConfigurationPriceBreakdown(
+  id: string,
+  input: PriceBreakdownInput
+): Promise<PropertyConfigurationPriceBreakdown> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from(BREAKDOWN_TABLE)
+    .update({
+      label: input.label,
+      amount: input.amount,
+      display_order: input.display_order ?? 0,
+    })
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  throwOnError(error, "Updating price line");
+  return data as unknown as PropertyConfigurationPriceBreakdown;
+}
+
+export async function deletePropertyConfigurationPriceBreakdown(
+  id: string
+): Promise<void> {
+  const supabase = getSupabase();
+  const { error } = await supabase.from(BREAKDOWN_TABLE).delete().eq("id", id);
+  throwOnError(error, "Deleting price line");
+}
+
+export async function reorderPropertyConfigurationPriceBreakdowns(
+  ids: string[]
+): Promise<void> {
+  const supabase = getSupabase();
+  await Promise.all(
+    ids.map(async (id, index) => {
+      const { error } = await supabase
+        .from(BREAKDOWN_TABLE)
+        .update({ display_order: index })
+        .eq("id", id);
+      throwOnError(error, "Reordering price lines");
+    })
+  );
+}
+
+/**
+ * Replaces every price line for a master property_configuration.
+ */
+export async function savePropertyConfigurationPriceBreakdowns(
+  configurationId: string,
+  rows: PriceBreakdownInput[]
+): Promise<void> {
+  const supabase = getSupabase();
+
+  const { error: deleteError } = await supabase
+    .from(BREAKDOWN_TABLE)
+    .delete()
+    .eq("configuration_id", configurationId);
+
+  throwOnError(deleteError, "Saving price breakdown");
+  if (rows.length === 0) return;
+
+  const { error } = await supabase.from(BREAKDOWN_TABLE).insert(
+    rows.map((row, index) => ({
+      configuration_id: configurationId,
+      label: row.label,
+      amount: row.amount,
+      display_order: row.display_order ?? index,
+    }))
+  );
+
+  throwOnError(error, "Saving price breakdown");
 }
