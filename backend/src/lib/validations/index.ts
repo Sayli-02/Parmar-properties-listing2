@@ -1,0 +1,269 @@
+import { z } from "zod";
+
+/**
+ * Number inputs report `""` when a user clears them, which `z.coerce.number()`
+ * would read as `0`. Blank, null and NaN all mean "not set" here, so an optional
+ * number column stays NULL instead of silently becoming zero.
+ */
+function optionalNumber<T extends z.ZodTypeAny>(schema: T) {
+  return z.preprocess(
+    (value) =>
+      value === "" ||
+      value === null ||
+      value === undefined ||
+      (typeof value === "number" && Number.isNaN(value))
+        ? null
+        : value,
+    schema.nullable()
+  );
+}
+
+export const loginSchema = z.object({
+  email: z.string().email("Enter a valid email"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+export const heroSlideSchema = z.object({
+  heading: z.string().min(1, "Heading is required").max(200),
+  supporting_text: z.string().max(500).optional().nullable(),
+  cta_label: z.string().max(100).optional().nullable(),
+  cta_url: z
+    .string()
+    .url("Enter a valid URL")
+    .optional()
+    .nullable()
+    .or(z.literal("")),
+  is_active: z.boolean().default(true),
+  display_order: z.coerce.number().int().min(0).default(0),
+});
+
+/**
+ * Micro-market pages. Master columns from 006 sit alongside the legacy ones,
+ * which the API dual-writes.
+ */
+export const locationSchema = z.object({
+  name: z.string().min(1, "Name is required").max(120),
+  slug: z
+    .string()
+    .min(1, "Slug is required")
+    .max(80)
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase letters, numbers, and hyphens"),
+  tagline: z.string().max(250).optional().nullable(),
+  description: z.string().max(2000).optional().nullable(),
+  city: z.string().max(120).optional().nullable(),
+  price_range: z.string().max(50).optional().nullable(),
+  average_rate: z.string().max(60).optional().nullable(),
+  lifestyle: z.string().max(200).optional().nullable(),
+  key_enclaves: z.array(z.string().min(1).max(120)).max(12).default([]),
+  is_primary_home: z.boolean().default(false),
+  primary_order: optionalNumber(z.coerce.number().int().min(1).max(4)),
+  is_future: z.boolean().default(false),
+  future_order: optionalNumber(z.coerce.number().int().min(1)),
+  publication_status: z.enum(["draft", "published", "archived"]).default("published"),
+  sort_order: z.coerce.number().int().min(0).default(0),
+  meta_title: z.string().max(120).optional().nullable(),
+  meta_description: z.string().max(255).optional().nullable(),
+  lookup_location_id: z.string().uuid().optional().nullable().or(z.literal("")),
+  is_active: z.boolean().default(true),
+  display_order: z.coerce.number().int().min(0).default(0),
+});
+
+export const marketIntelligenceSchema = z.object({
+  title: z.string().min(1, "Title is required").max(120),
+  value: z.string().min(1, "Value is required").max(80),
+  unit: z.string().max(40).optional().nullable(),
+  description: z.string().max(500).optional().nullable(),
+  change_percentage: z.coerce.number().optional().nullable(),
+  source: z.string().max(200).optional().nullable(),
+  is_active: z.boolean().default(true),
+  display_order: z.coerce.number().int().min(0).default(0),
+});
+
+export const propertySchema = z.object({
+  name: z.string().min(1, "Property name is required").max(200),
+  slug: z
+    .string()
+    .min(1, "Slug is required")
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase letters, numbers, and hyphens"),
+  property_type: z.enum([
+    "apartment",
+    "villa",
+    "penthouse",
+    "plot",
+    "commercial",
+    "duplex",
+    "other",
+  ]),
+  location_id: z.string().uuid().optional().nullable().or(z.literal("")),
+  location_name: z.string().max(200).optional().nullable(),
+  city: z.string().max(120).optional().nullable(),
+  locality: z.string().max(120).optional().nullable(),
+  location_details: z.string().max(1000).optional().nullable(),
+  tagline: z.string().max(250).optional().nullable(),
+  description: z.string().max(5000).optional().nullable(),
+  project_overview: z.string().max(10000).optional().nullable(),
+  project_details: z.string().max(10000).optional().nullable(),
+  developer_name: z.string().max(200).optional().nullable(),
+  developer_description: z.string().max(5000).optional().nullable(),
+  price_amount: z.coerce.number().min(0).optional().nullable(),
+  price_display: z.string().max(120).optional().nullable(),
+  bhk: z.string().max(40).optional().nullable(),
+  carpet_area: z.string().max(80).optional().nullable(),
+  possession: z.string().max(120).optional().nullable(),
+  availability: z.enum(["available", "limited", "sold_out", "coming_soon"]),
+  status: z.enum([
+    "active",
+    "inactive",
+    "sold_out",
+    "upcoming",
+    "ready_to_move",
+    "under_construction",
+  ]),
+  rera_number: z.string().max(120).optional().nullable(),
+  is_featured: z.boolean().default(false),
+  is_active: z.boolean().default(true),
+  latitude: z.coerce.number().min(-90).max(90).optional().nullable(),
+  longitude: z.coerce.number().min(-180).max(180).optional().nullable(),
+  google_maps_url: z
+    .string()
+    .url("Enter a valid Google Maps URL")
+    .optional()
+    .nullable()
+    .or(z.literal("")),
+  address: z.string().max(500).optional().nullable(),
+});
+
+/**
+ * Master-spec property form (Phase 4–5). Dual-writes legacy columns in the API.
+ */
+export const masterPropertySchema = z.object({
+  title: z.string().min(1, "Title is required").max(150),
+  slug: z
+    .string()
+    .min(1, "Slug is required")
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use lowercase letters, numbers, and hyphens"),
+  tagline: z.string().min(1, "Tagline is required").max(200),
+  /** Project Overview body on the public Property Detail page. */
+  description: z.string().min(1, "Project overview is required").max(10000),
+  highlights: z
+    .array(z.string().min(1).max(200))
+    .min(1, "Add at least one highlight")
+    .max(8),
+  /** Property-specific developer shown under Developer Overview. */
+  developer_name: z.string().max(200).optional().nullable(),
+  developer_description: z.string().max(10000).optional().nullable(),
+  lookup_location_id: z.string().uuid("Select a location"),
+  sub_location: z.string().min(1, "Sub-location is required").max(150),
+  property_type_id: z.string().uuid("Select a property type"),
+  bhk_id: z.string().uuid("Select a BHK"),
+  status_id: z.string().uuid("Select construction status"),
+  price: z.coerce.number().gt(0, "Price must be greater than 0"),
+  carpet_area_sqft: z.coerce.number().int().gt(0, "Carpet area is required"),
+  super_area: optionalNumber(
+    z.coerce.number().int().gt(0, "Super area must be greater than 0")
+  ),
+  possession_date: z.string().min(1, "Possession is required").max(50),
+  floor: z.string().min(1, "Floor information is required").max(80),
+  is_featured: z.boolean().default(false),
+  recently_added: z.boolean().default(false),
+  is_recommended: z.boolean().default(false),
+  is_new_launch: z.boolean().default(false),
+  launch_phase_id: z.string().uuid().optional().nullable().or(z.literal("")),
+  rera_id: z.string().min(1, "RERA number is required").max(50),
+  latitude: optionalNumber(z.coerce.number().min(-90).max(90)),
+  longitude: optionalNumber(z.coerce.number().min(-180).max(180)),
+  publication_status: z.enum(["draft", "published", "archived"]).default("published"),
+  sort_order: z.coerce.number().int().min(0).default(0),
+  meta_title: z.string().max(120).optional().nullable(),
+  meta_description: z.string().max(255).optional().nullable(),
+  /** Optional link to editorial micro-market page (legacy locations). */
+  location_id: z.string().uuid().optional().nullable().or(z.literal("")),
+});
+
+export const propertyConfigurationSchema = z.object({
+  plan_type: z.enum(["master", "floor", "individual"]),
+  variant_code: z.enum(["2bhk", "3bhk", "4bhk", "5bhk", "custom"]),
+  tab_label: z.string().min(1, "Tab label is required").max(30),
+  title: z.string().min(1, "Title is required").max(100),
+  area_range: z.string().max(60).default(""),
+  carpet_area: z.string().max(50).default(""),
+  price_indicator: z.string().max(60).default(""),
+  tower_zone: z.string().max(100).default(""),
+  image_path: z.string().max(2000).optional().default(""),
+  display_order: z.coerce.number().int().min(0).default(0),
+});
+
+export const configurationSchema = z.object({
+  name: z.string().min(1, "Name is required").max(120),
+  bhk: z.string().max(40).optional().nullable(),
+  variant: z.string().max(120).optional().nullable(),
+  carpet_area: z.string().max(80).optional().nullable(),
+  possession: z.string().max(120).optional().nullable(),
+  price: z.coerce.number().min(0).optional().nullable(),
+  price_display: z.string().max(120).optional().nullable(),
+  availability: z.enum(["available", "limited", "sold_out", "coming_soon"]),
+  status: z.string().max(40).default("active"),
+  display_order: z.coerce.number().int().min(0).default(0),
+});
+
+export const priceBreakdownSchema = z.object({
+  label: z.string().min(1, "Label is required").max(120),
+  amount: z.coerce.number().min(0, "Amount must be 0 or greater"),
+  display_order: z.coerce.number().int().min(0).default(0),
+});
+
+export const floorPlanSchema = z.object({
+  name: z.string().min(1, "Name is required").max(120),
+  plan_type: z.enum(["floor_plan", "master_plan", "configuration_plan"]),
+  configuration_id: z.string().uuid().optional().nullable().or(z.literal("")),
+  is_active: z.boolean().default(true),
+  display_order: z.coerce.number().int().min(0).default(0),
+});
+
+export const inventoryUnitSchema = z.object({
+  unit_number: z.string().min(1, "Unit number is required").max(40),
+  floor: z.string().max(40).optional().nullable(),
+  facing: z.string().max(40).optional().nullable(),
+  configuration_id: z.string().uuid().optional().nullable().or(z.literal("")),
+  price: z.coerce.number().min(0).optional().nullable(),
+  status: z.enum(["available", "booked", "hold", "sold"]),
+  notes: z.string().max(1000).optional().nullable(),
+});
+
+export const amenitySchema = z.object({
+  name: z.string().min(1, "Name is required").max(120),
+  icon: z.string().max(80).optional().nullable(),
+  is_active: z.boolean().default(true),
+});
+
+export const businessSettingsSchema = z.object({
+  business_name: z.string().min(1, "Business name is required").max(200),
+  phone: z.string().max(40).optional().default(""),
+  email: z.string().email("Enter a valid email").or(z.literal("")),
+  office_address: z.string().max(500).optional().default(""),
+  whatsapp: z.string().max(40).optional().default(""),
+  currency: z.string().min(1).max(10).default("INR"),
+  social_links: z
+    .object({
+      facebook: z.string().url().optional().or(z.literal("")),
+      instagram: z.string().url().optional().or(z.literal("")),
+      linkedin: z.string().url().optional().or(z.literal("")),
+      twitter: z.string().url().optional().or(z.literal("")),
+    })
+    .optional()
+    .default({}),
+});
+
+export type LoginInput = z.infer<typeof loginSchema>;
+export type HeroSlideInput = z.infer<typeof heroSlideSchema>;
+export type LocationInput = z.infer<typeof locationSchema>;
+export type MarketIntelligenceInput = z.infer<typeof marketIntelligenceSchema>;
+export type PropertyInput = z.infer<typeof propertySchema>;
+export type MasterPropertyInput = z.infer<typeof masterPropertySchema>;
+export type PropertyConfigurationInput = z.infer<typeof propertyConfigurationSchema>;
+export type ConfigurationInput = z.infer<typeof configurationSchema>;
+export type PriceBreakdownInput = z.infer<typeof priceBreakdownSchema>;
+export type FloorPlanInput = z.infer<typeof floorPlanSchema>;
+export type InventoryUnitInput = z.infer<typeof inventoryUnitSchema>;
+export type AmenityInput = z.infer<typeof amenitySchema>;
+export type BusinessSettingsInput = z.infer<typeof businessSettingsSchema>;
