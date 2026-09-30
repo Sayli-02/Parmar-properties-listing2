@@ -1,0 +1,132 @@
+# Parmar Properties — Architecture & Data Mapping Map 🗺️
+
+This document explains the technical mapping between **Frontend TypeScript components**, **Backend Admin forms**, and the **Supabase PostgreSQL database**.
+
+---
+
+## 1. Database Table Directory
+
+| Table Name | Defined in Migration | Used For | RLS Permissions |
+| :--- | :--- | :--- | :--- |
+| `properties` | `001`, `006`, `007` | Residential listings (Buy, New Launches, Luxury) | Public: `SELECT` published; Admin: CRUD |
+| `property_images` | `001` | Gallery photos for residential listings | Public: `SELECT`; Admin: CRUD |
+| `property_configurations` | `006` | Floor plans & 2/3/4/5 BHK variants per property | Public: `SELECT`; Admin: CRUD |
+| `price_breakdowns` | `001`, `008` | Cost-sheet lines (Base, Stamp Duty, GST, etc.) | Public: `SELECT`; Admin: CRUD |
+| `commercial_properties` | `005` | Commercial listings (Offices, HQs, Retail) | Public: `SELECT` published; Admin: CRUD |
+| `locations` | `001`, `006` | Micro-market editorial guides (Worli, Bandra, etc.) | Public: `SELECT` active; Admin: CRUD |
+| `insights_articles` | `005` | Market Intelligence research reports | Public: `SELECT` published; Admin: CRUD |
+| `article_sections` | `005` | Structured paragraphs, tables & quotes per article | Public: `SELECT`; Admin: CRUD |
+| `leads` | `004`, `005` | Consolidated inquiry inbox from all website forms | **Public: INSERT ONLY (Anon)**; Admin: SELECT/UPDATE |
+| `hero_slides` | `001` | Home page full-bleed carousel slides | Public: `SELECT` active; Admin: CRUD |
+| `site_branding` | `005` | Singleton company info, MahaRERA ID, contacts, address | Public: `SELECT`; Admin: CRUD |
+| `page_content` | `004` | Per-route headlines, badges, subtitles & JSON sections | Public: `SELECT`; Admin: CRUD |
+| `lookup_*` | `004`, `005` | Standard options (`bhk`, `property_types`, `hubs`, etc.) | Public: `SELECT`; Admin: CRUD |
+
+---
+
+## 2. Model Mapping (Frontend CamelCase ↔ Backend Snake_Case)
+
+### A. Residential Properties
+
+| Frontend Property Model ([`property.ts`](file:///c:/Users/Sayli/OneDrive/Desktop/Parmar-properties-listing/Frontend/types/property.ts)) | Supabase Database Column (`properties`) | Type | Notes |
+| :--- | :--- | :--- | :--- |
+| `id` | `id` | `UUID` | Primary Key |
+| `slug` | `slug` | `VARCHAR(120)` | Unique URL slug |
+| `title` | `title` | `VARCHAR(150)` | Listing title (e.g., *Worli Aurum Sky Villa*) |
+| `tagline` | `tagline` | `VARCHAR(200)` | Subtitle badge |
+| `location` | `location_id` / `locality` | `UUID` / `VARCHAR` | Foreign key to `locations(id)` |
+| `subLocation` | `sub_location` | `VARCHAR(150)` | Micro-enclave (e.g., *Worli Sea Face*) |
+| `price` | `price` | `NUMERIC(10,2)` | In Crores INR (e.g., `18.50`) |
+| `priceFormatted` | Computed | `string` | Formatted as `₹${price} Cr` |
+| `bhk` | `bhk_id` / `bhk` | `VARCHAR` | Configuration string (e.g., *4 BHK*) |
+| `carpetArea` | `carpet_area_sqft` | `INTEGER` | Square footage |
+| `superArea` | `super_area` | `INTEGER` | Super built-up area |
+| `propertyType` | `property_type_id` | `UUID` | Links to `lookup_property_types` |
+| `possession` | `status_id` / `possession`| `VARCHAR` | *Ready to Move*, *Under Construction*, etc. |
+| `possessionDate` | `possession_date` | `VARCHAR(50)` | Estimated delivery date |
+| `floor` | `floor` | `VARCHAR(50)` | e.g., *Levels 45–52* |
+| `featured` | `is_featured` | `BOOLEAN` | Shows on home page featured grid |
+| `recentlyAdded` | `recently_added` | `BOOLEAN` | New arrival badge |
+| `recommended` | `is_recommended` | `BOOLEAN` | Advisory recommendation |
+| `isNewLaunch` | `is_new_launch` | `BOOLEAN` | Controls inclusion in `/properties?tab=new-launches` |
+| `isLuxuryCollection`| `is_luxury_collection` | `BOOLEAN` | Controls inclusion in `/properties?tab=luxury-collection` |
+| `coverImage` | `cover_image` | `TEXT` | Primary card image URL |
+| `images` | `property_images.url` | `TEXT[]` | One-to-many relationship |
+| `amenities` | `property_amenities` | `TEXT[]` | Many-to-many to `lookup_amenities` |
+| `description` | `description` | `TEXT` | Architectural narrative |
+| `highlights` | `highlights` | `TEXT[]` | Bullet point highlights |
+| `reraId` | `rera_id` | `VARCHAR(80)` | MahaRERA Registration number |
+| `coordinates` | `latitude`, `longitude` | `NUMERIC` | Leaflet map coordinates |
+| `floorPlans` | `property_configurations` | `JSON/Relation` | Floor plan diagrams and layout variants |
+
+---
+
+### B. Leads Table Mapping (6 Ingestion Points)
+
+All 6 forms on the website insert into the unified `leads` table:
+
+```sql
+CREATE TABLE leads (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  full_name VARCHAR(120) NOT NULL,
+  phone VARCHAR(30) NOT NULL,
+  email VARCHAR(120),
+  company_name VARCHAR(120),
+  source_id UUID NOT NULL REFERENCES lookup_lead_sources(id),
+  status_id UUID REFERENCES lookup_lead_statuses(id),
+  property_id UUID REFERENCES properties(id),
+  commercial_id UUID REFERENCES commercial_properties(id),
+  article_id UUID REFERENCES insights_articles(id),
+  asset_class VARCHAR(80),
+  budget_range VARCHAR(80),
+  message TEXT,
+  gate_type VARCHAR(50),
+  is_otp_verified BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+```
+
+| Website Touchpoint | Form Location | Ingestion Source Slug (`lookup_lead_sources`) |
+| :--- | :--- | :--- |
+| **Navbar Advisory Modal** | Header "Talk to Advisory" button | `navbar_advisory` |
+| **Property Sticky Sidebar Form** | `/properties/[slug]` sidebar | `property_sidebar_inquiry` |
+| **Property Gated Unlock Modal** | `/properties/[slug]` brochure/floorplan click | `property_gate_modal` |
+| **Private Opportunities Gate** | Home page `/` OTP form | `private_opportunities_otp` |
+| **Commercial Dossier Modal** | `/commercials` "Inquire Commercial" button | `commercial_card_modal` |
+| **Market Intelligence Form** | `/market-intelligence/[slug]` consultation box | `article_consultation_modal` |
+
+---
+
+## 3. The Hybrid Fallback Pattern (Safe Wiring)
+
+To guarantee that the public website **never displays a white screen or crashes** even if Supabase is offline or not configured yet, all queries must implement this fallback structure:
+
+```typescript
+// Example: Frontend/lib/supabase/properties.ts
+import { supabase, isSupabaseConfigured } from './client';
+import { PROPERTIES } from '@/data/properties';
+import { Property } from '@/types/property';
+
+export async function getProperties(): Promise<Property[]> {
+  if (!isSupabaseConfigured()) {
+    return PROPERTIES; // Safe fallback to local data
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from('properties')
+      .select('*, property_images(*)')
+      .eq('publication_status', 'published')
+      .order('sort_order', { ascending: true });
+
+    if (error || !data || data.length === 0) {
+      return PROPERTIES;
+    }
+
+    return data.map(mapSupabasePropertyToFrontend);
+  } catch (err) {
+    console.warn('Supabase query failed, falling back to static data:', err);
+    return PROPERTIES;
+  }
+}
+```
