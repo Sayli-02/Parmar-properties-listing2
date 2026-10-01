@@ -5,6 +5,7 @@ import { Lock, Shield, CheckCircle2, X, Phone, User, Mail, KeyRound, ArrowRight 
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 
 import { HOME_PAGE_CONTENT } from '@/data/content/home.content';
+import { submitLead } from '@/lib/supabase/leads';
 
 interface PrivateOpportunitiesProps {
   minimal?: boolean;
@@ -50,14 +51,26 @@ export function PrivateOpportunities({ minimal = true }: PrivateOpportunitiesPro
     }, 400);
   };
 
-  const handleFinalSubmit = (e: React.FormEvent) => {
+  const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName || !email) return;
     setLoading(true);
-    setTimeout(() => {
+
+    try {
+      await submitLead({
+        fullName,
+        phone,
+        email,
+        sourceSlug: 'private_opportunities_otp',
+        isOtpVerified: true,
+        message: 'Requested confidential off-market private portfolio access',
+      });
+    } catch (err) {
+      console.warn('Private opportunities lead submit error:', err);
+    } finally {
       setLoading(false);
       setSubmitted(true);
-    }, 400);
+    }
   };
 
   return (

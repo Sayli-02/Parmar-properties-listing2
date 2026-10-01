@@ -9,12 +9,14 @@ import {
   ArrowRight,
   Building2,
 } from 'lucide-react';
-import { PROPERTIES } from '@/data/properties';
+import { PROPERTIES, Property } from '@/data/properties';
 import { PropertyCard } from '@/components/property/PropertyCard';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { ScrollProgressBar } from '@/components/ui/ScrollProgressBar';
 import { PrivateOpportunities } from '@/components/property/PrivateOpportunities';
 import { LOCATIONS_PAGE_CONTENT } from '@/data/content/locations.content';
+import { fetchLocations } from '@/lib/supabase/locations';
+import { fetchPublishedProperties } from '@/lib/supabase/properties';
 
 interface LocationDirectoryItem {
   name: string;
@@ -118,16 +120,43 @@ function LocationsContent() {
   const initialLoc = searchParams ? searchParams.get('location') : null;
 
   const [selectedLoc, setSelectedLoc] = useState<string>(initialLoc || 'All');
+  const [properties, setProperties] = useState<Property[]>(PROPERTIES);
+  const [locationsDirectory, setLocationsDirectory] = useState<LocationDirectoryItem[]>(ALL_LOCATIONS_DIRECTORY);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    fetchPublishedProperties().then((data) => {
+      if (data && data.length > 0 && isMounted) {
+        setProperties(data);
+      }
+    });
+    fetchLocations().then((data) => {
+      if (data && data.length > 0 && isMounted) {
+        const mapped = data.map((l) => ({
+          name: l.name,
+          slug: l.slug,
+          image: l.coverImage || '/properties/worli-aurum/cover.jpg',
+          tagline: l.tagline,
+          rate: l.priceRange,
+          subLocation: l.keyEnclaves?.length > 0 ? l.keyEnclaves.join(' & ') : l.lifestyle,
+        }));
+        setLocationsDirectory(mapped);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const filteredProperties = useMemo(() => {
-    if (selectedLoc === 'All') return PROPERTIES;
-    return PROPERTIES.filter((p) => {
+    if (selectedLoc === 'All') return properties;
+    return properties.filter((p) => {
       const pLoc = p.location.toLowerCase();
       const pSub = p.subLocation.toLowerCase();
       const sel = selectedLoc.toLowerCase();
       return pLoc.includes(sel) || pSub.includes(sel) || sel.includes(pLoc);
     });
-  }, [selectedLoc]);
+  }, [selectedLoc, properties]);
 
   return (
     <div className="pt-28 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto min-h-screen bg-[#EDEEE9] text-[#15181A]">
@@ -153,7 +182,7 @@ function LocationsContent() {
           </div>
 
           <div className="text-xs font-semibold uppercase tracking-wider text-[#C5282F] shrink-0">
-            {selectedLoc === 'All' ? `${ALL_LOCATIONS_DIRECTORY.length} Enclaves Available` : `${filteredProperties.length} Properties in ${selectedLoc}`}
+            {selectedLoc === 'All' ? `${locationsDirectory.length} Enclaves Available` : `${filteredProperties.length} Properties in ${selectedLoc}`}
           </div>
         </div>
 
@@ -192,7 +221,7 @@ function LocationsContent() {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {ALL_LOCATIONS_DIRECTORY.map((loc, idx) => (
+            {locationsDirectory.map((loc, idx) => (
               <ScrollReveal key={loc.slug} animation="fade-up" delay={(idx % 4) * 80}>
                 <Link
                   href={`/locations/${loc.slug}`}

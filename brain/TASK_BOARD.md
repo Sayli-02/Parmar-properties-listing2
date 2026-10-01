@@ -13,63 +13,14 @@
 ### 1. In Progress 🔄
 *(Claim a task by adding your name here)*
 
-- [ ] **Task 2.1: Frontend Supabase Client & Adapter Setup**
-  - **Status:** 🔄 Ready to Start / In Progress
-  - **Assigned:** `[Developer Name]`
-  - **Description:** Install `@supabase/supabase-js` in `Frontend`, create `Frontend/lib/supabase/client.ts`, and set up TypeScript type mapper functions.
-  - **Definition of Done:** Supabase client initializes safely without build or runtime errors.
+- [ ] **Task 5.1: Dynamic Header & Footer Branding**
+  - **Status:** 🔄 Ready to Start
+  - **Assigned:** `[Unassigned]`
+  - **Description:** Read phone, email, office address, and MahaRERA number from `site_branding` table.
 
 ---
 
 ### 2. To Do (Upcoming Tasks) 📋
-
-#### Phase 1: Lead Capture Forms (Direct to Supabase `leads`)
-- [ ] **Task 3.1: Navbar Advisory Modal Submission**
-  - **Assigned:** `[Unassigned]`
-  - **File:** `Frontend/components/layout/Navbar.tsx`
-  - **Goal:** On submit, insert lead into Supabase `leads` table with `source = 'navbar_advisory'`.
-- [ ] **Task 3.2: Property Detail Sticky Sidebar Inquiry Form**
-  - **Assigned:** `[Unassigned]`
-  - **File:** `Frontend/components/property/PropertyDetailClient.tsx`
-  - **Goal:** On submit, insert lead into Supabase with `property_id` and message.
-- [ ] **Task 3.3: Property Detail Gated Modal (Brochure / Floor Plan / Map Unlock)**
-  - **Assigned:** `[Unassigned]`
-  - **File:** `Frontend/components/property/PropertyDetailClient.tsx`
-  - **Goal:** Insert lead with `gate_type` (`brochure`, `floorplan`, `map`, `viewing`).
-- [ ] **Task 3.4: Home Private Opportunities OTP Gate**
-  - **Assigned:** `[Unassigned]`
-  - **File:** `Frontend/components/property/PrivateOpportunities.tsx`
-  - **Goal:** Insert lead with `is_otp_verified = true` and `source = 'private_opportunities_otp'`.
-- [ ] **Task 3.5: Commercial Dossier Inquiry Modal**
-  - **Assigned:** `[Unassigned]`
-  - **File:** `Frontend/app/commercials/page.tsx`
-  - **Goal:** Insert lead with `commercial_id` and company details.
-- [ ] **Task 3.6: Market Intelligence Advisory Consultation Modal**
-  - **Assigned:** `[Unassigned]`
-  - **File:** `Frontend/app/market-intelligence/[slug]/page.tsx`
-  - **Goal:** Insert lead with `article_id` and portfolio evaluation note.
-
-#### Phase 2: Live Content & Listings (Hybrid Fallback Pattern)
-- [ ] **Task 4.1: Residential Properties Query Hook**
-  - **Assigned:** `[Unassigned]`
-  - **Files:** `Frontend/app/properties/page.tsx`, `Frontend/app/page.tsx`
-  - **Goal:** Query published properties from Supabase `properties` table. If table is empty or offline, fallback to `PROPERTIES` in `data/properties.ts`.
-- [ ] **Task 4.2: Single Property Dossier (`/properties/[slug]`)**
-  - **Assigned:** `[Unassigned]`
-  - **Files:** `Frontend/app/properties/[slug]/page.tsx`
-  - **Goal:** Fetch property by slug with `property_configurations` and `property_images`.
-- [ ] **Task 4.3: Commercial Properties Query Hook (`/commercials`)**
-  - **Assigned:** `[Unassigned]`
-  - **Files:** `Frontend/app/commercials/page.tsx`
-  - **Goal:** Fetch published commercial properties from `commercial_properties`.
-- [ ] **Task 4.4: Locations Directory & Detail (`/locations`, `/locations/[slug]`)**
-  - **Assigned:** `[Unassigned]`
-  - **Files:** `Frontend/app/locations/page.tsx`, `Frontend/app/locations/[slug]/page.tsx`
-  - **Goal:** Fetch locations from Supabase `locations` table.
-- [ ] **Task 4.5: Market Intelligence Articles (`/market-intelligence`)**
-  - **Assigned:** `[Unassigned]`
-  - **Files:** `Frontend/app/market-intelligence/page.tsx`, `[slug]/page.tsx`
-  - **Goal:** Fetch published articles from `insights_articles` and `article_sections`.
 
 #### Phase 3: Global Settings & Branding
 - [ ] **Task 5.1: Dynamic Header & Footer Branding**
@@ -85,6 +36,15 @@
 
 ### 3. Completed Tasks ✅
 
+- [x] **Task 4.1: Residential Properties Query Hook & Home Showcase** (Done: 2026-10-01) — Connected `/` and `/properties` to Supabase `properties` table with zero-breakage fallback.
+- [x] **Task 4.2: Single Property Dossier (`/properties/[slug]`)** (Done: 2026-10-01) — Connected dynamic slug lookup with configurations, gallery images, and lead inquiry hooks.
+- [x] **Task 4.3: Commercial Properties Query Hook (`/commercials`)** (Done: 2026-10-01) — Connected `/commercials` to Supabase `commercial_properties` table with fallback.
+- [x] **Task 4.4: Locations Directory & Detail (`/locations`, `/locations/[slug]`)** (Done: 2026-10-01) — Connected enclaves directory and location slug pages to Supabase `locations` table.
+- [x] **Task 4.5: Market Intelligence Articles (`/market-intelligence`, `[slug]`)** (Done: 2026-10-01) — Connected `/market-intelligence` and article slug pages to Supabase `insights_articles` table.
+
+- [x] **Wire 6 Lead Touchpoints to Supabase `leads` (Navbar, Property Gate, Sidebar, Private Opportunities, Commercials, Market Intelligence)** — *Completed by Antigravity & Sayli (2026-09-30)*
+- [x] **Frontend Supabase Client (`lib/supabase/client.ts`, `leads.ts`, `properties.ts`)** — *Completed by Antigravity & Sayli (2026-09-30)*
+- [x] **Setup `.env.local` and `.env.example` in `backend` and `Frontend`** — *Completed by Antigravity & Sayli (2026-09-30)*
 - [x] **Audit Frontend and Backend Architecture & Attributes** — *Completed by Antigravity & Sayli (2026-09-30)*
 - [x] **Setup Project Brain & Team Collaboration System** — *Completed by Antigravity & Sayli (2026-09-30)*
 - [x] **Pull `backend-completion` and Fast-Forward Merge to `main`** — *Completed by Sayli (2026-09-30)*

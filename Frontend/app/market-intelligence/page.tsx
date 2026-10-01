@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { ArrowLeft, ArrowRight, BookOpen, TrendingUp, Compass, Globe, FileText, CheckCircle2, ShieldAlert, Sparkles, Download, Mail } from 'lucide-react';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { INSIGHTS_PAGE_CONTENT } from '@/data/content/insights.content';
+import { fetchInsightsArticles } from '@/lib/supabase/insights';
 
 interface ArticleInsight {
   id: string;
@@ -125,7 +126,33 @@ const ALL_INSIGHTS: ArticleInsight[] = [
 
 export default function MarketIntelligencePage() {
   const [activeModalInsight, setActiveModalInsight] = useState<ArticleInsight | null>(null);
-  const filteredInsights = ALL_INSIGHTS;
+  const [insights, setInsights] = useState<ArticleInsight[]>(ALL_INSIGHTS);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    fetchInsightsArticles().then((articles) => {
+      if (articles && articles.length > 0 && isMounted) {
+        const mapped: ArticleInsight[] = articles.map((item) => ({
+          id: item.slug || item.id,
+          category: item.category,
+          categorySlug: item.categorySlug,
+          title: item.title,
+          description: item.description,
+          image: item.image || '/hero/hero-1-crisp.jpg',
+          keyPoints: item.keyTakeaways && item.keyTakeaways.length > 0 ? item.keyTakeaways : [item.subtitle || item.description],
+          readTime: item.readTime,
+          tag: item.tag,
+          date: item.date,
+        }));
+        setInsights(mapped);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const filteredInsights = insights;
 
   return (
     <div className="w-full min-h-screen bg-[#EDEEE9] text-[#15181A] pt-24 font-sans">

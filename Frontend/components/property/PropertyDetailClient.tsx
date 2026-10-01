@@ -33,6 +33,7 @@ import { PROPERTIES } from '@/data/properties';
 import { PropertyCard } from '@/components/property/PropertyCard';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { ScrollProgressBar } from '@/components/ui/ScrollProgressBar';
+import { submitLead } from '@/lib/supabase/leads';
 import { useRecentStore } from '@/store/recent';
 
 interface PropertyDetailClientProps {
@@ -201,7 +202,7 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({ prop
     setOtpStep('details');
   };
 
-  const handleFinalLeadSubmit = (e: React.FormEvent) => {
+  const handleFinalLeadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!leadForm.name || !leadForm.email) return;
 
@@ -220,12 +221,24 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({ prop
       email: leadForm.email,
     }));
 
+    // Submit lead directly to Supabase
+    submitLead({
+      fullName: leadForm.name,
+      phone: leadForm.phone,
+      email: leadForm.email,
+      sourceSlug: 'property_gate_modal',
+      gateType: leadModalContext.type,
+      propertySlug: property.slug,
+      isOtpVerified: true,
+      message: `Unlocked ${leadModalContext.type} (${leadModalContext.title}) for ${property.title}`,
+    }).catch((err) => console.warn('Gated lead submit failed:', err));
+
     setTimeout(() => {
       setLeadModalOpen(false);
     }, 2200);
   };
 
-  const handleEnquirySubmit = (e: React.FormEvent) => {
+  const handleEnquirySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsVerifiedLead(true);
     try {
@@ -237,6 +250,16 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({ prop
       // Storage unavailable
     }
     setEnquirySubmitted(true);
+
+    // Submit lead directly to Supabase
+    submitLead({
+      fullName: enquiryForm.name,
+      phone: enquiryForm.phone,
+      email: enquiryForm.email,
+      sourceSlug: 'property_sidebar_inquiry',
+      propertySlug: property.slug,
+      message: `Direct inquiry for ${property.title} (${property.priceFormatted})`,
+    }).catch((err) => console.warn('Sidebar lead submit failed:', err));
   };
 
   return (

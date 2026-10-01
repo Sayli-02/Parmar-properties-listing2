@@ -21,6 +21,8 @@ import {
   X
 } from 'lucide-react';
 import { INSIGHTS_ARTICLES, InsightArticle } from '@/data/insights';
+import { submitLead } from '@/lib/supabase/leads';
+import { fetchArticleBySlug, fetchInsightsArticles } from '@/lib/supabase/insights';
 
 export default function ArticleDetailPage() {
   const params = useParams();
@@ -38,12 +40,32 @@ export default function ArticleDetailPage() {
     note: '',
   });
 
-  const article = INSIGHTS_ARTICLES.find(
-    (a) => a.id === slug || a.slug === slug
-  ) || INSIGHTS_ARTICLES[0];
+  const [article, setArticle] = useState<InsightArticle>(
+    () => INSIGHTS_ARTICLES.find((a) => a.id === slug || a.slug === slug) || INSIGHTS_ARTICLES[0]
+  );
+  const [allArticles, setAllArticles] = useState<InsightArticle[]>(INSIGHTS_ARTICLES);
 
-  const relatedArticles = INSIGHTS_ARTICLES.filter(
-    (a) => a.id !== article.id
+  React.useEffect(() => {
+    let isMounted = true;
+    if (slug) {
+      fetchArticleBySlug(slug).then((res) => {
+        if (res && isMounted) {
+          setArticle(res);
+        }
+      });
+    }
+    fetchInsightsArticles().then((res) => {
+      if (res && res.length > 0 && isMounted) {
+        setAllArticles(res);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [slug]);
+
+  const relatedArticles = allArticles.filter(
+    (a) => a.id !== article.id && a.slug !== article.slug
   ).slice(0, 3);
 
   const handleShare = () => {
@@ -54,9 +76,23 @@ export default function ArticleDetailPage() {
     }
   };
 
-  const handleConsultationSubmit = (e: React.FormEvent) => {
+  const handleConsultationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setConsultationSubmitted(true);
+
+    try {
+      await submitLead({
+        fullName: formData.name,
+        phone: formData.phone,
+        email: formData.email,
+        budgetRange: formData.budget,
+        sourceSlug: 'article_consultation_modal',
+        message: `Consultation on article "${article.title}": ${formData.note || 'No additional note'}`,
+      });
+    } catch (err) {
+      console.warn('Article consultation lead submit error:', err);
+    }
+
     setTimeout(() => {
       setShowConsultationModal(false);
       setConsultationSubmitted(false);

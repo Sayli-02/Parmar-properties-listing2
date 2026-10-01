@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -9,6 +9,8 @@ import { PropertyCard } from '@/components/property/PropertyCard';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { PROPERTIES } from '@/data/properties';
 import { Property } from '@/types/property';
+import { fetchLocationBySlug } from '@/lib/supabase/locations';
+import { fetchPublishedProperties } from '@/lib/supabase/properties';
 
 interface LocationInfo {
   name: string;
@@ -454,8 +456,19 @@ export default function LocationPropertiesPage() {
   const router = useRouter();
   const slug = (params.slug as string)?.toLowerCase() || 'worli';
 
+  const [dbLocation, setDbLocation] = useState<LocationInfo | null>(LOCATION_DATA[slug] || null);
+  const [properties, setProperties] = useState<Property[]>(PROPERTIES);
+
+  useEffect(() => {
+    fetchLocationBySlug(slug).then((res) => {
+      if (res) setDbLocation(res);
+    });
+    fetchPublishedProperties().then(setProperties);
+  }, [slug]);
+
   const location = useMemo(() => {
     return (
+      dbLocation ||
       LOCATION_DATA[slug] || {
         name: slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
         slug,
@@ -469,11 +482,11 @@ export default function LocationPropertiesPage() {
         keyEnclaves: ['Prime Corridors', 'Bespoke Towers', 'Avenue Belts'],
       }
     );
-  }, [slug]);
+  }, [dbLocation, slug]);
 
-  // Find real properties in this location or provide mock data
+  // Find real properties in this location or provide fallback data
   const locationProperties = useMemo(() => {
-    const matched = PROPERTIES.filter((p) => {
+    const matched = properties.filter((p) => {
       const pLoc = p.location.toLowerCase();
       const pSub = p.subLocation.toLowerCase();
       const target = location.name.toLowerCase();
@@ -490,7 +503,7 @@ export default function LocationPropertiesPage() {
 
     if (combined.length > 0) return combined;
     return (MOCK_LOCATION_FALLBACKS.worli || []) as Property[];
-  }, [location, slug]);
+  }, [properties, location, slug]);
 
   return (
     <div className="w-full min-h-screen bg-[#EDEEE9] text-[#15181A] pt-24">

@@ -59,40 +59,37 @@
   - `seed_master.sql`: Populates master catalogues and baseline page content.
   - `seed.sql`: Sample records for demonstration.
 
-### C. Frontend Luxury Portal (`/Frontend`) — 🟡 UI Complete, Needs Wiring
-- **Tech Stack:** Next.js 14.2.15 (App Router), React 18.3, Tailwind CSS v3, Zustand 4.5, Lucide-react.
+### C. Frontend Luxury Portal (`/Frontend`) — ✅ UI & Wiring Complete
+- **Tech Stack:** Next.js 14.2.35 (App Router), React 18.3, Tailwind CSS v3, Zustand 4.5, Lucide-react.
 - **Role:** High-end public client portal for ultra-luxury Mumbai real estate.
 - **Current State:**
   - All 11 pages and 6 lead capture modals are fully built, styled, and responsive.
-  - **The Missing Link:** Data is currently imported from local static files (`Frontend/data/properties.ts`, `commercials.ts`, `insights.ts`, `content/*`).
-  - Forms store lead details into browser `localStorage` and display mock success badges.
-  - `@supabase/supabase-js` is not yet installed in `Frontend/package.json`.
+  - `@supabase/supabase-js` installed in `Frontend/package.json`.
+  - Supabase client initialized in [`Frontend/lib/supabase/client.ts`](file:///c:/Users/Sayli/OneDrive/Desktop/Parmar-properties-listing/Frontend/lib/supabase/client.ts).
+  - **All 6 lead touchpoints are wired** to insert inquiries directly into the Supabase `leads` table.
+  - **Dynamic queries wired with zero-breakage hybrid fallback:**
+    - Residential properties & featured showcases ([`Frontend/lib/supabase/properties.ts`](file:///c:/Users/Sayli/OneDrive/Desktop/Parmar-properties-listing/Frontend/lib/supabase/properties.ts))
+    - Commercial properties ([`Frontend/lib/supabase/commercials.ts`](file:///c:/Users/Sayli/OneDrive/Desktop/Parmar-properties-listing/Frontend/lib/supabase/commercials.ts))
+    - Locations directory & enclaves ([`Frontend/lib/supabase/locations.ts`](file:///c:/Users/Sayli/OneDrive/Desktop/Parmar-properties-listing/Frontend/lib/supabase/locations.ts))
+    - Market intelligence articles ([`Frontend/lib/supabase/insights.ts`](file:///c:/Users/Sayli/OneDrive/Desktop/Parmar-properties-listing/Frontend/lib/supabase/insights.ts))
+  - Full production build compiles with **0 errors** across all 29 routes.
 
 ---
 
 ## 3. The Core Goal: "Wiring" Frontend to Backend
 
-To wire the project, we do NOT change backend API routes because Supabase serves as the direct data layer with Row Level Security:
-1. **Frontend Supabase Client:** Install `@supabase/supabase-js` in `Frontend`, create `Frontend/lib/supabase/client.ts`.
-2. **Hybrid Fallback Pattern:** Build query functions with graceful fallbacks. If Supabase is unconfigured or offline, fallback to `Frontend/data/*.ts` so the frontend NEVER breaks.
-3. **Connect Lead Modals (Priority 1):** Point all 6 lead forms to insert directly into the Supabase `leads` table.
-4. **Connect Dynamic Listings (Priority 2):** Fetch live published properties, commercials, locations, articles, and hero slides from Supabase.
+Supabase serves as the direct, secure data layer with Row Level Security:
+1. **Frontend Supabase Client:** `@supabase/supabase-js` configured with singleton client.
+2. **Hybrid Fallback Pattern:** Query functions fetch live Supabase rows and automatically fall back to static data if tables are empty or offline.
+3. **Connect Lead Modals (Priority 1):** All 6 lead forms insert directly into the Supabase `leads` table.
+4. **Connect Dynamic Listings (Priority 2):** Live published properties, commercials, locations, and articles hydrate on the public pages.
 
 ---
 
-## 4. Required Environment Variables
+## 4. Environment Variables Configuration
 
-Both Frontend and Backend share the same Supabase project:
+Both Frontend and Backend share the same Supabase project (`wmnptubgyikrwpbsckdn`).
 
-### `backend/.env.local`
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://<your-project-ref>.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...
-```
-
-### `Frontend/.env.local`
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://<your-project-ref>.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOi...
-```
-*(Both variables are safe for the browser; Supabase RLS protects the database).*
+- [x] Files created and active: [`backend/.env.local`](file:///c:/Users/Sayli/OneDrive/Desktop/Parmar-properties-listing/backend/.env.local) and [`Frontend/.env.local`](file:///c:/Users/Sayli/OneDrive/Desktop/Parmar-properties-listing/Frontend/.env.local)
+- [x] Values populated: `https://wmnptubgyikrwpbsckdn.supabase.co` with valid public anon key.
+- [x] Verified live database connectivity without errors.

@@ -23,8 +23,9 @@ import { PrivateOpportunities } from '@/components/property/PrivateOpportunities
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { ScrollProgressBar } from '@/components/ui/ScrollProgressBar';
 import { PROPERTIES } from '@/data/properties';
-import { PropertyCategory } from '@/types/property';
+import { Property, PropertyCategory } from '@/types/property';
 import { BUY_PAGE_CONTENT, NEW_LAUNCHES_CONTENT, LUXURY_COLLECTION_CONTENT } from '@/data/content';
+import { fetchPublishedProperties } from '@/lib/supabase/properties';
 
 function PropertiesContent() {
   const router = useRouter();
@@ -85,26 +86,32 @@ function PropertiesContent() {
     setSortBy('featured');
   };
 
+  const [properties, setProperties] = useState<Property[]>(PROPERTIES);
+
+  useEffect(() => {
+    fetchPublishedProperties().then(setProperties);
+  }, []);
+
   // 1. Base categorized list
   const baseCategoryProperties = useMemo(() => {
     if (activeTab === 'new-launches') {
-      return PROPERTIES.filter((p) => p.isNewLaunch);
+      return properties.filter((p) => p.isNewLaunch);
     }
     if (activeTab === 'luxury-collection') {
-      return PROPERTIES.filter((p) => p.isLuxuryCollection);
+      return properties.filter((p) => p.isLuxuryCollection);
     }
     // BUY tab: All verified residences
-    return PROPERTIES;
-  }, [activeTab]);
+    return properties;
+  }, [properties, activeTab]);
 
   // Counts for each tab badge
   const counts = useMemo(() => {
     return {
-      buy: PROPERTIES.length,
-      newLaunches: PROPERTIES.filter((p) => p.isNewLaunch).length,
-      luxuryCollection: PROPERTIES.filter((p) => p.isLuxuryCollection).length,
+      buy: properties.length,
+      newLaunches: properties.filter((p) => p.isNewLaunch).length,
+      luxuryCollection: properties.filter((p) => p.isLuxuryCollection).length,
     };
-  }, []);
+  }, [properties]);
 
   // 2. Filtered & sorted properties
   const filteredAndSortedProperties = useMemo(() => {

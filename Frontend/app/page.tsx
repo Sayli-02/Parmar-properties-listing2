@@ -14,14 +14,28 @@ import { MarketIntelligenceSection } from '@/components/home/MarketIntelligenceS
 import { WhyParmar } from '@/components/home/WhyParmar';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { ScrollProgressBar } from '@/components/ui/ScrollProgressBar';
-import { PROPERTIES } from '@/data/properties';
+import { PROPERTIES, Property } from '@/data/properties';
 import { HOME_PAGE_CONTENT } from '@/data/content/home.content';
+import { fetchPublishedProperties } from '@/lib/supabase/properties';
 
 export default function HomePage() {
   const { featuredProperties: featContent, locationSection: locContent } = HOME_PAGE_CONTENT;
+  const [properties, setProperties] = React.useState<Property[]>(PROPERTIES);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    fetchPublishedProperties().then((data) => {
+      if (data && data.length > 0 && isMounted) {
+        setProperties(data);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Curated premier featured properties for home page showcase
-  const featuredProperties = PROPERTIES.slice(0, featContent.maxDisplayCount || 6);
+  const featuredProperties = properties.slice(0, featContent.maxDisplayCount || 6);
 
   return (
     <div className="w-full relative bg-[#EDEEE9] text-[#15181A] pt-[68px] sm:pt-[70px] md:pt-[72px]">

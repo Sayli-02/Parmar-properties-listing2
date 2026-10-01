@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Menu, X, PhoneCall, CheckCircle2, Send, ShieldCheck } from 'lucide-react';
+import { submitLead } from '@/lib/supabase/leads';
 
 function NavbarContent() {
   const pathname = usePathname();
@@ -13,6 +14,7 @@ function NavbarContent() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [advisoryModalOpen, setAdvisoryModalOpen] = useState(false);
   const [advisorySubmitted, setAdvisorySubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [advisoryForm, setAdvisoryForm] = useState({
     name: '',
     phone: '',
@@ -79,9 +81,24 @@ function NavbarContent() {
     }
   };
 
-  const handleAdvisorySubmit = (e: React.FormEvent) => {
+  const handleAdvisorySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setAdvisorySubmitted(true);
+    setIsSubmitting(true);
+    try {
+      await submitLead({
+        fullName: advisoryForm.name,
+        phone: advisoryForm.phone,
+        email: advisoryForm.email,
+        assetClass: advisoryForm.assetType,
+        message: advisoryForm.message,
+        sourceSlug: 'navbar_advisory',
+      });
+    } catch (err) {
+      console.error('Navbar lead submit failed:', err);
+    } finally {
+      setIsSubmitting(false);
+      setAdvisorySubmitted(true);
+    }
   };
 
   return (
@@ -356,10 +373,11 @@ function NavbarContent() {
 
                   <button
                     type="submit"
-                    className="w-full py-3 bg-[#C5282F] hover:bg-[#A31D23] text-white text-xs uppercase tracking-[0.2em] font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm mt-3"
+                    disabled={isSubmitting}
+                    className="w-full py-3 bg-[#C5282F] hover:bg-[#A31D23] disabled:opacity-60 text-white text-xs uppercase tracking-[0.2em] font-semibold transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-sm mt-3"
                   >
                     <Send className="w-3.5 h-3.5" />
-                    <span>REQUEST PRIVATE CONSULTATION</span>
+                    <span>{isSubmitting ? 'CONNECTING ADVISORY...' : 'REQUEST PRIVATE CONSULTATION'}</span>
                   </button>
                 </form>
               </div>

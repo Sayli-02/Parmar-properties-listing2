@@ -1,4 +1,5 @@
 import { Property } from '@/types/property';
+export type { Property } from '@/types/property';
 
 export const PROPERTIES: Property[] = [
   // ============================================================================

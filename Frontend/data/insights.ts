@@ -9,6 +9,7 @@ export interface InsightArticle {
   readTime: string;
   tag: string;
   date: string;
+  image?: string;
   author: {
     name: string;
     role: string;

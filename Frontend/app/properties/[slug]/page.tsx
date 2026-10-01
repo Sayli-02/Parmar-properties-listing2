@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { PROPERTIES } from '@/data/properties';
 import { PropertyDetailClient } from '@/components/property/PropertyDetailClient';
+import { fetchPropertyBySlug } from '@/lib/supabase/properties';
 
 export function generateStaticParams() {
   return PROPERTIES.map((property) => ({
@@ -8,12 +9,12 @@ export function generateStaticParams() {
   }));
 }
 
-export default function PropertyDetailPage({
+export default async function PropertyDetailPage({
   params,
 }: {
   params: { slug: string };
 }) {
-  const property = PROPERTIES.find((p) => p.slug === params.slug);
+  const property = await fetchPropertyBySlug(params.slug);
 
   if (!property) {
     notFound();
