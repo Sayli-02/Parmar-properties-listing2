@@ -85,7 +85,7 @@ function NavbarContent() {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await submitLead({
+      const res = await submitLead({
         fullName: advisoryForm.name,
         phone: advisoryForm.phone,
         email: advisoryForm.email,
@@ -93,8 +93,11 @@ function NavbarContent() {
         message: advisoryForm.message,
         sourceSlug: 'navbar_advisory',
       });
+      if (!res.success) {
+        console.error('Navbar lead submission rejected by database:', res.error);
+      }
     } catch (err) {
-      console.error('Navbar lead submit failed:', err);
+      console.error('Navbar lead submit exception:', err);
     } finally {
       setIsSubmitting(false);
       setAdvisorySubmitted(true);

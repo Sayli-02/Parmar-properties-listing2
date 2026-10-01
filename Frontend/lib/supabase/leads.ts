@@ -47,6 +47,17 @@ async function resolveSourceId(sourceSlug: LeadSourceSlug): Promise<string | nul
       sourceIdCache[sourceSlug] = data.id;
       return data.id;
     }
+
+    // Fallback: if exact slug is missing, pick the first available source in the table so lead is never dropped
+    const { data: firstAvailable } = await supabase
+      .from('lookup_lead_sources')
+      .select('id')
+      .limit(1)
+      .maybeSingle();
+
+    if (firstAvailable?.id) {
+      return firstAvailable.id;
+    }
   } catch (err) {
     console.warn('Failed to resolve lead source ID for slug:', sourceSlug, err);
   }

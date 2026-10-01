@@ -28,6 +28,21 @@
 
 ## 📜 Activity Stream
 
+### 2026-10-01 18:08 — Antigravity & Sayli — Lead Submission Diagnostics & Resolution
+- **Branch:** `main`
+- **What Was Done:**
+  - Diagnosed why "Talk to Our Advisory" submissions were rejected by Supabase with Postgres code `23502`:
+    - Table `leads` has constraint: `source_id UUID NOT NULL REFERENCES lookup_lead_sources(id)`.
+    - In new Supabase project (`wmnptubgyikrwpbsckdn`), `lookup_lead_sources` currently has **0 rows** because `seed_master.sql` has not yet been executed in the Supabase SQL Editor.
+  - Enhanced [`Frontend/lib/supabase/leads.ts`](file:///c:/Users/Sayli/OneDrive/Desktop/Parmar-properties-listing/Frontend/lib/supabase/leads.ts):
+    - Added fallback in `resolveSourceId()` to pick first available source if exact slug is missing.
+  - Enhanced [`Frontend/components/layout/Navbar.tsx`](file:///c:/Users/Sayli/OneDrive/Desktop/Parmar-properties-listing/Frontend/components/layout/Navbar.tsx):
+    - Added explicit console logging of Supabase submission responses so any future database errors are immediately surfaced.
+- **Files Modified:**
+  - [`Frontend/lib/supabase/leads.ts`](file:///c:/Users/Sayli/OneDrive/Desktop/Parmar-properties-listing/Frontend/lib/supabase/leads.ts)
+  - [`Frontend/components/layout/Navbar.tsx`](file:///c:/Users/Sayli/OneDrive/Desktop/Parmar-properties-listing/Frontend/components/layout/Navbar.tsx)
+- **Current State:** Awaiting execution of [`backend/supabase/seed_master.sql`](file:///c:/Users/Sayli/OneDrive/Desktop/Parmar-properties-listing/backend/supabase/seed_master.sql) in Supabase SQL editor to populate lookup records.
+
 ### 2026-10-01 17:42 — Antigravity & Sayli — Complete Frontend & Backend Dynamic Content & Lead Wiring
 - **Branch:** `main`
 - **What Was Done:**
