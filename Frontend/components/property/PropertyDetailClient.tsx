@@ -923,12 +923,12 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({ prop
             </div>
             <div className="flex items-center gap-2 text-xs font-semibold text-[#15181A] bg-[#EDEEE9] px-3.5 py-1.5 border border-[#CFD1CA]">
               <ShieldCheck className="w-4 h-4 text-[#C5282F]" />
-              <span>{(property as any).developerBadge || (property as any).badge || 'Verified Tier-1 Developer'}</span>
+              <span>{property.developerName || 'Verified Tier-1 Developer'}</span>
             </div>
           </div>
           <div className="space-y-4 text-sm sm:text-base text-[#5B605F] leading-relaxed font-sans">
             <p>
-              {(property as any).developerOverview || (property as any).developerDescription ||
+              {property.developerDescription ||
                 "Crafted by one of Mumbai's most reputed architectural conglomerates, renowned for engineering excellence, timely structural handovers, and bespoke luxury benchmarks across prime micro-markets. Every development embodies earthquake-resistant RCC frameworks, IGBC green building certifications, and master-crafted spatial aesthetics designed for generations."}
             </p>
             <p>
