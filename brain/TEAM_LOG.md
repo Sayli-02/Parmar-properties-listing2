@@ -28,6 +28,38 @@
 
 ## 📜 Activity Stream
 
+### 2026-10-01 19:40 — Antigravity & Sayli — Complete CMS-to-Frontend Property Attribute Reflection & Functional Testing Setup
+- **Branch:** `main`
+- **What Was Done:**
+  - **Full Property Attribute Reflection:**
+    - Updated [`Frontend/types/property.ts`](file:///c:/Users/Sayli/OneDrive/Desktop/Parmar-properties-listing/Frontend/types/property.ts): Added `reraQrImage`, `brochureUrl`, `developerName`, `developerDescription`, `googleMapsUrl`, and `PropertyLayoutVariant` interface.
+    - Updated [`Frontend/lib/supabase/properties.ts`](file:///c:/Users/Sayli/OneDrive/Desktop/Parmar-properties-listing/Frontend/lib/supabase/properties.ts):
+      - Mapped `rera_qr_image` and `rera_qr_url` from CMS to `reraQrImage`.
+      - Mapped `brochure_url` from CMS to `brochureUrl`.
+      - Mapped `developer_name` and `developer_description` from CMS.
+      - Mapped `property_configurations` dynamically to custom `layoutVariants` with carpet area, price indicator, tower zone, and layout blueprint images.
+      - Updated queries to match both `publication_status = 'published'` and `status = 'active'`.
+    - Updated [`Frontend/components/property/PropertyDetailClient.tsx`](file:///c:/Users/Sayli/OneDrive/Desktop/Parmar-properties-listing/Frontend/components/property/PropertyDetailClient.tsx):
+      - Renders actual uploaded MahaRERA QR image directly in the compliance verification box.
+      - Displays the verified MahaRERA registration number.
+      - Unlocks and provides direct PDF download for uploaded property brochure.
+      - Renders the Developer & Architectural House details if specified in CMS.
+      - Dynamically hydrates floor plan typologies and blueprints directly from CMS configurations.
+  - Verified TypeScript compilation: `npx tsc --noEmit` exited with **0 errors**.
+- **Files Modified:**
+  - [`Frontend/types/property.ts`](file:///c:/Users/Sayli/OneDrive/Desktop/Parmar-properties-listing/Frontend/types/property.ts)
+  - [`Frontend/lib/supabase/properties.ts`](file:///c:/Users/Sayli/OneDrive/Desktop/Parmar-properties-listing/Frontend/lib/supabase/properties.ts)
+  - [`Frontend/components/property/PropertyDetailClient.tsx`](file:///c:/Users/Sayli/OneDrive/Desktop/Parmar-properties-listing/Frontend/components/property/PropertyDetailClient.tsx)
+- **Current State:** Manager can modify every attribute in Admin CMS (`/admin/properties/[id]`) and observe immediate, 1:1 reflection on the public portal (`/properties/[slug]`).
+
+### 2026-10-01 19:31 — Antigravity & Sayli — Verified Live Lead Ingestion Pipeline
+- **Branch:** `main`
+- **What Was Done:**
+  - User executed master catalogue seed script in Supabase (`seed_master.sql`).
+  - Verified live submission test: "Talk to Our Advisory" form submitted on Frontend (`http://localhost:3001`) immediately ingested into Supabase `leads` table and appeared in Admin CMS Leads inbox (`http://localhost:3000/leads`).
+  - Confirmed full end-to-end connectivity between Client Portal, Database, and Admin CMS.
+- **Current State:** Core data pipeline is 100% operational. Ready for Phase 3 (Global Settings & Branding or Live CMS inventory testing).
+
 ### 2026-10-01 18:08 — Antigravity & Sayli — Lead Submission Diagnostics & Resolution
 - **Branch:** `main`
 - **What Was Done:**

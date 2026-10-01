@@ -15,6 +15,17 @@ export type PropertyType = 'Penthouse' | 'Sea-Facing Apartment' | 'Duplex' | 'Sk
 
 export type PropertyCategory = 'buy' | 'new-launches' | 'luxury-collection';
 
+export interface PropertyLayoutVariant {
+  id: string;
+  tabLabel: string;
+  title: string;
+  area: string;
+  carpetArea: string;
+  price: string;
+  tower: string;
+  image: string;
+}
+
 export interface Property {
   id: string;
   slug: string;
@@ -44,6 +55,12 @@ export interface Property {
   description: string;
   highlights: string[];
   reraId: string;
+  reraQrImage?: string;
+  brochureUrl?: string;
+  developerName?: string;
+  developerDescription?: string;
+  googleMapsUrl?: string;
+  layoutVariants?: PropertyLayoutVariant[];
   coordinates?: {
     lat: number;
     lng: number;
@@ -52,5 +69,6 @@ export interface Property {
     title: string;
     area: string;
     description: string;
+    image?: string;
   }[];
 }

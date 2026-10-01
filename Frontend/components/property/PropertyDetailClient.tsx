@@ -108,7 +108,9 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({ prop
 
   const images = property.images && property.images.length > 0 ? property.images : [property.coverImage];
 
-  const layoutVariants = [
+  const layoutVariants = (property.layoutVariants && property.layoutVariants.length > 0)
+    ? property.layoutVariants
+    : [
     {
       id: '2bhk',
       tabLabel: '2 BHK',
@@ -421,20 +423,33 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({ prop
                 <h2 className="font-sans text-2xl sm:text-3xl font-bold tracking-tight text-[#15181A]">
                   Project Overview
                 </h2>
-                <button
-                  onClick={() =>
-                    openLeadGate(
-                      'Download Full Brochure & Specifications',
-                      'Please register with your name and mobile number to receive the comprehensive PDF brochure with architectural specifications.',
-                      'Brochure Download',
-                      'brochure'
-                    )
-                  }
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#EDEEE9] hover:bg-[#CFD1CA] text-[#15181A] text-xs uppercase tracking-wider font-semibold border border-[#CFD1CA] transition-colors cursor-pointer"
-                >
-                  <Download className="w-3.5 h-3.5 text-[#C5282F]" />
-                  <span>Download Brochure</span>
-                </button>
+                {isVerifiedLead && property.brochureUrl ? (
+                  <a
+                    href={property.brochureUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-[#C5282F] hover:bg-[#A31D23] text-white text-xs uppercase tracking-wider font-semibold border border-[#C5282F] transition-colors cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download Brochure PDF</span>
+                  </a>
+                ) : (
+                  <button
+                    onClick={() =>
+                      openLeadGate(
+                        'Download Full Brochure & Specifications',
+                        'Please register with your name and mobile number to receive the comprehensive PDF brochure with architectural specifications.',
+                        'Brochure Download',
+                        'brochure'
+                      )
+                    }
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-[#EDEEE9] hover:bg-[#CFD1CA] text-[#15181A] text-xs uppercase tracking-wider font-semibold border border-[#CFD1CA] transition-colors cursor-pointer"
+                  >
+                    <Download className="w-3.5 h-3.5 text-[#C5282F]" />
+                    <span>Download Brochure</span>
+                  </button>
+                )}
               </div>
 
               <div className="space-y-4 text-sm sm:text-base text-[#5B605F] leading-relaxed font-sans">
@@ -484,13 +499,22 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({ prop
                 </ul>
               </div>
 
-              {/* MahaRERA Registration & Sample QR Code */}
-              <div className="pt-4 border-t border-[#CFD1CA]">
+              {/* MahaRERA Registration & QR Code */}
+              <div className="pt-4 border-t border-[#CFD1CA] space-y-4">
                 <div className="p-4 bg-white border border-[#CFD1CA] shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
-                    {/* Sample QR Code Box */}
-                    <div className="w-16 h-16 bg-[#F7F7F4] border border-[#CFD1CA] p-2 flex items-center justify-center shrink-0 shadow-inner">
-                      <QrCode className="w-12 h-12 text-[#15181A]" />
+                    {/* QR Code Box */}
+                    <div className="w-16 h-16 bg-[#F7F7F4] border border-[#CFD1CA] p-1 flex items-center justify-center shrink-0 shadow-inner relative overflow-hidden">
+                      {property.reraQrImage ? (
+                        <Image
+                          src={property.reraQrImage}
+                          alt={`MahaRERA QR Code for ${property.title}`}
+                          fill
+                          className="object-contain p-1"
+                        />
+                      ) : (
+                        <QrCode className="w-12 h-12 text-[#15181A]" />
+                      )}
                     </div>
                     <div>
                       <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] font-semibold text-[#5B605F]">
@@ -513,6 +537,25 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({ prop
                     </span>
                   </div>
                 </div>
+
+                {/* Developer Information (if configured in CMS) */}
+                {property.developerName && (
+                  <div className="p-4 bg-white border border-[#CFD1CA] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <span className="text-[10px] uppercase tracking-[0.2em] font-semibold text-[#5B605F] block">
+                        Developer &amp; Architectural House
+                      </span>
+                      <h4 className="font-serif text-base sm:text-lg font-bold text-[#15181A] mt-0.5">
+                        {property.developerName}
+                      </h4>
+                      {property.developerDescription && (
+                        <p className="text-xs text-[#5B605F] mt-1 font-sans leading-relaxed">
+                          {property.developerDescription}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </ScrollReveal>
