@@ -507,7 +507,12 @@ export function PropertyForm({ property, onSaved }: PropertyFormProps) {
 
   return (
     <form
-      onSubmit={form.handleSubmit(onSubmit)}
+      onSubmit={form.handleSubmit(
+        onSubmit,
+        (errors) => {
+          console.error("PROPERTY FORM VALIDATION ERRORS", errors);
+        }
+      )}
       className="space-y-4 pb-20"
       noValidate
     >
@@ -648,8 +653,7 @@ export function PropertyForm({ property, onSaved }: PropertyFormProps) {
           <Field
             label="Signature architectural highlights"
             htmlFor="highlights"
-            required
-            hint="Three to five bullet points under Signature Architectural Highlights."
+            hint="Optional. Three to five bullet points under Signature Architectural Highlights."
             error={
               errors.highlights?.message ??
               errors.highlights?.root?.message

@@ -145,10 +145,8 @@ export const masterPropertySchema = z.object({
   tagline: z.string().min(1, "Tagline is required").max(200),
   /** Project Overview body on the public Property Detail page. */
   description: z.string().min(1, "Project overview is required").max(10000),
-  highlights: z
-    .array(z.string().min(1).max(200))
-    .min(1, "Add at least one highlight")
-    .max(8),
+  /** Optional on create — Add Property does not require highlights to save. */
+  highlights: z.array(z.string().min(1).max(200)).max(8).default([]),
   /** Property-specific developer shown under Developer Overview. */
   developer_name: z.string().max(200).optional().nullable(),
   developer_description: z.string().max(10000).optional().nullable(),
@@ -158,8 +156,16 @@ export const masterPropertySchema = z.object({
   /** Synced from the first configuration on create; optional on the form. */
   bhk_id: z.string().uuid().optional().nullable().or(z.literal("")),
   status_id: z.string().uuid("Select construction status"),
-  price: z.coerce.number().gt(0, "Price must be greater than 0"),
-  carpet_area_sqft: z.coerce.number().int().gt(0, "Carpet area is required"),
+  /**
+   * Optional on Add Property (fields are edit-only in the UI). Blank / NaN
+   * must stay null — never coerce to 0 via z.coerce.number().
+   */
+  price: optionalNumber(
+    z.coerce.number().gt(0, "Price must be greater than 0")
+  ),
+  carpet_area_sqft: optionalNumber(
+    z.coerce.number().int().gt(0, "Carpet area must be greater than 0")
+  ),
   super_area: optionalNumber(
     z.coerce.number().int().gt(0, "Super area must be greater than 0")
   ),

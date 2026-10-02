@@ -296,8 +296,16 @@ function toMasterPropertyPayload(
   const locationId =
     input.location_id && input.location_id !== "" ? input.location_id : null;
 
-  const priceCr = Number(input.price);
-  const carpetSqft = Number(input.carpet_area_sqft);
+  // Blank optional numbers stay NULL (DB allows null; CHECK rejects 0/NaN).
+  const priceCr =
+    input.price == null || Number.isNaN(Number(input.price))
+      ? null
+      : Number(input.price);
+  const carpetSqft =
+    input.carpet_area_sqft == null ||
+    Number.isNaN(Number(input.carpet_area_sqft))
+      ? null
+      : Number(input.carpet_area_sqft);
   const superArea =
     input.super_area == null || Number.isNaN(Number(input.super_area))
       ? null
@@ -356,9 +364,9 @@ function toMasterPropertyPayload(
     locality: input.sub_location,
     location_details: input.sub_location,
     possession: input.possession_date,
-    carpet_area: String(carpetSqft),
-    price_amount: priceCr * 10_000_000,
-    price_display: `₹${priceCr.toFixed(2)} Cr`,
+    carpet_area: carpetSqft == null ? null : String(carpetSqft),
+    price_amount: priceCr == null ? null : priceCr * 10_000_000,
+    price_display: priceCr == null ? null : `₹${priceCr.toFixed(2)} Cr`,
     rera_number: input.rera_id,
     is_active: input.publication_status === "published",
     status:
