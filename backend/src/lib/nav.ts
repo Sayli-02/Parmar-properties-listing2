@@ -102,7 +102,7 @@ export const navSections: NavSection[] = [
       {
         href: "/admin/locations",
         label: "Locations",
-        description: "Micro-markets and future enclaves",
+        description: "Editorial pages and property filter catalogue",
         icon: MapPin,
       },
       {

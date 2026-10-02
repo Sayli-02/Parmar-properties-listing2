@@ -296,8 +296,16 @@ function toMasterPropertyPayload(
   const locationId =
     input.location_id && input.location_id !== "" ? input.location_id : null;
 
-  const priceCr = Number(input.price);
-  const carpetSqft = Number(input.carpet_area_sqft);
+  // Blank optional numbers stay NULL (DB allows null; CHECK rejects 0/NaN).
+  const priceCr =
+    input.price == null || Number.isNaN(Number(input.price))
+      ? null
+      : Number(input.price);
+  const carpetSqft =
+    input.carpet_area_sqft == null ||
+    Number.isNaN(Number(input.carpet_area_sqft))
+      ? null
+      : Number(input.carpet_area_sqft);
   const superArea =
     input.super_area == null || Number.isNaN(Number(input.super_area))
       ? null
@@ -326,13 +334,16 @@ function toMasterPropertyPayload(
     lookup_location_id: input.lookup_location_id,
     sub_location: input.sub_location,
     property_type_id: input.property_type_id,
-    bhk_id: input.bhk_id,
+    bhk_id: input.bhk_id && input.bhk_id !== "" ? input.bhk_id : null,
     status_id: input.status_id,
     price: priceCr,
     carpet_area_sqft: carpetSqft,
     super_area: superArea,
     possession_date: input.possession_date,
-    floor: input.floor,
+    floor:
+      input.floor && String(input.floor).trim()
+        ? String(input.floor).trim()
+        : null,
     is_featured: input.is_featured,
     recently_added: input.recently_added,
     is_recommended: input.is_recommended,
@@ -353,9 +364,9 @@ function toMasterPropertyPayload(
     locality: input.sub_location,
     location_details: input.sub_location,
     possession: input.possession_date,
-    carpet_area: String(carpetSqft),
-    price_amount: priceCr * 10_000_000,
-    price_display: `₹${priceCr.toFixed(2)} Cr`,
+    carpet_area: carpetSqft == null ? null : String(carpetSqft),
+    price_amount: priceCr == null ? null : priceCr * 10_000_000,
+    price_display: priceCr == null ? null : `₹${priceCr.toFixed(2)} Cr`,
     rera_number: input.rera_id,
     is_active: input.publication_status === "published",
     status:

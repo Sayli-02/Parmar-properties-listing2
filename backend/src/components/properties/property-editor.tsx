@@ -11,7 +11,6 @@ import {
   Ellipsis,
   Eye,
   Image as ImageIcon,
-  Layers,
   LayoutPanelTop,
   Star,
   StarOff,
@@ -50,10 +49,8 @@ import {
 } from "@/components/shared/status-badge";
 import { PropertyForm } from "@/components/properties/property-form";
 import { MediaDocumentsPanel } from "@/components/properties/media-documents-panel";
-import { ConfigurationsManager } from "@/components/properties/configurations-manager";
 import { PropertyConfigurationsManager } from "@/components/properties/property-configurations-manager";
 import { AmenitiesPicker } from "@/components/properties/amenities-picker";
-import { InventoryManager } from "@/components/properties/inventory-manager";
 import { PropertyPreview } from "@/components/properties/property-preview";
 
 const EDITOR_TABS = [
@@ -61,8 +58,6 @@ const EDITOR_TABS = [
   "media",
   "configurations",
   "amenities",
-  "unit-pricing",
-  "inventory",
   "preview",
 ] as const;
 
@@ -283,14 +278,6 @@ export function PropertyEditor({ propertyId }: { propertyId: string }) {
             <Boxes />
             Amenities
           </TabsTrigger>
-          <TabsTrigger value="unit-pricing">
-            <Layers />
-            Unit pricing
-          </TabsTrigger>
-          <TabsTrigger value="inventory">
-            <Boxes />
-            Inventory
-          </TabsTrigger>
           <TabsTrigger value="preview">
             <Eye />
             Preview
@@ -325,17 +312,6 @@ export function PropertyEditor({ propertyId }: { propertyId: string }) {
 
         <TabsContent value="amenities">
           <AmenitiesPicker propertyId={property.id} />
-        </TabsContent>
-
-        <TabsContent value="unit-pricing">
-          <ConfigurationsManager
-            propertyId={property.id}
-            currency={currency}
-          />
-        </TabsContent>
-
-        <TabsContent value="inventory">
-          <InventoryManager propertyId={property.id} currency={currency} />
         </TabsContent>
 
         <TabsContent value="preview">

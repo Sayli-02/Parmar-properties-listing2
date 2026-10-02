@@ -41,11 +41,12 @@ export const VARIANT_CODES: {
   value: PropertyConfigVariant;
   label: string;
 }[] = [
+  { value: "1bhk", label: "1 BHK" },
   { value: "2bhk", label: "2 BHK" },
   { value: "3bhk", label: "3 BHK" },
   { value: "4bhk", label: "4 BHK" },
   { value: "5bhk", label: "5 BHK" },
-  { value: "custom", label: "Custom" },
+  { value: "custom", label: "Other" },
 ];
 
 export const PROPERTY_STATUSES: {

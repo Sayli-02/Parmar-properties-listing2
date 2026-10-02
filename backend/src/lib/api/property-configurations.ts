@@ -9,6 +9,7 @@ import type {
 } from "@/lib/validations";
 
 import { getSupabase, throwOnError } from "./client";
+import { resolvePublicUrl } from "./storage";
 
 const TABLE = "property_configurations";
 const BREAKDOWN_TABLE = "property_configuration_price_breakdowns";
@@ -89,20 +90,33 @@ export async function createPropertyConfiguration(
   propertyId: string,
   input: PropertyConfigurationInput
 ): Promise<PropertyConfiguration> {
+  const [row] = await createPropertyConfigurationsBatch(propertyId, [input]);
+  return row;
+}
+
+/**
+ * Single round-trip insert for multiple configuration matrix rows.
+ * Used by Add Property after layout images have been resolved.
+ */
+export async function createPropertyConfigurationsBatch(
+  propertyId: string,
+  inputs: PropertyConfigurationInput[]
+): Promise<PropertyConfiguration[]> {
+  if (inputs.length === 0) return [];
+
   const supabase = getSupabase();
-  const payload = {
+  const rows = inputs.map((input) => ({
     property_id: propertyId,
     ...toPayload(input),
-  };
+  }));
 
   const { data, error } = await supabase
     .from(TABLE)
-    .insert(payload)
-    .select("*")
-    .single();
+    .insert(rows)
+    .select("id, property_id, plan_type, variant_code, tab_label, title, area_range, carpet_area, price_indicator, tower_zone, image_path, display_order, created_at, updated_at");
 
-  throwOnError(error, "Creating configuration");
-  return data as unknown as PropertyConfiguration;
+  throwOnError(error, "Creating configurations");
+  return (data ?? []) as unknown as PropertyConfiguration[];
 }
 
 export async function updatePropertyConfiguration(
@@ -140,6 +154,49 @@ export async function reorderPropertyConfigurations(
       throwOnError(error, "Reordering configurations");
     })
   );
+}
+
+export interface ReusableConfigurationLayoutAsset {
+  id: string;
+  title: string;
+  tab_label: string;
+  variant_code: string;
+  image_path: string;
+  image_url: string;
+  property_id: string;
+}
+
+/**
+ * Individual layout images already stored on property_configurations.image_path.
+ * Used by Add Property → Select Existing for Individual Layout.
+ */
+export async function listReusableConfigurationLayoutAssets(): Promise<
+  ReusableConfigurationLayoutAsset[]
+> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select("id, title, tab_label, variant_code, image_path, property_id")
+    .neq("image_path", "")
+    .not("image_path", "is", null)
+    .order("updated_at", { ascending: false })
+    .limit(60);
+
+  throwOnError(error, "Loading reusable configuration layouts");
+
+  return ((data ?? []) as Array<{
+    id: string;
+    title: string;
+    tab_label: string;
+    variant_code: string;
+    image_path: string;
+    property_id: string;
+  }>)
+    .filter((row) => Boolean(row.image_path?.trim()))
+    .map((row) => ({
+      ...row,
+      image_url: resolvePublicUrl(row.image_path) ?? row.image_path,
+    }));
 }
 
 // ---------------------------------------------------------------- breakdowns

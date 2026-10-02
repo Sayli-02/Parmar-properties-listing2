@@ -29,7 +29,15 @@ import {
 import { ConfirmDialog, useConfirm } from "@/components/shared/confirm-dialog";
 import { OrderControls, moveItem } from "@/components/shared/order-controls";
 import { LocationDialog } from "@/components/locations/location-dialog";
+import { LookupLocationsView } from "@/components/locations/lookup-locations-view";
 
+/**
+ * Canonical admin location management (Website Content → Locations).
+ *
+ * - Editorial micro-market pages → `locations` table (section above).
+ * - Property filter / catalogue entries → `lookup_locations` (section below).
+ * Both are managed from this single screen; tables stay separate.
+ */
 export function LocationsView() {
   const [reordering, setReordering] = React.useState(false);
   const [dialogOpen, setDialogOpen] = React.useState(false);
@@ -95,7 +103,7 @@ export function LocationsView() {
     <div className="space-y-6">
       <PageHeader
         title="Locations"
-        description="Areas and micro-markets you sell in. Properties can be linked to a location so the website can group them."
+        description="Editorial micro-market pages for the website, plus the property filter catalogue used on Buy and related listings."
         actions={
           <Button
             onClick={() => {
@@ -108,6 +116,16 @@ export function LocationsView() {
           </Button>
         }
       />
+
+      <div className="space-y-1">
+        <h2 className="text-base font-semibold tracking-tight">
+          Editorial location pages
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Public micro-market dossiers (<code className="text-xs">locations</code>
+          ). Properties can optionally link to these pages.
+        </p>
+      </div>
 
       {error ? (
         <ErrorState message={error} onRetry={reload} />
@@ -266,6 +284,10 @@ export function LocationsView() {
           }
         }}
       />
+
+      <div className="border-t border-border pt-8">
+        <LookupLocationsView />
+      </div>
     </div>
   );
 }
