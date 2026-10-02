@@ -97,7 +97,13 @@ export interface MarketIntelligence extends AuditFields {
 export type PublicationStatus = "draft" | "published" | "archived";
 
 export type PropertyConfigPlanType = "master" | "floor" | "individual";
-export type PropertyConfigVariant = "2bhk" | "3bhk" | "4bhk" | "5bhk" | "custom";
+export type PropertyConfigVariant =
+  | "1bhk"
+  | "2bhk"
+  | "3bhk"
+  | "4bhk"
+  | "5bhk"
+  | "custom";
 
 export type PropertyCollection = "buy" | "new-launches" | "luxury";
 
@@ -238,6 +244,11 @@ export interface PropertyAmenity {
   amenity_id: string | null;
   /** Master lookup_amenities FK. */
   lookup_amenity_id: string | null;
+  /**
+   * Property-exclusive amenity label (migration 009). When set, FKs stay null
+   * so the amenity never enters the global lookup catalogue.
+   */
+  custom_label: string | null;
   display_order: number;
   created_at: string;
   updated_at: string;

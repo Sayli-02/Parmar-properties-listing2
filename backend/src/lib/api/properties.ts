@@ -326,13 +326,16 @@ function toMasterPropertyPayload(
     lookup_location_id: input.lookup_location_id,
     sub_location: input.sub_location,
     property_type_id: input.property_type_id,
-    bhk_id: input.bhk_id,
+    bhk_id: input.bhk_id && input.bhk_id !== "" ? input.bhk_id : null,
     status_id: input.status_id,
     price: priceCr,
     carpet_area_sqft: carpetSqft,
     super_area: superArea,
     possession_date: input.possession_date,
-    floor: input.floor,
+    floor:
+      input.floor && String(input.floor).trim()
+        ? String(input.floor).trim()
+        : null,
     is_featured: input.is_featured,
     recently_added: input.recently_added,
     is_recommended: input.is_recommended,

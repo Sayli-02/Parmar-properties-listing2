@@ -1,7 +1,7 @@
 import type { PropertyImage } from "@/types";
 
 import { getSupabase, throwOnError } from "./client";
-import { deleteFile, storageFolders, uploadFile } from "./storage";
+import { deleteFile, deleteFiles, storageFolders, uploadFile } from "./storage";
 
 const TABLE = "property_images";
 
@@ -11,7 +11,19 @@ const TABLE = "property_images";
  */
 async function syncCoverImage(propertyId: string): Promise<void> {
   const supabase = getSupabase();
-  const images = await listPropertyImages(propertyId);
+  const { data, error: listError } = await supabase
+    .from(TABLE)
+    .select("url, is_primary, display_order")
+    .eq("property_id", propertyId)
+    .order("is_primary", { ascending: false })
+    .order("display_order", { ascending: true });
+
+  throwOnError(listError, "Loading images for cover sync");
+  const images = (data ?? []) as Array<{
+    url: string;
+    is_primary: boolean;
+    display_order: number;
+  }>;
   const primary = images.find((image) => image.is_primary) ?? images[0] ?? null;
 
   const { error } = await supabase
@@ -46,35 +58,73 @@ export async function addPropertyImage(
   file: File,
   altText?: string
 ): Promise<PropertyImage> {
+  const [row] = await addPropertyImagesBatch(propertyId, [
+    { file, altText, isPrimary: undefined },
+  ]);
+  return row;
+}
+
+export interface PropertyImageBatchItem {
+  file: File;
+  altText?: string;
+  /** When set, overrides “first image is primary” for brand-new batches. */
+  isPrimary?: boolean;
+}
+
+/**
+ * Parallel uploads + one batched insert for Add Property gallery images.
+ * Syncs `properties.cover_image` once at the end.
+ * On insert failure, deletes only the paths uploaded in this call.
+ */
+export async function addPropertyImagesBatch(
+  propertyId: string,
+  items: PropertyImageBatchItem[]
+): Promise<PropertyImage[]> {
+  if (items.length === 0) return [];
+
   const supabase = getSupabase();
   const existing = await listPropertyImages(propertyId);
-  const uploaded = await uploadFile(
-    file,
-    storageFolders.propertyImages(propertyId)
+  const folder = storageFolders.propertyImages(propertyId);
+
+  const uploaded = await Promise.all(
+    items.map((item) => uploadFile(item.file, folder))
   );
+
+  const primaryIndex =
+    items.findIndex((item) => item.isPrimary === true) >= 0
+      ? items.findIndex((item) => item.isPrimary === true)
+      : existing.length === 0
+        ? 0
+        : -1;
+
+  const rows = uploaded.map((file, index) => ({
+    property_id: propertyId,
+    path: file.path,
+    url: file.url,
+    alt_text: items[index]?.altText?.trim()
+      ? items[index].altText!.trim()
+      : null,
+    is_primary:
+      primaryIndex >= 0
+        ? index === primaryIndex
+        : existing.length === 0 && index === 0,
+    display_order: existing.length + index,
+  }));
 
   const { data, error } = await supabase
     .from(TABLE)
-    .insert({
-      property_id: propertyId,
-      path: uploaded.path,
-      url: uploaded.url,
-      alt_text: altText?.trim() ? altText.trim() : null,
-      is_primary: existing.length === 0,
-      display_order: existing.length,
-    })
-    .select("*")
-    .single();
+    .insert(rows)
+    .select(
+      "id, property_id, path, url, alt_text, is_primary, display_order, created_at, updated_at"
+    );
 
   if (error) {
-    // Do not leave an orphaned object behind if the insert failed.
-    await deleteFile(uploaded.path);
-    throwOnError(error, "Saving image");
+    await deleteFiles(uploaded.map((file) => file.path));
+    throwOnError(error, "Saving images");
   }
 
-  if (existing.length === 0) await syncCoverImage(propertyId);
-
-  return data as unknown as PropertyImage;
+  await syncCoverImage(propertyId);
+  return (data ?? []) as unknown as PropertyImage[];
 }
 
 export async function updatePropertyImageAlt(

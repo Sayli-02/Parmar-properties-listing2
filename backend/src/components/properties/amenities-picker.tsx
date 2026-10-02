@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Boxes, Save, Search } from "lucide-react";
+import { Boxes, Plus, Save, Search, X } from "lucide-react";
 import { toast } from "sonner";
 
 import type { LookupItem } from "@/types";
@@ -9,7 +9,7 @@ import { getErrorMessage } from "@/lib/utils";
 import { useResource } from "@/lib/hooks/use-resource";
 import {
   listPropertyAmenities,
-  setPropertyLookupAmenities,
+  setPropertyAmenitySelection,
 } from "@/lib/api/amenities";
 import { listLookupAmenities } from "@/lib/api/lookups";
 import { Button } from "@/components/ui/button";
@@ -30,9 +30,12 @@ import {
   LoadingBlock,
   Spinner,
 } from "@/components/shared/states";
+import { Field } from "@/components/shared/field";
 
 export function AmenitiesPicker({ propertyId }: { propertyId: string }) {
   const [selected, setSelected] = React.useState<string[]>([]);
+  const [exclusiveLabels, setExclusiveLabels] = React.useState<string[]>([]);
+  const [exclusiveDraft, setExclusiveDraft] = React.useState("");
   const [search, setSearch] = React.useState("");
   const [saving, setSaving] = React.useState(false);
 
@@ -46,25 +49,31 @@ export function AmenitiesPicker({ propertyId }: { propertyId: string }) {
     const attached = links
       .map((link) => link.lookup_amenity)
       .filter((amenity): amenity is LookupItem => Boolean(amenity));
-    const merged = [...amenities];
+    const catalog = [...amenities];
     for (const amenity of attached) {
-      if (!merged.some((item) => item.id === amenity.id)) merged.push(amenity);
+      if (!catalog.some((item) => item.id === amenity.id)) catalog.push(amenity);
     }
-    merged.sort((a, b) => a.name.localeCompare(b.name));
+    catalog.sort((a, b) => a.name.localeCompare(b.name));
 
     const ids = links
       .map((link) => link.lookup_amenity_id)
       .filter((id): id is string => Boolean(id));
+    const exclusives = links
+      .map((link) => link.custom_label)
+      .filter((label): label is string => Boolean(label?.trim()));
+
     setSelected(ids);
-    return { catalog: merged, saved: ids };
+    setExclusiveLabels(exclusives);
+    return { catalog, savedIds: ids, savedExclusive: exclusives };
   }, [propertyId]);
 
   const { data, setData, loading, error, reload } = useResource<{
     catalog: LookupItem[];
-    saved: string[];
-  }>(fetchAmenities, { catalog: [], saved: [] });
+    savedIds: string[];
+    savedExclusive: string[];
+  }>(fetchAmenities, { catalog: [], savedIds: [], savedExclusive: [] });
 
-  const { catalog, saved } = data;
+  const { catalog, savedIds, savedExclusive } = data;
 
   const filtered = React.useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -75,8 +84,10 @@ export function AmenitiesPicker({ propertyId }: { propertyId: string }) {
   }, [catalog, search]);
 
   const dirty =
-    selected.length !== saved.length ||
-    selected.some((id) => !saved.includes(id));
+    selected.length !== savedIds.length ||
+    selected.some((id) => !savedIds.includes(id)) ||
+    exclusiveLabels.length !== savedExclusive.length ||
+    exclusiveLabels.some((label) => !savedExclusive.includes(label));
 
   function toggle(id: string, checked: boolean) {
     setSelected((current) =>
@@ -84,11 +95,37 @@ export function AmenitiesPicker({ propertyId }: { propertyId: string }) {
     );
   }
 
+  function addExclusive() {
+    const label = exclusiveDraft.trim();
+    if (!label) return;
+    if (
+      exclusiveLabels.some(
+        (existing) => existing.toLowerCase() === label.toLowerCase()
+      )
+    ) {
+      setExclusiveDraft("");
+      return;
+    }
+    setExclusiveLabels((current) => [...current, label.slice(0, 120)]);
+    setExclusiveDraft("");
+  }
+
+  function removeExclusive(label: string) {
+    setExclusiveLabels((current) => current.filter((item) => item !== label));
+  }
+
   async function handleSave() {
     setSaving(true);
     try {
-      await setPropertyLookupAmenities(propertyId, selected);
-      setData((current) => ({ ...current, saved: selected }));
+      await setPropertyAmenitySelection(propertyId, {
+        lookupAmenityIds: selected,
+        exclusiveLabels,
+      });
+      setData((current) => ({
+        ...current,
+        savedIds: selected,
+        savedExclusive: exclusiveLabels,
+      }));
       toast.success("Amenities updated");
     } catch (caught) {
       toast.error(getErrorMessage(caught));
@@ -103,11 +140,13 @@ export function AmenitiesPicker({ propertyId }: { propertyId: string }) {
         <div className="space-y-1.5">
           <CardTitle>Amenities</CardTitle>
           <CardDescription>
-            Pick from the master catalogue in <code>lookup_amenities</code>.
-            Renaming an amenity there renames it everywhere.
+            Pick from <code>lookup_amenities</code>, and optionally add
+            exclusive amenities that apply only to this property.
           </CardDescription>
         </div>
-        <Badge variant="secondary">{selected.length} selected</Badge>
+        <Badge variant="secondary">
+          {selected.length + exclusiveLabels.length} selected
+        </Badge>
       </CardHeader>
 
       <CardContent className="space-y-4">
@@ -175,21 +214,70 @@ export function AmenitiesPicker({ propertyId }: { propertyId: string }) {
               </div>
             )}
 
+            <div className="space-y-3 border-t border-border pt-4">
+              <Field
+                label="Exclusive amenity"
+                hint="Stored only on this property — never added to lookup_amenities."
+              >
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Input
+                    value={exclusiveDraft}
+                    onChange={(event) => setExclusiveDraft(event.target.value)}
+                    placeholder="Private Yacht Dock"
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") {
+                        event.preventDefault();
+                        addExclusive();
+                      }
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={!exclusiveDraft.trim()}
+                    onClick={addExclusive}
+                  >
+                    <Plus />
+                    Add exclusive
+                  </Button>
+                </div>
+              </Field>
+
+              {exclusiveLabels.length > 0 ? (
+                <ul className="flex flex-wrap gap-2">
+                  {exclusiveLabels.map((label) => (
+                    <li key={label}>
+                      <Badge variant="secondary" className="gap-1 pr-1">
+                        {label}
+                        <button
+                          type="button"
+                          className="rounded-sm p-0.5 hover:bg-muted"
+                          aria-label={`Remove ${label}`}
+                          onClick={() => removeExclusive(label)}
+                        >
+                          <X className="size-3" />
+                        </button>
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  No exclusive amenities on this property.
+                </p>
+              )}
+            </div>
+
             <div className="flex items-center justify-end gap-3 border-t border-border pt-4">
               {dirty ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setSelected(saved)}
-                  disabled={saving}
-                >
-                  Reset
-                </Button>
+                <p className="mr-auto text-xs text-muted-foreground">
+                  Unsaved amenity changes.
+                </p>
               ) : null}
               <Button
                 type="button"
-                onClick={handleSave}
                 disabled={saving || !dirty}
+                onClick={handleSave}
               >
                 {saving ? <Spinner /> : <Save />}
                 Save amenities

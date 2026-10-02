@@ -221,10 +221,29 @@ export async function listPropertyAmenities(
 /**
  * Replaces amenity selection using master lookup_amenities ids.
  * Writes lookup_amenity_id; leaves amenity_id null.
+ * Clears exclusive custom_label rows as well.
  */
 export async function setPropertyLookupAmenities(
   propertyId: string,
   lookupAmenityIds: string[]
+): Promise<void> {
+  return setPropertyAmenitySelection(propertyId, {
+    lookupAmenityIds,
+    exclusiveLabels: [],
+  });
+}
+
+/**
+ * Saves catalogue amenities plus property-exclusive custom labels in one pass.
+ * Exclusive labels are stored only on property_amenities.custom_label and are
+ * never inserted into lookup_amenities.
+ */
+export async function setPropertyAmenitySelection(
+  propertyId: string,
+  selection: {
+    lookupAmenityIds: string[];
+    exclusiveLabels: string[];
+  }
 ): Promise<void> {
   const supabase = getSupabase();
 
@@ -235,14 +254,41 @@ export async function setPropertyLookupAmenities(
 
   throwOnError(deleteError, "Updating property amenities");
 
-  if (lookupAmenityIds.length === 0) return;
+  const lookupIds = Array.from(
+    new Set(selection.lookupAmenityIds.filter(Boolean))
+  );
+  const exclusives = Array.from(
+    new Set(
+      selection.exclusiveLabels
+        .map((label) => label.trim())
+        .filter((label) => label.length > 0)
+    )
+  );
 
-  const rows = lookupAmenityIds.map((amenityId, index) => ({
-    property_id: propertyId,
-    amenity_id: null,
-    lookup_amenity_id: amenityId,
-    display_order: index,
-  }));
+  if (lookupIds.length === 0 && exclusives.length === 0) return;
+
+  const rows: Record<string, unknown>[] = [];
+  let order = 0;
+
+  for (const amenityId of lookupIds) {
+    rows.push({
+      property_id: propertyId,
+      amenity_id: null,
+      lookup_amenity_id: amenityId,
+      custom_label: null,
+      display_order: order++,
+    });
+  }
+
+  for (const label of exclusives) {
+    rows.push({
+      property_id: propertyId,
+      amenity_id: null,
+      lookup_amenity_id: null,
+      custom_label: label.slice(0, 120),
+      display_order: order++,
+    });
+  }
 
   const { error: insertError } = await supabase.from(LINK_TABLE).insert(rows);
   throwOnError(insertError, "Updating property amenities");
@@ -271,6 +317,7 @@ export async function setPropertyAmenities(
     property_id: propertyId,
     amenity_id: amenityId,
     lookup_amenity_id: null,
+    custom_label: null,
     display_order: index,
   }));
 

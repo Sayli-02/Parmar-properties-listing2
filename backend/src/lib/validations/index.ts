@@ -155,7 +155,8 @@ export const masterPropertySchema = z.object({
   lookup_location_id: z.string().uuid("Select a location"),
   sub_location: z.string().min(1, "Sub-location is required").max(150),
   property_type_id: z.string().uuid("Select a property type"),
-  bhk_id: z.string().uuid("Select a BHK"),
+  /** Synced from the first configuration on create; optional on the form. */
+  bhk_id: z.string().uuid().optional().nullable().or(z.literal("")),
   status_id: z.string().uuid("Select construction status"),
   price: z.coerce.number().gt(0, "Price must be greater than 0"),
   carpet_area_sqft: z.coerce.number().int().gt(0, "Carpet area is required"),
@@ -163,7 +164,8 @@ export const masterPropertySchema = z.object({
     z.coerce.number().int().gt(0, "Super area must be greater than 0")
   ),
   possession_date: z.string().min(1, "Possession is required").max(50),
-  floor: z.string().min(1, "Floor information is required").max(80),
+  /** Kept for legacy dual-write; no longer collected on Add Property. */
+  floor: z.string().max(80).optional().nullable().or(z.literal("")),
   is_featured: z.boolean().default(false),
   recently_added: z.boolean().default(false),
   is_recommended: z.boolean().default(false),
@@ -186,7 +188,7 @@ export const propertyConfigurationSchema = z.object({
     required_error: "Select a plan type",
     invalid_type_error: "Select a valid plan type",
   }),
-  variant_code: z.enum(["2bhk", "3bhk", "4bhk", "5bhk", "custom"], {
+  variant_code: z.enum(["1bhk", "2bhk", "3bhk", "4bhk", "5bhk", "custom"], {
     required_error: "Select a variant code",
     invalid_type_error: "Select a valid variant code",
   }),
@@ -199,6 +201,59 @@ export const propertyConfigurationSchema = z.object({
   image_path: z.string().max(2000).optional().default(""),
   display_order: z.coerce.number().int().min(0, "Display order must be 0 or greater").default(0),
 });
+
+/**
+ * Inline Add Property configuration row. Maps onto property_configurations:
+ * variant_code + optional custom_type → tab_label; title; area_range;
+ * price_indicator.
+ */
+export const configurationDraftRowSchema = z
+  .object({
+    variant_code: z.enum(["1bhk", "2bhk", "3bhk", "4bhk", "5bhk", "custom"], {
+      required_error: "Select BHK / Type",
+      invalid_type_error: "Select a valid BHK / Type",
+    }),
+    custom_type: z.string().max(100).optional().default(""),
+    title: z.string().max(100).optional().default(""),
+    area_range: z.string().max(60).optional().default(""),
+    price_indicator: z.string().max(60).optional().default(""),
+  })
+  .superRefine((row, ctx) => {
+    if (row.variant_code === "custom" && !row.custom_type?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Enter a custom type when Other is selected",
+        path: ["custom_type"],
+      });
+    }
+
+    const area = row.area_range?.trim() ?? "";
+    if (!area) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Area range is required",
+        path: ["area_range"],
+      });
+    } else if (/[a-zA-Z]{4,}/.test(area) && !/\d/.test(area)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Area range should include a number (sq.ft)",
+        path: ["area_range"],
+      });
+    }
+
+    if (!row.price_indicator?.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Price range is required",
+        path: ["price_indicator"],
+      });
+    }
+  });
+
+export const configurationDraftListSchema = z
+  .array(configurationDraftRowSchema)
+  .min(1, "Add at least one configuration");
 
 export const configurationSchema = z.object({
   name: z.string().min(1, "Name is required").max(120),
@@ -384,6 +439,7 @@ export type MarketIntelligenceInput = z.infer<typeof marketIntelligenceSchema>;
 export type PropertyInput = z.infer<typeof propertySchema>;
 export type MasterPropertyInput = z.infer<typeof masterPropertySchema>;
 export type PropertyConfigurationInput = z.infer<typeof propertyConfigurationSchema>;
+export type ConfigurationDraftRowInput = z.infer<typeof configurationDraftRowSchema>;
 export type ConfigurationInput = z.infer<typeof configurationSchema>;
 export type PriceBreakdownInput = z.infer<typeof priceBreakdownSchema>;
 export type FloorPlanInput = z.infer<typeof floorPlanSchema>;

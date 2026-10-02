@@ -71,7 +71,7 @@ export function PropertyConfigurationDialog({
     resolver: zodResolver(propertyConfigurationSchema),
     defaultValues: {
       plan_type: "individual",
-      variant_code: "3bhk",
+      variant_code: "1bhk",
       tab_label: "",
       title: "",
       area_range: "",
@@ -89,7 +89,7 @@ export function PropertyConfigurationDialog({
     setSelection(unchangedSelection);
     form.reset({
       plan_type: configuration?.plan_type ?? "individual",
-      variant_code: configuration?.variant_code ?? "3bhk",
+      variant_code: configuration?.variant_code ?? "1bhk",
       tab_label: configuration?.tab_label ?? "",
       title: configuration?.title ?? "",
       area_range: configuration?.area_range ?? "",
@@ -208,7 +208,7 @@ export function PropertyConfigurationDialog({
               error={errors.variant_code?.message}
             >
               <Select
-                value={form.watch("variant_code") ?? "3bhk"}
+                value={form.watch("variant_code") ?? "1bhk"}
                 onValueChange={(value) =>
                   form.setValue(
                     "variant_code",

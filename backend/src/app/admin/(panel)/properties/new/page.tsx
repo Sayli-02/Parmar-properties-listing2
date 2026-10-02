@@ -22,7 +22,7 @@ export default function NewPropertyPage() {
 
       <PageHeader
         title="New property"
-        description="Save the property details first. You will then land on Media & Documents to upload cover/gallery images, MahaRERA QR, brochure and floor plans. Configurations and amenities stay available as sibling tabs on the same editor."
+        description="Enter property details, configurations, amenities, RERA QR and gallery images, then create. You will land on Media & Documents for brochure and floor plans."
       />
 
       <PropertyForm />
