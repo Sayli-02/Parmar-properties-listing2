@@ -67,7 +67,6 @@ export async function createFloorPlansBatch(
   const supabase = getSupabase();
   const payload = rows.map(({ input, image, document }) => {
     const base = nullifyEmpty(input);
-    if (!base.configuration_id) base.configuration_id = null;
     return {
       ...base,
       property_id: propertyId,
@@ -82,7 +81,7 @@ export async function createFloorPlansBatch(
     .from(TABLE)
     .insert(payload)
     .select(
-      "id, property_id, configuration_id, name, plan_type, image_path, image_url, file_path, file_url, is_active, display_order, created_at, updated_at"
+      "id, property_id, name, plan_type, image_path, image_url, file_path, file_url, is_active, display_order, created_at, updated_at"
     );
 
   throwOnError(error, "Creating floor plans");
@@ -99,7 +98,6 @@ export async function updateFloorPlan(
 ): Promise<FloorPlan> {
   const supabase = getSupabase();
   const payload = nullifyEmpty(input);
-  if (!payload.configuration_id) payload.configuration_id = null;
 
   if (files.image !== undefined) {
     payload.image_path = files.image?.path ?? null;

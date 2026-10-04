@@ -275,8 +275,7 @@ One record per route containing editorial copy, section headings, badges, and la
 | Featured Order | `featured_order` | `SMALLINT` | Yes | Number (Int) | 1 to 12 | `NULL` | Ordering on home page |
 | Recently Added Badge| `recently_added` | `BOOLEAN` | No | Checkbox | Toggle | `false` | Sort priority |
 | Recommended Pick | `is_recommended` | `BOOLEAN` | No | Checkbox | Toggle | `false` | Editorial badge |
-| Is New Launch | `is_new_launch` | `BOOLEAN` | No | Checkbox | Toggle | `false` | Controls tab placement |
-| Launch Phase FK | `launch_phase_id` | `UUID` | Yes | Dropdown (FK) | Pre-Launch, Under Construction | `NULL` | Badge on cards |
+| Is New Launch | `is_new_launch` | `BOOLEAN` | No | Checkbox | Toggle | `false` | Controls tab placement (New Launches collection). `launch_phase_id` removed in migration `012`. |
 | Cover Image Path | `cover_image` | `TEXT` | No | Media Upload | Valid URL / Storage Path | None | Card & Hero thumbnail |
 | MahaRERA Number | `rera_id` | `VARCHAR(50)` | No | Text | Format `P51...` | None | Card & Detail compliance |
 | MahaRERA QR Code | `rera_qr_image` | `TEXT` | Yes | Media Upload | Image path | `NULL` | Detail page QR modal |

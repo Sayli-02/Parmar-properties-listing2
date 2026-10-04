@@ -36,6 +36,10 @@
 
 ### 3. Completed Tasks ✅
 
+- [x] **Backend: drop unused `properties.launch_phase_id`** (Done: 2026-10-04) — Migration `012_drop_properties_launch_phase_id.sql` authored and **applied** on production; admin form/types/API/lookups updated; column absent remotely.
+- [x] **Backend: drop legacy `floor_plans.configuration_id`** (Done: 2026-10-04) — Migration `011_drop_floor_plans_configuration_id.sql` authored and **applied** on production; admin types/API/`FloorPlansManager`/`duplicateProperty` updated; column absent remotely.
+- [x] **Backend RLS: publication_status authority for properties + children** (Done: 2026-10-04) — Migration `010_publication_status_rls.sql` authored and **applied** on production (public SELECT uses `publication_status` + `deleted_at`).
+- [x] **Admin Add/Edit Property: main Price (₹ Cr) in Property Information** (Done: 2026-10-04) — Canonical `price` field shown beside Property Type so create/edit can set catalogue price (avoids public “Price on Request”).
 - [x] **Task 4.1: Residential Properties Query Hook & Home Showcase** (Done: 2026-10-01) — Connected `/` and `/properties` to Supabase `properties` table with zero-breakage fallback.
 - [x] **Task 4.2: Single Property Dossier (`/properties/[slug]`)** (Done: 2026-10-01) — Connected dynamic slug lookup with configurations, gallery images, and lead inquiry hooks.
 - [x] **Task 4.3: Commercial Properties Query Hook (`/commercials`)** (Done: 2026-10-01) — Connected `/commercials` to Supabase `commercial_properties` table with fallback.

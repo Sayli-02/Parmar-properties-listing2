@@ -93,7 +93,6 @@ type PropertyValues = z.input<typeof masterPropertySchema>;
 type PropertyOutput = z.output<typeof masterPropertySchema>;
 
 const NO_LOCATION = "none";
-const NO_PHASE = "none";
 
 interface PropertyFormProps {
   property?: Property;
@@ -106,7 +105,6 @@ interface FormLookups {
   statuses: LookupItem[];
   types: LookupItem[];
   amenities: LookupItem[];
-  launchPhases: LookupItem[];
 }
 
 const emptyLookups: FormLookups = {
@@ -115,7 +113,6 @@ const emptyLookups: FormLookups = {
   statuses: [],
   types: [],
   amenities: [],
-  launchPhases: [],
 };
 
 const VARIANT_TO_BHK_SLUGS: Record<PropertyConfigVariant, string[]> = {
@@ -182,7 +179,6 @@ function toFormValues(property?: Property): DefaultValues<PropertyValues> {
     is_recommended: property?.is_recommended ?? false,
     is_new_launch: property?.is_new_launch ?? false,
     is_luxury_collection: property?.is_luxury_collection ?? false,
-    launch_phase_id: property?.launch_phase_id ?? "",
     rera_id: property?.rera_id ?? property?.rera_number ?? "",
     latitude: property?.latitude ?? null,
     longitude: property?.longitude ?? null,
@@ -242,7 +238,6 @@ export function PropertyForm({ property, onSaved }: PropertyFormProps) {
           statuses: loaded.statuses,
           types: loaded.types,
           amenities: loaded.amenities,
-          launchPhases: loaded.launchPhases,
         })
       )
       .catch((error) => toast.error(getErrorMessage(error)));
@@ -435,7 +430,6 @@ export function PropertyForm({ property, onSaved }: PropertyFormProps) {
             input: {
               name: "Master Plan",
               plan_type: "master_plan",
-              configuration_id: "",
               is_active: true,
               display_order: planOrder++,
             },
@@ -447,7 +441,6 @@ export function PropertyForm({ property, onSaved }: PropertyFormProps) {
             input: {
               name: "Floor Plan",
               plan_type: "floor_plan",
-              configuration_id: "",
               is_active: true,
               display_order: planOrder++,
             },
@@ -593,32 +586,52 @@ export function PropertyForm({ property, onSaved }: PropertyFormProps) {
             />
           </Field>
 
-          <Field
-            label="Property type"
-            required
-            error={errors.property_type_id?.message}
-          >
-            <Select
-              value={form.watch("property_type_id") || ""}
-              onValueChange={(value) =>
-                form.setValue("property_type_id", value, {
-                  shouldDirty: true,
-                  shouldValidate: true,
-                })
-              }
+          <FieldGrid>
+            <Field
+              label="Property type"
+              required
+              error={errors.property_type_id?.message}
             >
-              <SelectTrigger aria-label="Property type">
-                <SelectValue placeholder="Select a type" />
-              </SelectTrigger>
-              <SelectContent>
-                {lookups.types.map((option) => (
-                  <SelectItem key={option.id} value={option.id}>
-                    {option.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
+              <Select
+                value={form.watch("property_type_id") || ""}
+                onValueChange={(value) =>
+                  form.setValue("property_type_id", value, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
+              >
+                <SelectTrigger aria-label="Property type">
+                  <SelectValue placeholder="Select a type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {lookups.types.map((option) => (
+                    <SelectItem key={option.id} value={option.id}>
+                      {option.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+
+            <Field
+              label="Price (₹ Cr)"
+              htmlFor="price"
+              required
+              hint="Enter crores as a number — 20 means ₹20 Cr, 32.5 means ₹32.50 Cr."
+              error={errors.price?.message}
+            >
+              <Input
+                id="price"
+                type="number"
+                min={0}
+                step="0.01"
+                placeholder="20"
+                aria-invalid={Boolean(errors.price)}
+                {...form.register("price")}
+              />
+            </Field>
+          </FieldGrid>
         </CardContent>
       </Card>
 
@@ -869,37 +882,19 @@ export function PropertyForm({ property, onSaved }: PropertyFormProps) {
         </CardContent>
       </Card>
 
-      {/* Pricing & area remain on edit so existing editor fields stay available.
-          They are intentionally not rendered on Add Property. */}
+      {/* Area fields remain on edit. Main catalogue price lives in Property
+          Information (create + edit) so Add Property can set it. */}
       {isEdit ? (
         <Card>
           <CardHeader>
             <CardTitle>Pricing &amp; Area</CardTitle>
             <CardDescription>
-              Price drives catalogue range filters; areas drive card and detail
-              specs.
+              Areas drive card and detail specs. Catalogue price is edited under
+              Property Information.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <FieldGrid columns={3}>
-              <Field
-                label="Price (₹ Cr)"
-                htmlFor="price"
-                required
-                hint="Decimals allowed, for example 7.80."
-                error={errors.price?.message}
-              >
-                <Input
-                  id="price"
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  placeholder="7.80"
-                  aria-invalid={Boolean(errors.price)}
-                  {...form.register("price")}
-                />
-              </Field>
-
+            <FieldGrid>
               <Field
                 label="Carpet area (sq ft)"
                 htmlFor="carpet_area_sqft"
@@ -1115,35 +1110,6 @@ export function PropertyForm({ property, onSaved }: PropertyFormProps) {
               }
             />
           </div>
-
-          <Field
-            label="Launch phase"
-            hint="Badge shown on new launch cards."
-            error={errors.launch_phase_id?.message}
-          >
-            <Select
-              value={form.watch("launch_phase_id") || NO_PHASE}
-              onValueChange={(value) =>
-                form.setValue(
-                  "launch_phase_id",
-                  value === NO_PHASE ? "" : value,
-                  { shouldDirty: true }
-                )
-              }
-            >
-              <SelectTrigger aria-label="Launch phase">
-                <SelectValue placeholder="Not set" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NO_PHASE}>Not set</SelectItem>
-                {lookups.launchPhases.map((option) => (
-                  <SelectItem key={option.id} value={option.id}>
-                    {option.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
 
           <Field
             label="Meta title"

@@ -177,7 +177,6 @@ export const masterPropertySchema = z.object({
   is_recommended: z.boolean().default(false),
   is_new_launch: z.boolean().default(false),
   is_luxury_collection: z.boolean().default(false),
-  launch_phase_id: z.string().uuid().optional().nullable().or(z.literal("")),
   rera_id: z.string().min(1, "RERA number is required").max(50),
   latitude: optionalNumber(z.coerce.number().min(-90).max(90)),
   longitude: optionalNumber(z.coerce.number().min(-180).max(180)),
@@ -283,7 +282,6 @@ export const priceBreakdownSchema = z.object({
 export const floorPlanSchema = z.object({
   name: z.string().min(1, "Name is required").max(120),
   plan_type: z.enum(["floor_plan", "master_plan", "configuration_plan"]),
-  configuration_id: z.string().uuid().optional().nullable().or(z.literal("")),
   is_active: z.boolean().default(true),
   display_order: z.coerce.number().int().min(0).default(0),
 });

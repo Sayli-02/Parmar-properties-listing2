@@ -28,6 +28,117 @@
 
 ## 📜 Activity Stream
 
+### [2026-10-04 01:00] — Antigravity (AI) & Arisha — Backend audit follow-ups (BHK repair, duplicate layout safety, docs)
+- **Branch:** `main`
+- **What Was Done:**
+  - Production repair: property `f40308ad-…` legacy `bhk` set to `1 BHK` from `bhk_id` → `lookup_bhk.slug` `1-bhk` using the same `LEGACY_BHK_BY_LOOKUP_SLUG` mapping (only `bhk` updated).
+  - `duplicateProperty`: master `property_configurations.image_path` cleared to `""` on copy (no storage-copy helper; avoids shared layout object); floor-plan paths already nulled; master breakdown ID remap unchanged.
+  - Docs: mark migrations `010`–`012` as **applied** on production; clarify master vs legacy config stacks + Phase-1 dual-write in brain docs.
+- **Files Touched / Created:**
+  - [`backend/src/lib/api/properties.ts`](../backend/src/lib/api/properties.ts)
+  - [`brain/PROJECT_STATE.md`](PROJECT_STATE.md), [`brain/TASK_BOARD.md`](TASK_BOARD.md), [`brain/ARCHITECTURE_MAP.md`](ARCHITECTURE_MAP.md), [`brain/TEAM_LOG.md`](TEAM_LOG.md)
+- **Current State:** No Frontend changes. No new migration. No commit/push.
+- **Next Steps for Next Developer:**
+  - FRONTEND deferred: resolve layout `image_path` to public URL; wire `floor_plans` master/floor reads; Phase-2 admin filters on lookup IDs.
+
+### [2026-10-04 00:55] — Antigravity (AI) & Arisha — duplicateProperty copies master price breakdowns
+- **Branch:** `main`
+- **What Was Done:**
+  - Fixed master-stack gap in `duplicateProperty`: each `property_configurations` row is inserted with old→new ID remap, then related `property_configuration_price_breakdowns` (`label`, `amount`, `display_order`) are copied to the new configuration ID.
+  - Preserved legacy `configurations` / `price_breakdowns` duplication unchanged; still does not copy inventory.
+  - No migration/schema/Frontend changes.
+- **Files Touched / Created:**
+  - [`backend/src/lib/api/properties.ts`](../backend/src/lib/api/properties.ts)
+- **Current State:** `npm run typecheck` passed with 0 errors. No commit/push.
+- **Next Steps for Next Developer:**
+  - Manually duplicate a property that has master price-breakdown lines and confirm the copy’s Configuration Matrix shows the same lines.
+
+### [2026-10-04 00:50] — Antigravity (AI) & Arisha — Dual-write legacy bhk / property_type from lookup IDs
+- **Branch:** `main`
+- **What Was Done:**
+  - Phase 1 compatibility: master create/update now syncs legacy `properties.bhk` and `properties.property_type` from canonical `bhk_id` / `property_type_id` via explicit slug maps (IDs remain SoT).
+  - Shared helpers in `properties.ts`: `legacyBhkFromLookupSlug`, `legacyPropertyTypeFromLookupSlug`, `resolveLegacyBhkAndPropertyType`; `toMasterPropertyPayload` is async and used by both `createMasterProperty` and `updateMasterProperty`.
+  - No migration, no column drops, no Frontend changes, no new test framework.
+- **Files Touched / Created:**
+  - [`backend/src/lib/api/properties.ts`](../backend/src/lib/api/properties.ts)
+- **Current State:** `npm run typecheck` (`tsc --noEmit`) passed with 0 errors. No commit/push.
+- **Next Steps for Next Developer:**
+  - Re-save existing property (or create new) and confirm admin BHK/type filters + dashboard badge show synced legacy values.
+  - Later Phase 2: migrate admin filters/dashboard to lookup IDs, then consider dropping legacy columns.
+
+### [2026-10-04 00:45] — Antigravity (AI) & Arisha — Drop unused properties.launch_phase_id
+- **Branch:** `main`
+- **What Was Done:**
+  - Added migration `012_drop_properties_launch_phase_id.sql` to drop FK `properties_launch_phase_id_fkey` and column `properties.launch_phase_id` (production audit: 0 populated rows).
+  - Canonical model unchanged: `status_id` → construction status; `is_new_launch` → New Launches membership; `possession_date` unchanged.
+  - Removed field from Property type, Zod `masterPropertySchema`, `toMasterPropertyPayload`, admin property form, and `listPropertyFormLookups` launch-phase filter.
+  - Updated MASTER_BACKEND_SPEC (root + backend copy) and brain docs.
+  - Did **not** create `lookup_launch_phases`; did **not** change Frontend. Migration later **applied** on production (column absent as of 2026-10-04 audit).
+- **Files Touched / Created:**
+  - [`backend/supabase/migrations/012_drop_properties_launch_phase_id.sql`](../backend/supabase/migrations/012_drop_properties_launch_phase_id.sql)
+  - [`backend/src/types/index.ts`](../backend/src/types/index.ts)
+  - [`backend/src/lib/validations/index.ts`](../backend/src/lib/validations/index.ts)
+  - [`backend/src/lib/api/properties.ts`](../backend/src/lib/api/properties.ts)
+  - [`backend/src/lib/api/lookups.ts`](../backend/src/lib/api/lookups.ts)
+  - [`backend/src/components/properties/property-form.tsx`](../backend/src/components/properties/property-form.tsx)
+  - [`MASTER_BACKEND_SPEC.md`](../MASTER_BACKEND_SPEC.md), [`backend/MASTER_BACKEND_SPEC.md`](../backend/MASTER_BACKEND_SPEC.md)
+- **Current State:** Migration authored and applied on production (column absent as of 2026-10-04 audit).
+- **Next Steps for Next Developer:**
+  - Migrations `010` → `011` → `012` are applied on production (verified 2026-10-04).
+  - Smoke-test Add/Edit Property: Construction status, New launch toggle, Possession still work; Launch phase control gone.
+  - Frontend still has unused mock `launchPhase` type/field — FRONTEND — DEFERRED.
+
+### [2026-10-04 00:40] — Antigravity (AI) & Arisha — Drop legacy floor_plans.configuration_id
+- **Branch:** `main`
+- **What Was Done:**
+  - Added migration `011_drop_floor_plans_configuration_id.sql` to drop FK `floor_plans_configuration_id_fkey` and column `floor_plans.configuration_id`.
+  - Canonical model unchanged: Master Layout / Floor Plan stay on property-level `floor_plans` (`master_plan` / `floor_plan`); Individual Layout stays on `property_configurations.image_path`.
+  - Removed configuration linking from `FloorPlansManager`, Zod `floorPlanSchema`, `FloorPlan` type, floor-plans API select/insert/update, Add Property create payload, and `duplicateProperty` floor-plan copy.
+  - Left legacy `configurations` / `price_breakdowns` / `inventory_units.configuration_id` untouched.
+  - Did **not** change Frontend. Migration later **applied** on production (column absent as of 2026-10-04 audit).
+- **Files Touched / Created:**
+  - [`backend/supabase/migrations/011_drop_floor_plans_configuration_id.sql`](../backend/supabase/migrations/011_drop_floor_plans_configuration_id.sql)
+  - [`backend/src/types/index.ts`](../backend/src/types/index.ts)
+  - [`backend/src/lib/validations/index.ts`](../backend/src/lib/validations/index.ts)
+  - [`backend/src/lib/api/floor-plans.ts`](../backend/src/lib/api/floor-plans.ts)
+  - [`backend/src/lib/api/properties.ts`](../backend/src/lib/api/properties.ts)
+  - [`backend/src/components/properties/floor-plans-manager.tsx`](../backend/src/components/properties/floor-plans-manager.tsx)
+  - [`backend/src/components/properties/property-form.tsx`](../backend/src/components/properties/property-form.tsx)
+- **Current State:** Migration authored and applied on production. No commit/push at time of authoring.
+- **Next Steps for Next Developer:**
+  - Migrations `010` then `011` applied on production (verified 2026-10-04).
+  - Smoke-test Add Property master/floor upload and Media → Floor plans CRUD.
+  - Later: wire Frontend master/floor tabs to `floor_plans` by `plan_type` (FRONTEND — DEFERRED).
+
+### [2026-10-04 00:30] — Antigravity (AI) & Arisha — Publication/RLS authority → publication_status
+- **Branch:** `main`
+- **What Was Done:**
+  - Added migration `010_publication_status_rls.sql` so public/anon SELECT on properties and property children gates on `publication_status = 'published' AND deleted_at IS NULL` (MASTER §5.5).
+  - Recreated public SELECT policies for: `properties`, `property_images`, `configurations`, `price_breakdowns`, `floor_plans`, `property_amenities`.
+  - Left already-correct master policies on `property_configurations` / `property_configuration_price_breakdowns` unchanged.
+  - Preserved all admin FOR ALL / inventory / catalogue / locations / storage policies; kept `is_active` column and app dual-write untouched.
+  - Migration later **applied** on production (verified 2026-10-04; followed by `011`/`012`).
+- **Files Touched / Created:**
+  - [`backend/supabase/migrations/010_publication_status_rls.sql`](../backend/supabase/migrations/010_publication_status_rls.sql)
+- **Current State:** Migration authored and applied on production. No backend test script exists (`package.json` has no `test`).
+- **Next Steps for Next Developer:**
+  - Migration `010` applied on production (verified 2026-10-04).
+  - Spot-check: draft property with `is_active=true` must be hidden from anon; published + not deleted must remain visible with images/configs/amenities.
+
+### [2026-10-04 00:05] — Antigravity (AI) & Arisha — Add Property main price in Property Information
+- **Branch:** `main`
+- **What Was Done:**
+  - Added the canonical numeric `price` field to the Property Information section of the Admin property form, labeled exactly `Price (₹ Cr)`, beside Property Type.
+  - Layout is now: Title | URL Slug → Tagline → Property Type | Price (₹ Cr).
+  - Create and edit both use the existing `price` form value / `masterPropertySchema` / payload mapping (no new column, migration, or frontend budget-filter changes).
+  - Removed the duplicate Price input from the edit-only Pricing & Area card so there is a single price control; carpet/super area remain there on edit.
+- **Files Touched / Created:**
+  - [`backend/src/components/properties/property-form.tsx`](../backend/src/components/properties/property-form.tsx)
+- **Current State:** UI change complete; `npm run typecheck` (`tsc --noEmit`) passed with 0 errors.
+- **Next Steps for Next Developer:**
+  - Create/edit a property with price `20` or `32.5` and confirm the public portal shows ₹ Cr instead of “Price on Request”.
+  - Optionally tighten `masterPropertySchema.price` from optional to required if blank submissions should be blocked at Zod level (UI already marks the field required).
+
 ### 2026-10-01 19:43 — Antigravity & Sayli — Full Property Attribute Audit & Live Portfolio Sync
 - **Branch:** `main`
 - **What Was Done:**

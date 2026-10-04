@@ -1,7 +1,7 @@
 # Parmar Properties — Project State & System Status
 
-> **Last Updated:** September 30, 2026  
-> **Status:** Backend Admin Complete | Frontend UI Complete | Wiring in Progress  
+> **Last Updated:** October 4, 2026  
+> **Status:** Backend Admin Complete | Frontend UI Complete | Wiring in Progress | Migrations 010–012 applied on production Supabase (`hsopshatelrzfmqgncam`)  
 > **Repository:** `https://github.com/Sayli-02/Parmar-properties-listing2.git`  
 > **Main Branch Commit:** `87c5d1f` (*Complete backend admin CMS*)
 
@@ -56,6 +56,10 @@
   6. `006_evolve_properties_locations.sql`: Master columns on properties and locations, `property_configurations` layout variants.
   7. `007_content_completeness.sql`: Luxury collection flag, 2 BHK lookup, audit fields.
   8. `008_property_configuration_price_breakdowns.sql`: Cost-sheet line items for configurations.
+  9. `009_add_property_flow.sql`: 1 BHK variants + exclusive amenity `custom_label`.
+  10. `010_publication_status_rls.sql`: Public property RLS gates on `publication_status` + `deleted_at` (**applied** on production).
+  11. `011_drop_floor_plans_configuration_id.sql`: Drops legacy `floor_plans.configuration_id` FK/column (**applied** on production; column absent).
+  12. `012_drop_properties_launch_phase_id.sql`: Drops unused `properties.launch_phase_id` FK/column (**applied** on production; column absent). Canonical launch membership remains `is_new_launch`.
   - `seed_master.sql`: Populates master catalogues and baseline page content.
   - `seed.sql`: Sample records for demonstration.
 

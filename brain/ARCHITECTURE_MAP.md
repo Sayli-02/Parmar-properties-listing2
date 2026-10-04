@@ -8,10 +8,14 @@ This document explains the technical mapping between **Frontend TypeScript compo
 
 | Table Name | Defined in Migration | Used For | RLS Permissions |
 | :--- | :--- | :--- | :--- |
-| `properties` | `001`, `006`, `007` | Residential listings (Buy, New Launches, Luxury) | Public: `SELECT` published; Admin: CRUD |
-| `property_images` | `001` | Gallery photos for residential listings | Public: `SELECT`; Admin: CRUD |
-| `property_configurations` | `006` | Floor plans & 2/3/4/5 BHK variants per property | Public: `SELECT`; Admin: CRUD |
-| `price_breakdowns` | `001`, `008` | Cost-sheet lines (Base, Stamp Duty, GST, etc.) | Public: `SELECT`; Admin: CRUD |
+| `properties` | `001`, `006`, `007`, `010`, `012` | Residential listings (Buy, New Launches, Luxury). Construction status via `status_id` → `lookup_construction_status`; New Launches via `is_new_launch`. `launch_phase_id` removed in `012` (**applied**). Phase-1 dual-write: canonical `bhk_id` / `property_type_id` → legacy `bhk` / `property_type`. | Public: `SELECT` where `publication_status='published' AND deleted_at IS NULL` (`010`, **applied**); Admin: CRUD |
+| `property_images` | `001`, `010` | Gallery photos for residential listings | Public: `SELECT` if parent published (`010`); Admin: CRUD |
+| `floor_plans` | `001`, `010`, `011` | Property-level Master Layout (`master_plan`) & Floor Plan (`floor_plan`) artwork only; `configuration_id` removed in `011` (**applied**). Individual layouts are **not** stored here. | Public: `SELECT` if parent published (`010`); Admin: CRUD |
+| `property_configurations` | `006` | **Active admin SoT** for configuration matrix typologies + Individual Layout `image_path` | Public: `SELECT` if parent published; Admin: CRUD |
+| `configurations` | `001`, `010` | **Legacy** typology stack (kept for compatibility; managers unmounted; still loaded/duplicated) | Public: `SELECT` if parent published (`010`); Admin: CRUD |
+| `price_breakdowns` | `001`, `008`, `010` | **Legacy** cost-sheet lines on `configurations` (kept for compatibility) | Public: `SELECT` if parent published (`010`); Admin: CRUD |
+| `property_configuration_price_breakdowns` | `008` | **Master** cost-sheet lines on `property_configurations` (active admin SoT with configs) | Public: `SELECT` if parent published; Admin: CRUD |
+| `inventory_units` | `001` | **Legacy/infrastructure** unit inventory (admin-only; managers unmounted; dashboard still counts) | Admin only |
 | `commercial_properties` | `005` | Commercial listings (Offices, HQs, Retail) | Public: `SELECT` published; Admin: CRUD |
 | `locations` | `001`, `006` | Micro-market editorial guides (Worli, Bandra, etc.) | Public: `SELECT` active; Admin: CRUD |
 | `insights_articles` | `005` | Market Intelligence research reports | Public: `SELECT` published; Admin: CRUD |
@@ -38,17 +42,17 @@ This document explains the technical mapping between **Frontend TypeScript compo
 | `subLocation` | `sub_location` | `VARCHAR(150)` | Micro-enclave (e.g., *Worli Sea Face*) |
 | `price` | `price` | `NUMERIC(10,2)` | In Crores INR (e.g., `18.50`) |
 | `priceFormatted` | Computed | `string` | Formatted as `₹${price} Cr` |
-| `bhk` | `bhk_id` / `bhk` | `VARCHAR` | Configuration string (e.g., *4 BHK*) |
+| `bhk` | `bhk_id` (canonical) / `bhk` (legacy dual-write) | `UUID` / `VARCHAR` | SoT is `bhk_id` → `lookup_bhk`; Phase-1 writes legacy `bhk` text for admin filters |
 | `carpetArea` | `carpet_area_sqft` | `INTEGER` | Square footage |
 | `superArea` | `super_area` | `INTEGER` | Super built-up area |
-| `propertyType` | `property_type_id` | `UUID` | Links to `lookup_property_types` |
+| `propertyType` | `property_type_id` (canonical) / `property_type` (legacy dual-write) | `UUID` / enum | SoT is `property_type_id` → `lookup_property_types`; Phase-1 maps slug → legacy enum |
 | `possession` | `status_id` / `possession`| `VARCHAR` | *Ready to Move*, *Under Construction*, etc. |
 | `possessionDate` | `possession_date` | `VARCHAR(50)` | Estimated delivery date |
 | `floor` | `floor` | `VARCHAR(50)` | e.g., *Levels 45–52* |
 | `featured` | `is_featured` | `BOOLEAN` | Shows on home page featured grid |
 | `recentlyAdded` | `recently_added` | `BOOLEAN` | New arrival badge |
 | `recommended` | `is_recommended` | `BOOLEAN` | Advisory recommendation |
-| `isNewLaunch` | `is_new_launch` | `BOOLEAN` | Controls inclusion in `/properties?tab=new-launches` |
+| `isNewLaunch` | `is_new_launch` | `BOOLEAN` | Controls inclusion in `/properties?tab=new-launches` (canonical launch membership; no `launch_phase_id`) |
 | `isLuxuryCollection`| `is_luxury_collection` | `BOOLEAN` | Controls inclusion in `/properties?tab=luxury-collection` |
 | `coverImage` | `cover_image` | `TEXT` | Primary card image URL |
 | `images` | `property_images.url` | `TEXT[]` | One-to-many relationship |
@@ -57,7 +61,7 @@ This document explains the technical mapping between **Frontend TypeScript compo
 | `highlights` | `highlights` | `TEXT[]` | Bullet point highlights |
 | `reraId` | `rera_id` | `VARCHAR(80)` | MahaRERA Registration number |
 | `coordinates` | `latitude`, `longitude` | `NUMERIC` | Leaflet map coordinates |
-| `floorPlans` | `property_configurations` | `JSON/Relation` | Floor plan diagrams and layout variants |
+| `floorPlans` / layout artwork | `floor_plans` (master/floor) + `property_configurations.image_path` (individual) | Relation | Master Layout & Floor Plan on `floor_plans`; Individual Layout on configuration rows |
 
 ---
 
