@@ -57,6 +57,7 @@ export function HeroSlidesView() {
   }
 
   async function handleToggle(slide: HeroSlide, isActive: boolean) {
+    const previous = slides;
     setSlides((current) =>
       current.map((item) =>
         item.id === slide.id ? { ...item, is_active: isActive } : item
@@ -64,8 +65,12 @@ export function HeroSlidesView() {
     );
 
     try {
-      await setHeroSlideActive(slide.id, isActive);
+      const saved = await setHeroSlideActive(slide.id, isActive);
+      setSlides((current) =>
+        current.map((item) => (item.id === saved.id ? saved : item))
+      );
     } catch (caught) {
+      setSlides(previous);
       toast.error(getErrorMessage(caught));
       reload();
     }

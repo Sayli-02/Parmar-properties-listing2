@@ -39,10 +39,11 @@ function toPayload(input: InsightsArticleInput): Record<string, unknown> {
       author_role: input.author_role,
       author_desk: input.author_desk,
       status: input.status,
-      sort_order: input.sort_order,
       meta_title: input.meta_title,
       meta_description: input.meta_description,
     }),
+    // Ordering is applied after insert/update — strip here so a raw write
+    // cannot leave duplicate sort_order values behind.
     // NOT NULL text columns — keep empty string rather than null
     subtitle: input.subtitle || "",
     tag: input.tag || "",
@@ -52,6 +53,65 @@ function toPayload(input: InsightsArticleInput): Record<string, unknown> {
     author_desk: input.author_desk || "Parmar Properties Research",
     key_takeaways: input.key_takeaways ?? [],
   };
+}
+
+function clampInt(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, Math.trunc(value)));
+}
+
+async function listAllInsightsOrdered(): Promise<InsightsArticle[]> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select("*")
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: true });
+  throwOnError(error, "Loading insights articles");
+  return (data ?? []) as unknown as InsightsArticle[];
+}
+
+async function applyContiguousSortOrder(ids: string[]): Promise<void> {
+  const supabase = getSupabase();
+
+  await Promise.all(
+    ids.map(async (id, index) => {
+      const { error } = await supabase
+        .from(TABLE)
+        .update({ sort_order: -(index + 1) })
+        .eq("id", id);
+      throwOnError(error, "Reordering insights articles");
+    })
+  );
+
+  await Promise.all(
+    ids.map(async (id, index) => {
+      const { error } = await supabase
+        .from(TABLE)
+        .update({ sort_order: index + 1 })
+        .eq("id", id);
+      throwOnError(error, "Reordering insights articles");
+    })
+  );
+}
+
+async function resequenceSortOrder(
+  movingId: string | null,
+  desiredOrder: number | null
+): Promise<void> {
+  const all = await listAllInsightsOrdered();
+  const others = movingId ? all.filter((a) => a.id !== movingId) : all;
+  const ids = others.map((a) => a.id);
+
+  if (movingId) {
+    const target = clampInt(
+      desiredOrder && desiredOrder > 0 ? desiredOrder : ids.length + 1,
+      1,
+      ids.length + 1
+    );
+    ids.splice(target - 1, 0, movingId);
+  }
+
+  await applyContiguousSortOrder(ids);
 }
 
 export async function listInsightsArticles(
@@ -160,14 +220,29 @@ export async function createInsightsArticle(
   input: InsightsArticleInput
 ): Promise<InsightsArticle> {
   const supabase = getSupabase();
+  const desiredOrder =
+    typeof input.sort_order === "number" && input.sort_order > 0
+      ? input.sort_order
+      : null;
+
   const { data, error } = await supabase
     .from(TABLE)
-    .insert(toPayload(input))
+    .insert({ ...toPayload(input), sort_order: 0 })
     .select("*")
     .single();
 
   throwOnError(error, "Creating insights article");
-  return data as unknown as InsightsArticle;
+  const created = data as unknown as InsightsArticle;
+
+  await resequenceSortOrder(created.id, desiredOrder);
+
+  const { data: refreshed, error: refreshError } = await supabase
+    .from(TABLE)
+    .select("*")
+    .eq("id", created.id)
+    .single();
+  throwOnError(refreshError, "Loading insights article");
+  return (refreshed as unknown as InsightsArticle) ?? created;
 }
 
 export async function updateInsightsArticle(
@@ -175,6 +250,11 @@ export async function updateInsightsArticle(
   input: InsightsArticleInput
 ): Promise<InsightsArticle> {
   const supabase = getSupabase();
+  const desiredOrder =
+    typeof input.sort_order === "number" && input.sort_order > 0
+      ? input.sort_order
+      : null;
+
   const { data, error } = await supabase
     .from(TABLE)
     .update(toPayload(input))
@@ -183,13 +263,26 @@ export async function updateInsightsArticle(
     .single();
 
   throwOnError(error, "Updating insights article");
-  return data as unknown as InsightsArticle;
+  if (!data) {
+    throw new Error("Updating insights article failed: no row was updated.");
+  }
+
+  await resequenceSortOrder(id, desiredOrder);
+
+  const { data: refreshed, error: refreshError } = await supabase
+    .from(TABLE)
+    .select("*")
+    .eq("id", id)
+    .single();
+  throwOnError(refreshError, "Loading insights article");
+  return (refreshed as unknown as InsightsArticle) ?? (data as unknown as InsightsArticle);
 }
 
 export async function deleteInsightsArticle(id: string): Promise<void> {
   const supabase = getSupabase();
   const { error } = await supabase.from(TABLE).delete().eq("id", id);
   throwOnError(error, "Deleting insights article");
+  await resequenceSortOrder(null, null);
 }
 
 export async function listArticleSections(
@@ -260,14 +353,25 @@ export async function reorderArticleSections(
   orderedIds: string[]
 ): Promise<void> {
   const supabase = getSupabase();
+
   await Promise.all(
-    orderedIds.map((id, index) =>
-      supabase
+    orderedIds.map(async (id, index) => {
+      const { error } = await supabase
         .from(SECTIONS_TABLE)
-        .update({ section_order: index })
-        .eq("id", id)
-        .then(({ error }) => throwOnError(error, "Reordering sections"))
-    )
+        .update({ section_order: -(index + 1) })
+        .eq("id", id);
+      throwOnError(error, "Reordering sections");
+    })
+  );
+
+  await Promise.all(
+    orderedIds.map(async (id, index) => {
+      const { error } = await supabase
+        .from(SECTIONS_TABLE)
+        .update({ section_order: index + 1 })
+        .eq("id", id);
+      throwOnError(error, "Reordering sections");
+    })
   );
 }
 

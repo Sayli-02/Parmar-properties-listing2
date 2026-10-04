@@ -68,6 +68,7 @@ export function MarketIntelligenceView() {
     metric: MarketIntelligence,
     isActive: boolean
   ) {
+    const previous = metrics;
     setMetrics((current) =>
       current.map((item) =>
         item.id === metric.id ? { ...item, is_active: isActive } : item
@@ -75,8 +76,12 @@ export function MarketIntelligenceView() {
     );
 
     try {
-      await setMarketIntelligenceActive(metric.id, isActive);
+      const saved = await setMarketIntelligenceActive(metric.id, isActive);
+      setMetrics((current) =>
+        current.map((item) => (item.id === saved.id ? saved : item))
+      );
     } catch (caught) {
+      setMetrics(previous);
       toast.error(getErrorMessage(caught));
       reload();
     }

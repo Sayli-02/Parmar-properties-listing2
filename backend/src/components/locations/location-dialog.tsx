@@ -146,10 +146,13 @@ export function LocationDialog({
         }
         toast.success("Location updated");
       } else {
-        await createLocation(
-          { ...values, sort_order: await getNextLocationOrder() },
-          uploaded ?? null
-        );
+        // Append when sort_order is unset/0; otherwise insert at the requested
+        // position and shift peers (enforced in the locations API).
+        const sortOrder =
+          values.sort_order && values.sort_order > 0
+            ? values.sort_order
+            : await getNextLocationOrder();
+        await createLocation({ ...values, sort_order: sortOrder }, uploaded ?? null);
         toast.success("Location created");
       }
 
@@ -382,13 +385,13 @@ export function LocationDialog({
             <Field
               label="Sort order"
               htmlFor="sort_order"
-              hint="Order in the locations directory."
+              hint="Unique directory order. Changing this shifts other locations so duplicates never occur."
               error={errors.sort_order?.message}
             >
               <Input
                 id="sort_order"
                 type="number"
-                min={0}
+                min={1}
                 step="1"
                 {...form.register("sort_order")}
               />
@@ -414,7 +417,7 @@ export function LocationDialog({
               <Field
                 label="Home page order"
                 htmlFor="primary_order"
-                hint="1 to 4."
+                hint="Unique among the home-page four (1–4). Changing this shifts the other selected locations."
                 error={errors.primary_order?.message}
               >
                 <Input

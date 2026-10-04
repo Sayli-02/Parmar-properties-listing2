@@ -1,7 +1,7 @@
 # Parmar Properties — Project State & System Status
 
 > **Last Updated:** October 4, 2026  
-> **Status:** Backend Admin Complete | Frontend UI Complete | Wiring in Progress | Migrations 010–012 applied on production Supabase (`hsopshatelrzfmqgncam`)  
+> **Status:** Backend Admin Complete | Frontend UI Complete | Home CMS sections wired (Locations/Hero/Why/Insights) | RLS publication_status migration authored (010, not yet applied)  
 > **Repository:** `https://github.com/Sayli-02/Parmar-properties-listing2.git`  
 > **Main Branch Commit:** `87c5d1f` (*Complete backend admin CMS*)
 
@@ -57,11 +57,10 @@
   7. `007_content_completeness.sql`: Luxury collection flag, 2 BHK lookup, audit fields.
   8. `008_property_configuration_price_breakdowns.sql`: Cost-sheet line items for configurations.
   9. `009_add_property_flow.sql`: 1 BHK variants + exclusive amenity `custom_label`.
-  10. `010_publication_status_rls.sql`: Public property RLS gates on `publication_status` + `deleted_at` (**applied** on production).
-  11. `011_drop_floor_plans_configuration_id.sql`: Drops legacy `floor_plans.configuration_id` FK/column (**applied** on production; column absent).
-  12. `012_drop_properties_launch_phase_id.sql`: Drops unused `properties.launch_phase_id` FK/column (**applied** on production; column absent). Canonical launch membership remains `is_new_launch`.
+  10. `010_publication_status_rls.sql`: Public property RLS gates on `publication_status` + `deleted_at` (authored; apply in Supabase when ready).
   - `seed_master.sql`: Populates master catalogues and baseline page content.
   - `seed.sql`: Sample records for demonstration.
+  - `seed_cms_frontend_content.sql`: Migrates existing Frontend Mumbai hero/why/locations/insights content into live CMS tables (applied to linked Supabase).
 
 ### C. Frontend Luxury Portal (`/Frontend`) — ✅ UI & Wiring Complete
 - **Tech Stack:** Next.js 14.2.35 (App Router), React 18.3, Tailwind CSS v3, Zustand 4.5, Lucide-react.
@@ -72,10 +71,12 @@
   - Supabase client initialized in [`Frontend/lib/supabase/client.ts`](file:///c:/Users/Sayli/OneDrive/Desktop/Parmar-properties-listing/Frontend/lib/supabase/client.ts).
   - **All 6 lead touchpoints are wired** to insert inquiries directly into the Supabase `leads` table.
   - **Dynamic queries wired with zero-breakage hybrid fallback:**
-    - Residential properties & featured showcases ([`Frontend/lib/supabase/properties.ts`](file:///c:/Users/Sayli/OneDrive/Desktop/Parmar-properties-listing/Frontend/lib/supabase/properties.ts))
-    - Commercial properties ([`Frontend/lib/supabase/commercials.ts`](file:///c:/Users/Sayli/OneDrive/Desktop/Parmar-properties-listing/Frontend/lib/supabase/commercials.ts))
-    - Locations directory & enclaves ([`Frontend/lib/supabase/locations.ts`](file:///c:/Users/Sayli/OneDrive/Desktop/Parmar-properties-listing/Frontend/lib/supabase/locations.ts))
-    - Market intelligence articles ([`Frontend/lib/supabase/insights.ts`](file:///c:/Users/Sayli/OneDrive/Desktop/Parmar-properties-listing/Frontend/lib/supabase/insights.ts))
+    - Residential properties & featured showcases ([`Frontend/lib/supabase/properties.ts`](../Frontend/lib/supabase/properties.ts))
+    - Commercial properties ([`Frontend/lib/supabase/commercials.ts`](../Frontend/lib/supabase/commercials.ts))
+    - Locations directory, filter bar, primary/future home cards ([`Frontend/lib/supabase/locations.ts`](../Frontend/lib/supabase/locations.ts))
+    - Hero slides + home page_content ([`Frontend/lib/supabase/hero.ts`](../Frontend/lib/supabase/hero.ts), [`Frontend/lib/supabase/page-content.ts`](../Frontend/lib/supabase/page-content.ts))
+    - Why Parmar metrics/pillars from `page_content` ([`Frontend/components/home/WhyParmar.tsx`](../Frontend/components/home/WhyParmar.tsx))
+    - Market intelligence articles + home preview ([`Frontend/lib/supabase/insights.ts`](../Frontend/lib/supabase/insights.ts))
   - Full production build compiles with **0 errors** across all 29 routes.
 
 ---

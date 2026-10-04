@@ -543,7 +543,6 @@ export const PROPERTIES: Property[] = [
     recentlyAdded: true,
     recommended: true,
     isNewLaunch: true,
-    launchPhase: 'Pre-Launch EOI',
     completionYear: '2027',
     coverImage: '/properties/worli-aurum/cover.jpg',
     images: [
@@ -587,7 +586,6 @@ export const PROPERTIES: Property[] = [
     recentlyAdded: true,
     recommended: true,
     isNewLaunch: true,
-    launchPhase: 'New Launch',
     completionYear: '2026',
     coverImage: '/properties/bandra-palisades/cover.jpg',
     images: [
@@ -631,7 +629,6 @@ export const PROPERTIES: Property[] = [
     recentlyAdded: true,
     recommended: true,
     isNewLaunch: true,
-    launchPhase: 'Pre-Launch EOI',
     completionYear: '2028',
     coverImage: '/properties/lower-parel-pavilion/cover.jpg',
     images: [
@@ -677,7 +674,6 @@ export const PROPERTIES: Property[] = [
     recommended: true,
     isNewLaunch: true,
     isLuxuryCollection: true,
-    launchPhase: 'New Launch',
     completionYear: '2027',
     coverImage: '/properties/worli-aurum/cover.jpg',
     images: [

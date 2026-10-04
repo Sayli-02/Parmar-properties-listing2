@@ -18,6 +18,10 @@ const LOOKUP_TABLES = [
 
 export type LookupTable = (typeof LOOKUP_TABLES)[number];
 
+function clampInt(value: number, min: number, max: number): number {
+  return Math.min(max, Math.max(min, Math.trunc(value)));
+}
+
 async function listLookup(
   table: LookupTable,
   activeOnly = true
@@ -34,6 +38,63 @@ async function listLookup(
   const { data, error } = await query;
   throwOnError(error, `Loading ${table.replace(/_/g, " ")}`);
   return (data ?? []) as unknown as LookupItem[];
+}
+
+/**
+ * Writes contiguous unique display_order values (1..n) for the given id
+ * sequence. Two-phase update avoids mid-swap collisions.
+ */
+async function applyContiguousDisplayOrder(
+  table: LookupTable,
+  ids: string[]
+): Promise<void> {
+  const supabase = getSupabase();
+  const label = table.replace(/_/g, " ");
+
+  await Promise.all(
+    ids.map(async (id, index) => {
+      const { error } = await supabase
+        .from(table)
+        .update({ display_order: -(index + 1) })
+        .eq("id", id);
+      throwOnError(error, `Reordering ${label}`);
+    })
+  );
+
+  await Promise.all(
+    ids.map(async (id, index) => {
+      const { error } = await supabase
+        .from(table)
+        .update({ display_order: index + 1 })
+        .eq("id", id);
+      throwOnError(error, `Reordering ${label}`);
+    })
+  );
+}
+
+/**
+ * Inserts/moves `movingId` to 1-based `desiredOrder` among all rows and
+ * renumbers everyone 1..n so duplicates are impossible.
+ */
+async function resequenceDisplayOrder(
+  table: LookupTable,
+  movingId: string | null,
+  desiredOrder: number | null
+): Promise<void> {
+  const all = await listLookup(table, false);
+  const others = movingId ? all.filter((item) => item.id !== movingId) : all;
+  const ids = others.map((item) => item.id);
+
+  if (movingId) {
+    const target = clampInt(
+      desiredOrder && desiredOrder > 0 ? desiredOrder : ids.length + 1,
+      1,
+      ids.length + 1
+    );
+    ids.splice(target - 1, 0, movingId);
+  }
+
+  await applyContiguousDisplayOrder(table, ids);
 }
 
 export const listLookupLocations = (activeOnly = true) =>
@@ -65,14 +126,24 @@ export async function createLookupItem(
     .insert({
       slug: input.slug,
       name: input.name,
-      display_order: input.display_order ?? 0,
+      // Temporary placeholder; resequenced immediately after insert.
+      display_order: 0,
       is_active: input.is_active ?? true,
     })
     .select("*")
     .single();
 
   throwOnError(error, `Creating ${table.replace(/_/g, " ")}`);
-  return data as unknown as LookupItem;
+  const created = data as unknown as LookupItem;
+
+  await resequenceDisplayOrder(
+    table,
+    created.id,
+    input.display_order && input.display_order > 0 ? input.display_order : null
+  );
+
+  const refreshed = await listLookup(table, false);
+  return refreshed.find((item) => item.id === created.id) ?? created;
 }
 
 export async function updateLookupItem(
@@ -86,7 +157,6 @@ export async function updateLookupItem(
     .update({
       slug: input.slug,
       name: input.name,
-      display_order: input.display_order ?? 0,
       is_active: input.is_active ?? true,
     })
     .eq("id", id)
@@ -94,21 +164,42 @@ export async function updateLookupItem(
     .single();
 
   throwOnError(error, `Updating ${table.replace(/_/g, " ")}`);
-  return data as unknown as LookupItem;
+  if (!data) {
+    throw new Error(
+      `Updating ${table.replace(/_/g, " ")} failed: no row was updated.`
+    );
+  }
+
+  await resequenceDisplayOrder(
+    table,
+    id,
+    input.display_order && input.display_order > 0 ? input.display_order : null
+  );
+
+  const refreshed = await listLookup(table, false);
+  return refreshed.find((item) => item.id === id) ?? (data as unknown as LookupItem);
 }
 
 export async function setLookupItemActive(
   table: LookupTable,
   id: string,
   isActive: boolean
-): Promise<void> {
+): Promise<LookupItem> {
   const supabase = getSupabase();
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from(table)
     .update({ is_active: isActive })
-    .eq("id", id);
+    .eq("id", id)
+    .select("*")
+    .single();
 
   throwOnError(error, `Updating ${table.replace(/_/g, " ")}`);
+  if (!data) {
+    throw new Error(
+      `Updating ${table.replace(/_/g, " ")} failed: no row was updated. Check admin permissions.`
+    );
+  }
+  return data as unknown as LookupItem;
 }
 
 export async function deleteLookupItem(
@@ -118,16 +209,24 @@ export async function deleteLookupItem(
   const supabase = getSupabase();
   const { error } = await supabase.from(table).delete().eq("id", id);
   throwOnError(error, `Deleting ${table.replace(/_/g, " ")}`);
+  await resequenceDisplayOrder(table, null, null);
+}
+
+/** Normalize display_order to unique contiguous 1..n within a lookup table. */
+export async function repairLookupOrdering(table: LookupTable): Promise<void> {
+  await resequenceDisplayOrder(table, null, null);
 }
 
 export async function listPropertyFormLookups() {
-  const [locations, bhk, statuses, types, amenities] = await Promise.all([
-    listLookupLocations(),
-    listLookupBhk(),
-    listLookupConstructionStatus(),
-    listLookupPropertyTypes(),
-    listLookupAmenities(),
-  ]);
+  const [locations, bhk, statuses, types, amenities, launchPhases] =
+    await Promise.all([
+      listLookupLocations(),
+      listLookupBhk(),
+      listLookupConstructionStatus(),
+      listLookupPropertyTypes(),
+      listLookupAmenities(),
+      listLookupConstructionStatus(),
+    ]);
 
   return {
     locations,
@@ -135,5 +234,8 @@ export async function listPropertyFormLookups() {
     statuses,
     types,
     amenities,
+    launchPhases: launchPhases.filter((item) =>
+      ["pre-launch", "under-construction"].includes(item.slug)
+    ),
   };
 }

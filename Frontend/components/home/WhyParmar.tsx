@@ -1,28 +1,77 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Award, Gem, TrendingUp, ShieldCheck, CheckCircle2, ArrowRight, Sparkles } from 'lucide-react';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
-
 import { HOME_PAGE_CONTENT } from '@/data/content/home.content';
-
-const whyContent = HOME_PAGE_CONTENT.whyParmar;
+import {
+  fetchHomePageContent,
+  type HomePageCms,
+  type HomeTrustMetric,
+  type HomeWhyPillar,
+} from '@/lib/supabase/page-content';
 
 const ICONS = [Award, Gem, TrendingUp, ShieldCheck];
 
-const WHY_POINTS = whyContent.pillars.map((p, idx) => ({
-  number: p.number,
-  subtitle: p.subtitle,
-  title: p.title,
-  description: p.description,
-  icon: ICONS[idx] || Award,
-  badge: p.badge,
-}));
+function toWhyPoints(pillars: HomeWhyPillar[]) {
+  return pillars.map((p, idx) => ({
+    number: p.number,
+    subtitle: p.subtitle,
+    title: p.title,
+    description: p.description,
+    icon: ICONS[idx] || Award,
+    badge: p.badge,
+  }));
+}
 
-const TRUST_METRICS = whyContent.trustMetrics;
+const FALLBACK_CMS: HomePageCms = {
+  heroHeadline: HOME_PAGE_CONTENT.hero.headline,
+  heroSubtext: HOME_PAGE_CONTENT.hero.subtext,
+  heroSlideDurationMs: HOME_PAGE_CONTENT.hero.slideDurationMs,
+  searchMinBudgetCr: HOME_PAGE_CONTENT.hero.searchConsole.budgetSlider.minCrores,
+  searchMaxBudgetCr: HOME_PAGE_CONTENT.hero.searchConsole.budgetSlider.maxCrores,
+  searchBudgetStepCr: HOME_PAGE_CONTENT.hero.searchConsole.budgetSlider.stepCrores || 1,
+  whyBadge: HOME_PAGE_CONTENT.whyParmar.badge,
+  whyTitlePrefix: HOME_PAGE_CONTENT.whyParmar.titlePrefix,
+  whyTitleHighlight: HOME_PAGE_CONTENT.whyParmar.titleHighlight,
+  whySubtitle: HOME_PAGE_CONTENT.whyParmar.subtitle,
+  whyCtaText: HOME_PAGE_CONTENT.whyParmar.ctaButton.text,
+  whyCtaLink: HOME_PAGE_CONTENT.whyParmar.ctaButton.link,
+  whyPillars: HOME_PAGE_CONTENT.whyParmar.pillars.map((p) => ({
+    number: p.number,
+    subtitle: p.subtitle,
+    title: p.title,
+    description: p.description,
+    badge: p.badge,
+  })),
+  whyTrustMetrics: HOME_PAGE_CONTENT.whyParmar.trustMetrics.map((m) => ({
+    value: m.value,
+    label: m.label,
+    sub: m.sub,
+  })),
+  miBadge: HOME_PAGE_CONTENT.marketIntelligence.badge,
+  miHeading: HOME_PAGE_CONTENT.marketIntelligence.heading,
+  miSubheading: HOME_PAGE_CONTENT.marketIntelligence.subheading,
+  miViewAllText: HOME_PAGE_CONTENT.marketIntelligence.viewAllLink.text,
+  miViewAllLink: HOME_PAGE_CONTENT.marketIntelligence.viewAllLink.link,
+};
 
 export function WhyParmar() {
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null);
+  const [whyContent, setWhyContent] = useState(FALLBACK_CMS);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchHomePageContent().then((data) => {
+      if (isMounted) setWhyContent(data);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const whyPoints = toWhyPoints(whyContent.whyPillars);
+  const trustMetrics: HomeTrustMetric[] = whyContent.whyTrustMetrics;
 
   return (
     <section
@@ -59,26 +108,27 @@ export function WhyParmar() {
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E5484D] opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-[#E5484D]" />
                 </span>
-                <span>{whyContent.badge}</span>
+                <span>{whyContent.whyBadge}</span>
               </div>
 
               {/* Section Title: WHY PARMAR PROPERTIES */}
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-sans font-light tracking-tight text-white mb-4 leading-tight">
-                {whyContent.titlePrefix} <span className="font-semibold text-white">{whyContent.titleHighlight}</span>
+                {whyContent.whyTitlePrefix}{' '}
+                <span className="font-semibold text-white">{whyContent.whyTitleHighlight}</span>
               </h2>
 
               <p className="text-base sm:text-lg text-[#D1D5DB] font-sans leading-relaxed font-light">
-                {whyContent.subtitle}
+                {whyContent.whySubtitle}
               </p>
             </div>
 
             {/* Quick Contact Link */}
             <div className="shrink-0">
               <a
-                href={whyContent.ctaButton.link || '#properties'}
+                href={whyContent.whyCtaLink || '#properties'}
                 className="group inline-flex items-center gap-2 px-5 py-3 bg-[#2E3339] hover:bg-[#C5282F] border border-[#444C55] hover:border-[#C5282F] text-xs uppercase tracking-[0.15em] font-semibold text-white transition-all duration-300 shadow-sm"
               >
-                <span>{whyContent.ctaButton.text}</span>
+                <span>{whyContent.whyCtaText}</span>
                 <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-300" />
               </a>
             </div>
@@ -87,7 +137,7 @@ export function WhyParmar() {
 
         {/* Vertical Layout: Stacked Architectural Rows */}
         <div className="flex flex-col space-y-5 mb-16">
-          {WHY_POINTS.map((pt, idx) => {
+          {whyPoints.map((pt, idx) => {
             const Icon = pt.icon;
             const isHovered = hoveredIdx === idx;
 
@@ -163,11 +213,11 @@ export function WhyParmar() {
         {/* Animated Trust Metrics Bar */}
         <ScrollReveal animation="fade-up" delay={200}>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-6 sm:p-8 bg-[#2A2F35] border border-[#3C434B]">
-            {TRUST_METRICS.map((metric, i) => (
+            {trustMetrics.map((metric, i) => (
               <div
                 key={metric.label}
                 className={`p-4 transition-all duration-300 ${
-                  i < TRUST_METRICS.length - 1 ? 'sm:border-r border-[#3C434B]' : ''
+                  i < trustMetrics.length - 1 ? 'sm:border-r border-[#3C434B]' : ''
                 } hover:bg-[#32383F] group`}
               >
                 <div className="font-sans text-3xl sm:text-4xl font-extrabold text-white tracking-tight tabular-nums group-hover:text-[#E5484D] transition-colors mb-1.5">

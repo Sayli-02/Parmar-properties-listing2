@@ -15,7 +15,7 @@ import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { ScrollProgressBar } from '@/components/ui/ScrollProgressBar';
 import { PrivateOpportunities } from '@/components/property/PrivateOpportunities';
 import { LOCATIONS_PAGE_CONTENT } from '@/data/content/locations.content';
-import { fetchLocations } from '@/lib/supabase/locations';
+import { fetchLocations, fetchLocationFilterNames } from '@/lib/supabase/locations';
 import { fetchPublishedProperties } from '@/lib/supabase/properties';
 
 interface LocationDirectoryItem {
@@ -102,19 +102,6 @@ const ALL_LOCATIONS_DIRECTORY: LocationDirectoryItem[] = [
   },
 ];
 
-const LOCATIONS_LIST = [
-  'All',
-  'Worli',
-  'Bandra West',
-  'Juhu',
-  'Malabar Hill',
-  'Prabhadevi',
-  'Lower Parel',
-  'Powai',
-  'Sewri',
-  'Cuffe Parade',
-];
-
 function LocationsContent() {
   const searchParams = useSearchParams();
   const initialLoc = searchParams ? searchParams.get('location') : null;
@@ -123,6 +110,10 @@ function LocationsContent() {
   const [properties, setProperties] = useState<Property[]>([]);
   const [propertiesLoading, setPropertiesLoading] = useState(true);
   const [locationsDirectory, setLocationsDirectory] = useState<LocationDirectoryItem[]>(ALL_LOCATIONS_DIRECTORY);
+  const [locationsList, setLocationsList] = useState<string[]>([
+    'All',
+    ...ALL_LOCATIONS_DIRECTORY.map((l) => l.name),
+  ]);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -133,8 +124,9 @@ function LocationsContent() {
       .finally(() => {
         if (isMounted) setPropertiesLoading(false);
       });
-    fetchLocations().then((data) => {
-      if (data && data.length > 0 && isMounted) {
+    Promise.all([fetchLocations(), fetchLocationFilterNames()]).then(([data, filterNames]) => {
+      if (!isMounted) return;
+      if (data && data.length > 0) {
         const mapped = data.map((l) => ({
           name: l.name,
           slug: l.slug,
@@ -144,6 +136,9 @@ function LocationsContent() {
           subLocation: l.keyEnclaves?.length > 0 ? l.keyEnclaves.join(' & ') : l.lifestyle,
         }));
         setLocationsDirectory(mapped);
+      }
+      if (filterNames && filterNames.length > 1) {
+        setLocationsList(filterNames);
       }
     });
     return () => {
@@ -191,7 +186,7 @@ function LocationsContent() {
 
         {/* Scrollable Location Filter Bar */}
         <div className="mt-8 flex gap-2 bg-[#F7F7F4] p-2 border border-[#CFD1CA] overflow-x-auto scrollbar-thin">
-          {LOCATIONS_LIST.map((loc) => {
+          {locationsList.map((loc) => {
             const isSelected = selectedLoc === loc;
 
             return (

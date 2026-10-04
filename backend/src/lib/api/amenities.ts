@@ -127,7 +127,7 @@ export async function setAmenityActive(
 export async function setMasterAmenityActive(
   id: string,
   isActive: boolean
-): Promise<void> {
+): Promise<LookupItem> {
   return setLookupItemActive(LOOKUP_TABLE, id, isActive);
 }
 

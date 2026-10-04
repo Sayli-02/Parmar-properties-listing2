@@ -8,7 +8,6 @@ import type {
   PropertyConfiguration,
   PropertyFilters,
   PropertyImage,
-  PropertyType,
   PropertyWithRelations,
 } from "@/types";
 import type { MasterPropertyInput, PropertyInput } from "@/lib/validations";
@@ -32,111 +31,6 @@ const TABLE = "properties";
 
 /** Luxury Collection threshold in ₹ Cr (MASTER_BACKEND_SPEC). */
 export const LUXURY_PRICE_THRESHOLD_CR = 25;
-
-/**
- * Canonical lookup_bhk.slug → legacy properties.bhk text.
- * Used so admin filters (ilike on `bhk`) stay aligned with bhk_id.
- */
-export const LEGACY_BHK_BY_LOOKUP_SLUG: Readonly<Record<string, string>> = {
-  "1-bhk": "1 BHK",
-  "2-bhk": "2 BHK",
-  "3-bhk": "3 BHK",
-  "4-bhk": "4 BHK",
-  "5-bhk": "5 BHK",
-  "6-plus-bhk": "6+ BHK",
-  any: "Any",
-};
-
-/**
- * Canonical lookup_property_types.slug → legacy properties.property_type enum.
- * Explicit only — never infer or cast unknown slugs into the enum.
- */
-export const LEGACY_PROPERTY_TYPE_BY_LOOKUP_SLUG: Readonly<
-  Record<string, PropertyType>
-> = {
-  "sea-facing-apartment": "apartment",
-  penthouse: "penthouse",
-  "sky-villa": "villa",
-  duplex: "duplex",
-  "luxury-estate": "other",
-};
-
-export function legacyBhkFromLookupSlug(
-  slug: string | null | undefined
-): string | null {
-  if (!slug) return null;
-  return LEGACY_BHK_BY_LOOKUP_SLUG[slug] ?? null;
-}
-
-export function legacyPropertyTypeFromLookupSlug(
-  slug: string | null | undefined
-): PropertyType | null {
-  if (!slug) return null;
-  return LEGACY_PROPERTY_TYPE_BY_LOOKUP_SLUG[slug] ?? null;
-}
-
-async function fetchLookupSlug(
-  table: "lookup_bhk" | "lookup_property_types",
-  id: string | null | undefined
-): Promise<string | null> {
-  if (!id) return null;
-
-  const supabase = getSupabase();
-  const { data, error } = await supabase
-    .from(table)
-    .select("slug")
-    .eq("id", id)
-    .maybeSingle();
-
-  throwOnError(error, `Resolving ${table.replace(/_/g, " ")}`);
-  const slug = (data as { slug?: string } | null)?.slug;
-  return typeof slug === "string" && slug.length > 0 ? slug : null;
-}
-
-/**
- * Resolves canonical lookup IDs to legacy compatibility column values.
- * Returns only safely mapped values (never invents enum/text).
- *
- * - `bhk`: mapped label, or `null` when bhk_id is unset (clear legacy).
- *   `undefined` when bhk_id is set but slug is unknown (do not overwrite).
- * - `property_type`: mapped enum, or `undefined` when unset/unknown
- *   (omit from payload; insert uses DB default).
- */
-export async function resolveLegacyBhkAndPropertyType(input: {
-  bhk_id?: string | null;
-  property_type_id?: string | null;
-}): Promise<{
-  bhk: string | null | undefined;
-  property_type: PropertyType | undefined;
-}> {
-  const bhkId =
-    input.bhk_id && String(input.bhk_id).trim() !== ""
-      ? String(input.bhk_id)
-      : null;
-  const propertyTypeId =
-    input.property_type_id && String(input.property_type_id).trim() !== ""
-      ? String(input.property_type_id)
-      : null;
-
-  const [bhkSlug, propertyTypeSlug] = await Promise.all([
-    fetchLookupSlug("lookup_bhk", bhkId),
-    fetchLookupSlug("lookup_property_types", propertyTypeId),
-  ]);
-
-  let bhk: string | null | undefined;
-  if (!bhkId) {
-    bhk = null;
-  } else {
-    const mapped = legacyBhkFromLookupSlug(bhkSlug);
-    bhk = mapped ?? undefined;
-  }
-
-  return {
-    bhk,
-    property_type:
-      legacyPropertyTypeFromLookupSlug(propertyTypeSlug) ?? undefined,
-  };
-}
 
 export function propertyDisplayTitle(property: Property): string {
   return property.title?.trim() || property.name;
@@ -391,12 +285,14 @@ function toPropertyPayload(input: PropertyInput): Record<string, unknown> {
 /**
  * Builds insert/update payload for the master property form.
  * Dual-writes legacy columns so existing Admin screens keep working.
- * Canonical SoT remains bhk_id / property_type_id; legacy bhk / property_type
- * are derived from lookup slugs via an explicit compatibility map.
  */
-async function toMasterPropertyPayload(
+function toMasterPropertyPayload(
   input: MasterPropertyInput
-): Promise<Record<string, unknown>> {
+): Record<string, unknown> {
+  const launchPhaseId =
+    input.launch_phase_id && input.launch_phase_id !== ""
+      ? input.launch_phase_id
+      : null;
   const locationId =
     input.location_id && input.location_id !== "" ? input.location_id : null;
 
@@ -424,14 +320,7 @@ async function toMasterPropertyPayload(
       ? String(input.developer_description).trim()
       : null;
 
-  const bhkId = input.bhk_id && input.bhk_id !== "" ? input.bhk_id : null;
-  const { bhk: legacyBhk, property_type: legacyPropertyType } =
-    await resolveLegacyBhkAndPropertyType({
-      bhk_id: bhkId,
-      property_type_id: input.property_type_id,
-    });
-
-  const payload: Record<string, unknown> = {
+  return {
     // Master
     title: input.title,
     slug: input.slug,
@@ -445,7 +334,7 @@ async function toMasterPropertyPayload(
     lookup_location_id: input.lookup_location_id,
     sub_location: input.sub_location,
     property_type_id: input.property_type_id,
-    bhk_id: bhkId,
+    bhk_id: input.bhk_id && input.bhk_id !== "" ? input.bhk_id : null,
     status_id: input.status_id,
     price: priceCr,
     carpet_area_sqft: carpetSqft,
@@ -460,6 +349,7 @@ async function toMasterPropertyPayload(
     is_recommended: input.is_recommended,
     is_new_launch: input.is_new_launch,
     is_luxury_collection: input.is_luxury_collection,
+    launch_phase_id: launchPhaseId,
     rera_id: input.rera_id,
     latitude: input.latitude ?? null,
     longitude: input.longitude ?? null,
@@ -486,19 +376,6 @@ async function toMasterPropertyPayload(
           ? "under_construction"
           : "active",
   };
-
-  // Sync legacy BHK from canonical bhk_id. Clear when unset; skip unknown slugs.
-  if (legacyBhk !== undefined) {
-    payload.bhk = legacyBhk;
-  }
-
-  // Only write legacy enum when mapping succeeds — never invent invalid values.
-  // On insert, omitting falls back to DB default 'apartment'.
-  if (legacyPropertyType !== undefined) {
-    payload.property_type = legacyPropertyType;
-  }
-
-  return payload;
 }
 
 export async function createProperty(
@@ -525,7 +402,7 @@ export async function createMasterProperty(
   input: MasterPropertyInput
 ): Promise<Property> {
   const supabase = getSupabase();
-  const payload = await toMasterPropertyPayload(input);
+  const payload = toMasterPropertyPayload(input);
 
   if (input.is_featured) {
     payload.featured_order = await getNextFeaturedOrder();
@@ -572,7 +449,7 @@ export async function updateMasterProperty(
   input: MasterPropertyInput
 ): Promise<Property> {
   const supabase = getSupabase();
-  const payload = await toMasterPropertyPayload(input);
+  const payload = toMasterPropertyPayload(input);
   const current = await getProperty(id);
 
   if (input.is_featured && !current?.is_featured) {
@@ -732,13 +609,9 @@ export async function purgeProperty(id: string): Promise<void> {
 }
 
 /**
- * Copies a property along with legacy configurations/price breakdowns,
- * master property_configurations + property_configuration_price_breakdowns,
- * floor plan records, and amenity links. Gallery/brochure/RERA files and
- * inventory units are not copied. Floor-plan image/file storage paths and
- * master configuration layout `image_path` values are cleared on the copy
- * so both rows do not share the same storage object (no safe storage-copy
- * helper exists for these assets).
+ * Copies a property along with its configurations, price breakdowns, floor
+ * plan records and amenity links. Images are not copied because both rows
+ * would then point at the same storage object.
  */
 export async function duplicateProperty(id: string): Promise<Property> {
   const supabase = getSupabase();
@@ -836,11 +709,12 @@ export async function duplicateProperty(id: string): Promise<Property> {
     }
   }
 
-  // Floor plans are property-level (master_plan / floor_plan); no config FK.
+  // Floor plans reference the same artwork URL but belong to the new property.
   for (const plan of source.floor_plans ?? []) {
     const {
       id: _planId,
       property_id: _planProperty,
+      configuration_id: planConfigId,
       created_at: _pCreated,
       updated_at: _pUpdated,
       created_by: _pCreatedBy,
@@ -855,69 +729,34 @@ export async function duplicateProperty(id: string): Promise<Property> {
       image_path: null,
       file_path: null,
       property_id: copy.id,
+      configuration_id: planConfigId
+        ? configurationIdMap.get(planConfigId) ?? null
+        : null,
     });
     throwOnError(planError, "Duplicating floor plans");
   }
 
-  // Master configuration matrix: remap IDs so price-breakdown lines can follow.
-  const propertyConfigurationIdMap = new Map<string, string>();
-  for (const layout of source.property_configurations ?? []) {
-    const { data: newLayout, error: layoutError } = await supabase
+  // Master layout tabs point at the same plan drawings as the source.
+  const layouts = source.property_configurations ?? [];
+  if (layouts.length > 0) {
+    const { error: layoutError } = await supabase
       .from("property_configurations")
-      .insert({
-        property_id: copy.id,
-        plan_type: layout.plan_type,
-        variant_code: layout.variant_code,
-        tab_label: layout.tab_label,
-        title: layout.title,
-        area_range: layout.area_range,
-        carpet_area: layout.carpet_area,
-        price_indicator: layout.price_indicator,
-        tower_zone: layout.tower_zone,
-        // Do not reuse the source layout storage path — there is no safe
-        // storage-copy helper; empty string matches NOT NULL DEFAULT '' and
-        // the create-path convention (admin re-uploads on the copy).
-        image_path: "",
-        display_order: layout.display_order,
-      })
-      .select("id")
-      .single();
-
-    throwOnError(layoutError, "Duplicating layouts");
-    const newLayoutId = (newLayout as { id?: string } | null)?.id;
-    if (newLayoutId) {
-      propertyConfigurationIdMap.set(layout.id, newLayoutId);
-    }
-  }
-
-  // Master price breakdowns for each copied property_configuration.
-  for (const [oldLayoutId, newLayoutId] of propertyConfigurationIdMap) {
-    const { data: breakdowns, error: loadBreakdownError } = await supabase
-      .from("property_configuration_price_breakdowns")
-      .select("label, amount, display_order")
-      .eq("configuration_id", oldLayoutId)
-      .order("display_order", { ascending: true });
-
-    throwOnError(loadBreakdownError, "Loading configuration price breakdowns");
-
-    const rows = (breakdowns ?? []) as Array<{
-      label: string;
-      amount: number;
-      display_order: number;
-    }>;
-    if (rows.length === 0) continue;
-
-    const { error: breakdownError } = await supabase
-      .from("property_configuration_price_breakdowns")
       .insert(
-        rows.map((row) => ({
-          configuration_id: newLayoutId,
-          label: row.label,
-          amount: row.amount,
-          display_order: row.display_order,
+        layouts.map((layout) => ({
+          property_id: copy.id,
+          plan_type: layout.plan_type,
+          variant_code: layout.variant_code,
+          tab_label: layout.tab_label,
+          title: layout.title,
+          area_range: layout.area_range,
+          carpet_area: layout.carpet_area,
+          price_indicator: layout.price_indicator,
+          tower_zone: layout.tower_zone,
+          image_path: layout.image_path,
+          display_order: layout.display_order,
         }))
       );
-    throwOnError(breakdownError, "Duplicating configuration price breakdowns");
+    throwOnError(layoutError, "Duplicating layouts");
   }
 
   const links = source.property_amenities ?? [];

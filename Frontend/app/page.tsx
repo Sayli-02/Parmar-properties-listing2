@@ -17,11 +17,22 @@ import { ScrollProgressBar } from '@/components/ui/ScrollProgressBar';
 import type { Property } from '@/types/property';
 import { HOME_PAGE_CONTENT } from '@/data/content/home.content';
 import { fetchPublishedProperties, selectFeaturedProperties } from '@/lib/supabase/properties';
+import {
+  fetchFutureLocations,
+  fetchPrimaryHomeLocations,
+  type LocationInfo,
+} from '@/lib/supabase/locations';
 
 export default function HomePage() {
   const { featuredProperties: featContent, locationSection: locContent } = HOME_PAGE_CONTENT;
   const [properties, setProperties] = React.useState<Property[]>([]);
   const [propertiesLoading, setPropertiesLoading] = React.useState(true);
+  const [locationCards, setLocationCards] = React.useState<
+    Array<{ name: string; slug: string; image: string; tagline: string; rate: string }>
+  >([]);
+  const [futureLocations, setFutureLocations] = React.useState<
+    Array<{ name: string; slug: string }>
+  >([]);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -32,6 +43,25 @@ export default function HomePage() {
       .finally(() => {
         if (isMounted) setPropertiesLoading(false);
       });
+
+    Promise.all([fetchPrimaryHomeLocations(), fetchFutureLocations()]).then(
+      ([primary, future]) => {
+        if (!isMounted) return;
+        // CMS-only: show exactly the selected homepage locations (0–4).
+        // Do not invent/hardcode replacements when fewer than 4 are selected.
+        setLocationCards(
+          primary.map((l: LocationInfo) => ({
+            name: l.name,
+            slug: l.slug,
+            image: l.coverImage || '/properties/worli-aurum/cover.jpg',
+            tagline: l.tagline,
+            rate: l.priceRange,
+          }))
+        );
+        setFutureLocations(future.map((l) => ({ name: l.name, slug: l.slug })));
+      }
+    );
+
     return () => {
       isMounted = false;
     };
@@ -111,9 +141,9 @@ export default function HomePage() {
             </div>
           </ScrollReveal>
 
-          {/* 4 Location Cards (Default) */}
+          {/* Homepage CMS locations (is_primary_home + primary_order) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {locContent.cards.slice(0, 4).map((loc, idx) => (
+            {locationCards.map((loc, idx) => (
               <ScrollReveal key={loc.slug} animation="fade-up" delay={idx * 100}>
                 <div className="group bg-[#F7F7F4] border border-[#CFD1CA] hover:border-[#15181A] transition-all duration-300 overflow-hidden shadow-xs hover:shadow-md flex flex-col justify-between h-full">
                   <div>
@@ -169,13 +199,7 @@ export default function HomePage() {
                 FUTURE LOCATIONS :
               </span>
               <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
-                {[
-                  { name: 'Sewri', slug: 'sewri' },
-                  { name: 'Powai', slug: 'powai' },
-                  { name: 'Prabhadevi', slug: 'prabhadevi' },
-                  { name: 'Lower Parel', slug: 'lower-parel' },
-                  { name: 'Cuffe Parade', slug: 'cuffe-parade' },
-                ].map((loc, idx, arr) => (
+                {futureLocations.map((loc, idx, arr) => (
                   <React.Fragment key={loc.slug}>
                     <Link
                       href={`/locations/${loc.slug}`}

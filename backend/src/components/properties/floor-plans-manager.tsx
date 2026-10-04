@@ -7,7 +7,7 @@ import { FileText, Image as ImageIcon, Pencil, Plus, Trash } from "lucide-react"
 import { toast } from "sonner";
 import type { z } from "zod";
 
-import type { FloorPlan } from "@/types";
+import type { Configuration, FloorPlan } from "@/types";
 import { floorPlanSchema } from "@/lib/validations";
 import { getErrorMessage } from "@/lib/utils";
 import { useResource } from "@/lib/hooks/use-resource";
@@ -21,6 +21,7 @@ import {
   setFloorPlanActive,
   updateFloorPlan,
 } from "@/lib/api/floor-plans";
+import { listConfigurations } from "@/lib/api/configurations";
 import { deleteFile, storageFolders } from "@/lib/api/storage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,11 +68,8 @@ import {
 type FloorPlanValues = z.input<typeof floorPlanSchema>;
 type FloorPlanOutput = z.output<typeof floorPlanSchema>;
 
-/**
- * Admin editor for property-level Master Layout / Floor Plan artwork
- * (`floor_plans`). Individual Configuration Layouts are edited on
- * `property_configurations.image_path`, not here.
- */
+const NO_CONFIGURATION = "none";
+
 export function FloorPlansManager({
   propertyId,
   onChanged,
@@ -84,18 +82,30 @@ export function FloorPlansManager({
   const [editing, setEditing] = React.useState<FloorPlan | null>(null);
   const confirm = useConfirm<FloorPlan>();
 
-  const fetchPlans = React.useCallback(
-    () => listFloorPlans(propertyId),
-    [propertyId]
-  );
+  const fetchPlans = React.useCallback(async () => {
+    const [plans, configurations] = await Promise.all([
+      listFloorPlans(propertyId),
+      listConfigurations(propertyId),
+    ]);
+    return { plans, configurations };
+  }, [propertyId]);
 
-  const {
-    data: plans,
-    setData: setPlans,
-    loading,
-    error,
-    reload,
-  } = useResource<FloorPlan[]>(fetchPlans, []);
+  const { data, setData, loading, error, reload } = useResource<{
+    plans: FloorPlan[];
+    configurations: Configuration[];
+  }>(fetchPlans, { plans: [], configurations: [] });
+
+  const { plans, configurations } = data;
+
+  const setPlans = React.useCallback(
+    (update: React.SetStateAction<FloorPlan[]>) => {
+      setData((current) => ({
+        ...current,
+        plans: typeof update === "function" ? update(current.plans) : update,
+      }));
+    },
+    [setData]
+  );
 
   async function handleMove(from: number, to: number) {
     const next = moveItem(plans, from, to);
@@ -128,16 +138,22 @@ export function FloorPlansManager({
     }
   }
 
+  const configurationNames = React.useMemo(
+    () => new Map(configurations.map((item) => [item.id, item.name])),
+    [configurations]
+  );
+
   return (
     <Card>
       <CardHeader className="flex-row items-start justify-between gap-4">
         <div className="space-y-1.5">
           <CardTitle>Floor plans</CardTitle>
           <CardDescription>
-            Master Layout and Floor Plan artwork for the public property page.
-            These are property-level plans (separate from gallery images and
-            from Individual Configuration Layouts on the Configuration Matrix).
-            Active plans can be shown; inactive ones stay hidden.
+            Master plan, floor plate and individual layout artwork for the
+            public property page. Use plan type Master Plan, Floor Plan or
+            Configuration Plan. Active plans can be shown; inactive ones stay
+            hidden. These are separate from gallery images and from the
+            Configuration Matrix typologies.
           </CardDescription>
         </div>
         <Button
@@ -161,7 +177,7 @@ export function FloorPlansManager({
           <EmptyState
             icon={<ImageIcon />}
             title="No floor plans yet"
-            description="Upload a Master Layout or Floor Plan image (and optional PDF). Gated/blurred display on the public site is controlled by the website lead gate — keep plans Active when they should be available after unlock."
+            description="Upload a Master Plan, Floor Plan or Configuration Plan image (and optional PDF). Gated/blurred display on the public site is controlled by the website lead gate — keep plans Active when they should be available after unlock."
             action={
               <Button
                 type="button"
@@ -202,6 +218,9 @@ export function FloorPlansManager({
                       <p className="truncate text-sm font-medium">{plan.name}</p>
                       <p className="truncate text-xs text-muted-foreground">
                         {getFloorPlanTypeLabel(plan.plan_type)}
+                        {plan.configuration_id
+                          ? ` · ${configurationNames.get(plan.configuration_id) ?? "Configuration"}`
+                          : ""}
                       </p>
                     </div>
                     {plan.file_url ? (
@@ -269,6 +288,7 @@ export function FloorPlansManager({
       <FloorPlanDialog
         propertyId={propertyId}
         plan={editing}
+        configurations={configurations}
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         onSaved={() => {
@@ -303,12 +323,14 @@ export function FloorPlansManager({
 function FloorPlanDialog({
   propertyId,
   plan,
+  configurations,
   open,
   onOpenChange,
   onSaved,
 }: {
   propertyId: string;
   plan: FloorPlan | null;
+  configurations: Configuration[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSaved: () => void;
@@ -322,6 +344,7 @@ function FloorPlanDialog({
     defaultValues: {
       name: "",
       plan_type: "floor_plan",
+      configuration_id: "",
       is_active: true,
       display_order: 0,
     },
@@ -335,6 +358,7 @@ function FloorPlanDialog({
     form.reset({
       name: plan?.name ?? "",
       plan_type: plan?.plan_type ?? "floor_plan",
+      configuration_id: plan?.configuration_id ?? "",
       is_active: plan?.is_active ?? true,
       display_order: plan?.display_order ?? 0,
     });
@@ -386,8 +410,8 @@ function FloorPlanDialog({
         <DialogHeader>
           <DialogTitle>{plan ? "Edit floor plan" : "New floor plan"}</DialogTitle>
           <DialogDescription>
-            Choose Master Layout or Floor Plan, upload the on-page image, and
-            optionally a higher-resolution downloadable file.
+            Choose Master Plan, Floor Plan or Configuration Plan, upload the
+            on-page image, and optionally a higher-resolution downloadable file.
           </DialogDescription>
         </DialogHeader>
 
@@ -406,7 +430,7 @@ function FloorPlanDialog({
             >
               <Input
                 id="plan-name"
-                placeholder="Master Layout"
+                placeholder="2 BHK — Type A"
                 aria-invalid={Boolean(errors.name)}
                 {...form.register("name")}
               />
@@ -432,6 +456,34 @@ function FloorPlanDialog({
               </Select>
             </Field>
           </FieldGrid>
+
+          <Field
+            label="Linked configuration"
+            hint="Optional. Helps the website show the right plan per unit type."
+            error={errors.configuration_id?.message}
+          >
+            <Select
+              value={form.watch("configuration_id") || NO_CONFIGURATION}
+              onValueChange={(value) =>
+                form.setValue(
+                  "configuration_id",
+                  value === NO_CONFIGURATION ? "" : value
+                )
+              }
+            >
+              <SelectTrigger aria-label="Linked configuration">
+                <SelectValue placeholder="Not linked" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NO_CONFIGURATION}>Not linked</SelectItem>
+                {configurations.map((configuration) => (
+                  <SelectItem key={configuration.id} value={configuration.id}>
+                    {configuration.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Plan image">

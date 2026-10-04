@@ -79,6 +79,7 @@ export function LocationsView() {
   }
 
   async function handleToggle(location: Location, isActive: boolean) {
+    const previous = locations;
     setLocations((current) =>
       current.map((item) =>
         item.id === location.id
@@ -92,8 +93,12 @@ export function LocationsView() {
     );
 
     try {
-      await setLocationActive(location.id, isActive);
+      const saved = await setLocationActive(location.id, isActive);
+      setLocations((current) =>
+        current.map((item) => (item.id === saved.id ? saved : item))
+      );
     } catch (caught) {
+      setLocations(previous);
       toast.error(getErrorMessage(caught));
       reload();
     }

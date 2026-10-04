@@ -5,7 +5,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ChevronDown, ArrowRight, ChevronLeft, ChevronRight, Search, MapPin, BedDouble, Building2, IndianRupee, Check } from 'lucide-react';
-import { HERO_SLIDES, SLIDE_DURATION_MS, TOTAL_SLIDES, PERSIST_HERO_COMPLETED } from '@/lib/constants';
+import { HERO_SLIDES, SLIDE_DURATION_MS, PERSIST_HERO_COMPLETED } from '@/lib/constants';
+import { fetchHeroContent, type HeroCmsContent } from '@/lib/supabase/hero';
 
 export interface HeroSearchParams {
   location?: string;
@@ -33,6 +34,27 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
   const [isLocked, setIsLocked] = useState(false);
   const [hasUnlocked, setHasUnlocked] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [heroContent, setHeroContent] = useState<HeroCmsContent>({
+    headline: 'MUMBAI\'S FINEST ADDRESSES',
+    subtext:
+      'Curated residences, private opportunities and investment properties across Mumbai\'s most sought after neighbourhoods',
+    slideDurationMs: SLIDE_DURATION_MS,
+    slides: HERO_SLIDES,
+    locationOptions: [{ label: 'All Prime Locations', val: '' }],
+    bhkOptions: [{ label: 'Any Configuration', val: 'Any' }],
+    statusOptions: [{ label: 'All Status', val: 'All', tab: 'buy' }],
+    budgetMin: 3,
+    budgetMax: 60,
+    budgetStep: 1,
+  });
+
+  const slides = heroContent.slides.length > 0 ? heroContent.slides : HERO_SLIDES;
+  const totalSlides = slides.length;
+  const slideDurationMs = heroContent.slideDurationMs || SLIDE_DURATION_MS;
+  const budgetMin = heroContent.budgetMin;
+  const budgetMax = heroContent.budgetMax;
+  const budgetStep = heroContent.budgetStep || 1;
+  const budgetSpan = Math.max(budgetMax - budgetMin, 1);
 
   // Swipe gesture tracking
   const touchStartX = useRef<number | null>(null);
@@ -62,6 +84,19 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
       onUnlockStateChange(true);
     }
   }, [onUnlockStateChange]);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetchHeroContent().then((data) => {
+      if (!isMounted) return;
+      setHeroContent(data);
+      setSearchMinBudget(data.budgetMin);
+      setSearchMaxBudget(data.budgetMax);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Initial setup: Check sessionStorage, reduced motion, and initialize scroll-lock if fresh visit
   useEffect(() => {
@@ -96,7 +131,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
       return;
     }
 
-    // 4. Fresh visit at top: activate scroll-lock until all 3 slides cycle
+    // 4. Fresh visit at top: activate scroll-lock until all slides cycle
     isLockedRef.current = true;
     setIsLocked(true);
     setHasUnlocked(false);
@@ -148,26 +183,26 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
 
   const goToNextSlide = useCallback(() => {
     setCurrentSlide((prev) => {
-      const nextSlide = (prev + 1) % TOTAL_SLIDES;
+      const nextSlide = (prev + 1) % totalSlides;
       visitedSlidesRef.current.add(nextSlide);
       if (
         isLockedRef.current &&
-        visitedSlidesRef.current.size >= TOTAL_SLIDES &&
+        visitedSlidesRef.current.size >= totalSlides &&
         nextSlide === 0
       ) {
         unlockScroll();
       }
       return nextSlide;
     });
-  }, [unlockScroll]);
+  }, [unlockScroll, totalSlides]);
 
   const goToPrevSlide = useCallback(() => {
     setCurrentSlide((prev) => {
-      const prevSlide = (prev - 1 + TOTAL_SLIDES) % TOTAL_SLIDES;
+      const prevSlide = (prev - 1 + totalSlides) % totalSlides;
       visitedSlidesRef.current.add(prevSlide);
       return prevSlide;
     });
-  }, []);
+  }, [totalSlides]);
 
   const minSwipeDistance = 45;
 
@@ -206,10 +241,16 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
   useEffect(() => {
     const timer = setInterval(() => {
       goToNextSlide();
-    }, SLIDE_DURATION_MS);
+    }, slideDurationMs);
 
     return () => clearInterval(timer);
-  }, [goToNextSlide]);
+  }, [goToNextSlide, slideDurationMs]);
+
+  useEffect(() => {
+    if (currentSlide >= totalSlides) {
+      setCurrentSlide(0);
+    }
+  }, [currentSlide, totalSlides]);
 
   return (
     <section
@@ -237,11 +278,11 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
       </button>
 
       {/* Background Slides */}
-      {HERO_SLIDES.map((slide, index) => {
+      {slides.map((slide, index) => {
         const isActive = currentSlide === index;
         return (
           <div
-            key={slide.id}
+            key={`${slide.id}-${slide.image}`}
             className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
               isActive ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
             } ${reducedMotion ? 'transition-none' : ''}`}
@@ -269,12 +310,12 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
 
         {/* Unified Tagline */}
         <h1 className="font-serif text-3xl sm:text-5xl md:text-6xl lg:text-7xl text-white font-light tracking-wide leading-tight drop-shadow-md mb-3">
-          MUMBAI&apos;S FINEST ADDRESSES
+          {heroContent.headline}
         </h1>
 
         {/* Subtext */}
         <p className="font-sans text-xs sm:text-sm md:text-base text-[#CFD1CA] max-w-2xl font-light tracking-wide mb-2 leading-relaxed drop-shadow">
-          Curated residences, private oppurtunities and investment properties across Mumbai&apos;s most sought after neighbourhoods
+          {heroContent.subtext}
         </p>
 
         {/* Seamless Blended Luxury Architectural Search Console */}
@@ -286,23 +327,22 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
 
               const hasLocation = Boolean(searchLocation && searchLocation.trim() && searchLocation !== 'All');
               const hasBhk = Boolean(searchBhk && searchBhk !== 'Any');
-              const hasMinBudget = searchMinBudget > 3;
-              const hasMaxBudget = searchMaxBudget < 60;
+              const hasMinBudget = searchMinBudget > budgetMin;
+              const hasMaxBudget = searchMaxBudget < budgetMax;
               const hasStatus = Boolean(searchStatus && searchStatus !== 'All' && searchStatus !== 'All Status');
 
-              let targetTab: 'buy' | 'new-launches' | 'luxury-collection' = 'buy';
-              if (
-                searchStatus === 'Pre-Launch' ||
-                searchStatus === 'Pre Launch' ||
-                searchStatus === 'Under Construction' ||
-                searchStatus === 'New Launch'
-              ) {
-                targetTab = 'new-launches';
-              } else if (searchStatus === 'Luxury Collection') {
-                targetTab = 'luxury-collection';
-              } else {
-                targetTab = 'buy';
-              }
+              const selectedStatus = heroContent.statusOptions.find(
+                (opt) => opt.val === searchStatus || opt.label === searchStatus
+              );
+              const targetTab =
+                selectedStatus?.tab ||
+                (searchStatus.toLowerCase().includes('luxury')
+                  ? 'luxury-collection'
+                  : searchStatus.toLowerCase().includes('pre') ||
+                      searchStatus.toLowerCase().includes('under') ||
+                      searchStatus.toLowerCase().includes('launch')
+                    ? 'new-launches'
+                    : 'buy');
 
               // If a user does not put any filter and simply clicks Search
               if (!hasLocation && !hasBhk && !hasMinBudget && !hasMaxBudget && !hasStatus) {
@@ -316,7 +356,11 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
               if (hasBhk) params.set('bhk', searchBhk);
               if (hasMinBudget) params.set('minPrice', searchMinBudget.toString());
               if (hasMaxBudget) params.set('maxPrice', searchMaxBudget.toString());
-              if (hasStatus && searchStatus !== 'All' && searchStatus !== 'Luxury Collection') {
+              if (
+                hasStatus &&
+                searchStatus !== 'All' &&
+                !searchStatus.toLowerCase().includes('luxury')
+              ) {
                 params.set('status', searchStatus);
               }
               router.push(`/properties?${params.toString()}`);
@@ -358,17 +402,9 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
                       <span>Prime Enclaves</span>
                       <span className="text-[9px] text-[#C5282F] font-semibold">Mumbai</span>
                     </div>
-                    {[
-                      { label: 'All Prime Locations', val: '' },
-                      { label: 'Worli Sea Face', val: 'Worli' },
-                      { label: 'Bandra West (Pali Hill)', val: 'Bandra West' },
-                      { label: 'Juhu Beachfront', val: 'Juhu' },
-                      { label: 'Lower Parel Towers', val: 'Lower Parel' },
-                      { label: 'Malabar Hill & Walkeshwar', val: 'Malabar Hill' },
-                      { label: 'Cuffe Parade & Colaba', val: 'Cuffe Parade' },
-                    ].map((loc) => (
+                    {heroContent.locationOptions.map((loc) => (
                       <button
-                        key={loc.val}
+                        key={loc.slug || loc.label || loc.val || 'all-locations'}
                         type="button"
                         onClick={() => {
                           setSearchLocation(loc.val);
@@ -412,14 +448,9 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
                       <span>Configuration</span>
                       <span className="text-[9px] text-[#C5282F] font-semibold">BHK</span>
                     </div>
-                    {[
-                      { label: 'Any Configuration', val: 'Any' },
-                      { label: '3 BHK Residence', val: '3 BHK' },
-                      { label: '4 BHK Sky Suite', val: '4 BHK' },
-                      { label: '5 BHK Sky Mansion', val: '5 BHK' },
-                    ].map((opt) => (
+                    {heroContent.bhkOptions.map((opt) => (
                       <button
-                        key={opt.val}
+                        key={opt.slug || opt.val}
                         type="button"
                         onClick={() => {
                           setSearchBhk(opt.val);
@@ -455,20 +486,20 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
                   <div
                     className="absolute h-1.5 bg-[#C5282F] rounded-full pointer-events-none shadow-xs"
                     style={{
-                      left: `${((searchMinBudget - 3) / (60 - 3)) * 100}%`,
-                      width: `${((searchMaxBudget - searchMinBudget) / (60 - 3)) * 100}%`,
+                      left: `${((searchMinBudget - budgetMin) / budgetSpan) * 100}%`,
+                      width: `${((searchMaxBudget - searchMinBudget) / budgetSpan) * 100}%`,
                     }}
                   />
 
                   {/* Min Value Thumb Slider */}
                   <input
                     type="range"
-                    min="3"
-                    max="60"
-                    step="1"
+                    min={budgetMin}
+                    max={budgetMax}
+                    step={budgetStep}
                     value={searchMinBudget}
                     onChange={(e) => {
-                      const val = Math.min(Number(e.target.value), searchMaxBudget - 1);
+                      const val = Math.min(Number(e.target.value), searchMaxBudget - budgetStep);
                       setSearchMinBudget(val);
                     }}
                     aria-label="Minimum Budget"
@@ -478,12 +509,12 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
                   {/* Max Value Thumb Slider */}
                   <input
                     type="range"
-                    min="3"
-                    max="60"
-                    step="1"
+                    min={budgetMin}
+                    max={budgetMax}
+                    step={budgetStep}
                     value={searchMaxBudget}
                     onChange={(e) => {
-                      const val = Math.max(Number(e.target.value), searchMinBudget + 1);
+                      const val = Math.max(Number(e.target.value), searchMinBudget + budgetStep);
                       setSearchMaxBudget(val);
                     }}
                     aria-label="Maximum Budget"
@@ -495,7 +526,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
                 <div className="flex justify-between items-center text-xs text-white/90 mt-1 font-sans font-semibold">
                   <span className="tabular-nums">₹{searchMinBudget} Cr</span>
                   <span className="tabular-nums">
-                    {searchMaxBudget >= 60 ? '₹60 Cr+' : `₹${searchMaxBudget} Cr`}
+                    {searchMaxBudget >= budgetMax ? `₹${budgetMax} Cr+` : `₹${searchMaxBudget} Cr`}
                   </span>
                 </div>
               </div>
@@ -524,16 +555,9 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
                       <span>Construction Status</span>
                       <span className="text-[9px] text-[#C5282F] font-semibold">Phase</span>
                     </div>
-                    {[
-                      { label: 'All Status', val: 'All', tab: 'buy' },
-                      { label: 'Ready to Move In', val: 'Ready to Move', tab: 'buy' },
-                      { label: 'Under Construction', val: 'Under Construction', tab: 'new-launches' },
-                      { label: 'Pre-Launch', val: 'Pre-Launch', tab: 'new-launches' },
-                      { label: 'Luxury Collection', val: 'Luxury Collection', tab: 'luxury-collection' },
-                      { label: 'Resale', val: 'Resale', tab: 'buy' },
-                    ].map((opt) => (
+                    {heroContent.statusOptions.map((opt) => (
                       <button
-                        key={opt.val}
+                        key={opt.slug || opt.val}
                         type="button"
                         onClick={() => {
                           setSearchStatus(opt.val);
@@ -541,16 +565,23 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
 
                           // Instantly direct user to that particular page with active criteria
                           const params = new URLSearchParams();
-                          params.set('tab', opt.tab);
+                          params.set('tab', opt.tab || 'buy');
                           if (searchLocation && searchLocation.trim() && searchLocation !== 'All') {
                             params.set('location', searchLocation.trim());
                           }
                           if (searchBhk && searchBhk !== 'Any') {
                             params.set('bhk', searchBhk);
                           }
-                          if (searchMinBudget > 3) params.set('minPrice', searchMinBudget.toString());
-                          if (searchMaxBudget < 60) params.set('maxPrice', searchMaxBudget.toString());
-                          if (opt.val !== 'All' && opt.val !== 'Luxury Collection') {
+                          if (searchMinBudget > budgetMin) {
+                            params.set('minPrice', searchMinBudget.toString());
+                          }
+                          if (searchMaxBudget < budgetMax) {
+                            params.set('maxPrice', searchMaxBudget.toString());
+                          }
+                          if (
+                            opt.val !== 'All' &&
+                            !(opt.slug === 'luxury-collection' || opt.val.toLowerCase().includes('luxury'))
+                          ) {
                             params.set('status', opt.val);
                           }
                           router.push(`/properties?${params.toString()}`);
@@ -588,9 +619,9 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange,
       <div className="absolute bottom-8 left-0 right-0 z-10 flex flex-col items-center justify-center pointer-events-none">
         {/* Slide Indicator Dots (Visual Only) */}
         <div className="flex items-center gap-3 mb-4 pointer-events-auto" aria-label="Hero Slide Progress">
-          {HERO_SLIDES.map((slide, idx) => (
+          {slides.map((slide, idx) => (
             <button
-              key={slide.id}
+              key={`${slide.id}-dot-${idx}`}
               onClick={() => setCurrentSlide(idx)}
               className={`h-1.5 transition-all duration-500 rounded-full ${
                 currentSlide === idx ? 'w-8 bg-[#C5282F]' : 'w-2 bg-white/40 hover:bg-white/70'

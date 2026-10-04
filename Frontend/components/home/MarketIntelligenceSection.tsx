@@ -1,9 +1,13 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, BookOpen, TrendingUp, Compass, Globe, FileText } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
+import { HOME_PAGE_CONTENT } from '@/data/content/home.content';
+import { fetchHomePageContent } from '@/lib/supabase/page-content';
+import { fetchInsightsArticles } from '@/lib/supabase/insights';
 
 export interface MarketInsight {
   id: string;
@@ -12,57 +16,99 @@ export interface MarketInsight {
   description: string;
   readTime: string;
   tag: string;
-  icon: React.ElementType;
 }
 
-export const FEATURED_INSIGHTS: MarketInsight[] = [
+const FALLBACK_FEATURED: MarketInsight[] = [
   {
     id: 'worli-guide-2026',
     category: 'WORLI PROPERTY GUIDE 2026',
     title: 'What Rs. 10–25 Cr buys in Worli today.',
-    description: 'Neighbourhood, product, price band and buyer-profile context across Sea Face and high-rise developments.',
+    description:
+      'Neighbourhood, product, price band and buyer-profile context across Sea Face and high-rise developments.',
     readTime: '4 min read',
     tag: 'Price Analysis',
-    icon: TrendingUp,
   },
   {
     id: 'mahalaxmi-vs-worli',
     category: 'LOCATION COMPARISON',
     title: 'Mahalaxmi vs Worli',
-    description: "Understanding two of South Mumbai's evolving luxury corridors, racecourse vistas, and coastal connectivity.",
+    description:
+      "Understanding two of South Mumbai's evolving luxury corridors, racecourse vistas, and coastal connectivity.",
     readTime: '5 min read',
     tag: 'Macro Trends',
-    icon: Compass,
   },
   {
     id: 'buying-penthouse-mumbai',
     category: 'BUYER GUIDE',
     title: 'Buying a Penthouse in Mumbai',
-    description: 'What buyers should evaluate beyond the view: private elevators, structural terrace loads, and wind engineering.',
+    description:
+      'What buyers should evaluate beyond the view: private elevators, structural terrace loads, and wind engineering.',
     readTime: '6 min read',
     tag: 'Architecture & Law',
-    icon: BookOpen,
   },
   {
     id: 'nri-mumbai-property',
     category: 'NRI GUIDE',
     title: 'Buying Mumbai property from overseas',
-    description: 'A practical guide to search, compare, repatriate funds, and transact under FEMA & RBI guidelines.',
+    description:
+      'A practical guide to search, compare, repatriate funds, and transact under FEMA & RBI guidelines.',
     readTime: '7 min read',
     tag: 'Cross-Border Advisory',
-    icon: Globe,
   },
 ];
 
-import { useRouter } from 'next/navigation';
-import { HOME_PAGE_CONTENT } from '@/data/content/home.content';
-
 export function MarketIntelligenceSection() {
   const router = useRouter();
-  const miContent = HOME_PAGE_CONTENT.marketIntelligence;
+  const [miContent, setMiContent] = useState({
+    sectionId: HOME_PAGE_CONTENT.marketIntelligence.sectionId,
+    badge: HOME_PAGE_CONTENT.marketIntelligence.badge,
+    heading: HOME_PAGE_CONTENT.marketIntelligence.heading,
+    subheading: HOME_PAGE_CONTENT.marketIntelligence.subheading,
+    viewAllLink: HOME_PAGE_CONTENT.marketIntelligence.viewAllLink,
+  });
+  const [featuredInsights, setFeaturedInsights] = useState<MarketInsight[]>(FALLBACK_FEATURED);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    Promise.all([fetchHomePageContent(), fetchInsightsArticles()]).then(([home, articles]) => {
+      if (!isMounted) return;
+
+      setMiContent({
+        sectionId: HOME_PAGE_CONTENT.marketIntelligence.sectionId,
+        badge: home.miBadge,
+        heading: home.miHeading,
+        subheading: home.miSubheading,
+        viewAllLink: {
+          text: home.miViewAllText,
+          link: home.miViewAllLink,
+        },
+      });
+
+      if (articles && articles.length > 0) {
+        setFeaturedInsights(
+          articles.slice(0, 4).map((article) => ({
+            id: article.slug || article.id,
+            category: article.category,
+            title: article.title,
+            description: article.description,
+            readTime: article.readTime,
+            tag: article.tag,
+          }))
+        );
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
-    <section id={miContent.sectionId || 'market-intelligence'} className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#CFD1CA]">
+    <section
+      id={miContent.sectionId || 'market-intelligence'}
+      className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#CFD1CA]"
+    >
       <ScrollReveal animation="fade-up">
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 pb-6 border-b border-[#CFD1CA] gap-4">
           <div className="max-w-2xl">
@@ -88,7 +134,7 @@ export function MarketIntelligenceSection() {
 
       {/* 4 Square-styled Minimalist Editorial Boxes */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-        {FEATURED_INSIGHTS.map((insight, idx) => {
+        {featuredInsights.map((insight, idx) => {
           return (
             <ScrollReveal key={insight.id} animation="fade-up" delay={idx * 100}>
               <div

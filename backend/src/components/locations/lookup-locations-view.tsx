@@ -58,13 +58,19 @@ export function LookupLocationsView() {
   const [editing, setEditing] = React.useState<LookupItem | null>(null);
   const [linkedCount, setLinkedCount] = React.useState<number | null>(null);
   const confirm = useConfirm<LookupItem>();
+  // Stable fetcher identity — an inline arrow would re-run the effect on every
+  // render and race optimistic Active toggles (snapping the switch back).
+  const fetchCatalogue = React.useCallback(
+    () => listLookupLocations(false),
+    []
+  );
   const {
     data: locations,
     setData: setLocations,
     loading,
     error,
     reload,
-  } = useResource<LookupItem[]>(() => listLookupLocations(false), []);
+  } = useResource<LookupItem[]>(fetchCatalogue, []);
 
   const filtered = React.useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -87,6 +93,7 @@ export function LookupLocationsView() {
   }
 
   async function handleToggle(location: LookupItem, isActive: boolean) {
+    const previous = locations;
     setLocations((current) =>
       current.map((item) =>
         item.id === location.id ? { ...item, is_active: isActive } : item
@@ -94,8 +101,16 @@ export function LookupLocationsView() {
     );
 
     try {
-      await setLookupItemActive("lookup_locations", location.id, isActive);
+      const saved = await setLookupItemActive(
+        "lookup_locations",
+        location.id,
+        isActive
+      );
+      setLocations((current) =>
+        current.map((item) => (item.id === saved.id ? saved : item))
+      );
     } catch (caught) {
+      setLocations(previous);
       toast.error(getErrorMessage(caught));
       reload();
     }

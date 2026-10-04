@@ -40,13 +40,18 @@ export function AmenitiesView() {
   const [editing, setEditing] = React.useState<LookupItem | null>(null);
   const [linkedCount, setLinkedCount] = React.useState<number | null>(null);
   const confirm = useConfirm<LookupItem>();
+  // Stable fetcher identity — prevents Active-toggle races from inline arrows.
+  const fetchAmenities = React.useCallback(
+    () => listMasterAmenities(false),
+    []
+  );
   const {
     data: amenities,
     setData: setAmenities,
     loading,
     error,
     reload,
-  } = useResource<LookupItem[]>(() => listMasterAmenities(false), []);
+  } = useResource<LookupItem[]>(fetchAmenities, []);
 
   const filtered = React.useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -69,6 +74,7 @@ export function AmenitiesView() {
   }
 
   async function handleToggle(amenity: LookupItem, isActive: boolean) {
+    const previous = amenities;
     setAmenities((current) =>
       current.map((item) =>
         item.id === amenity.id ? { ...item, is_active: isActive } : item
@@ -76,8 +82,12 @@ export function AmenitiesView() {
     );
 
     try {
-      await setMasterAmenityActive(amenity.id, isActive);
+      const saved = await setMasterAmenityActive(amenity.id, isActive);
+      setAmenities((current) =>
+        current.map((item) => (item.id === saved.id ? saved : item))
+      );
     } catch (caught) {
+      setAmenities(previous);
       toast.error(getErrorMessage(caught));
       reload();
     }

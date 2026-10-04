@@ -27,18 +27,14 @@
   - **Assigned:** `[Unassigned]`
   - **Files:** `Frontend/components/layout/Navbar.tsx`, `Frontend/components/layout/Footer.tsx`
   - **Goal:** Read phone, email, office address, and MahaRERA number from `site_branding` table.
-- [ ] **Task 5.2: Dynamic Hero Carousel Slides**
-  - **Assigned:** `[Unassigned]`
-  - **Files:** `Frontend/components/hero/HeroCarousel.tsx`
-  - **Goal:** Read active slides from `hero_slides` table.
 
 ---
 
 ### 3. Completed Tasks ✅
 
-- [x] **Backend: drop unused `properties.launch_phase_id`** (Done: 2026-10-04) — Migration `012_drop_properties_launch_phase_id.sql` authored and **applied** on production; admin form/types/API/lookups updated; column absent remotely.
-- [x] **Backend: drop legacy `floor_plans.configuration_id`** (Done: 2026-10-04) — Migration `011_drop_floor_plans_configuration_id.sql` authored and **applied** on production; admin types/API/`FloorPlansManager`/`duplicateProperty` updated; column absent remotely.
-- [x] **Backend RLS: publication_status authority for properties + children** (Done: 2026-10-04) — Migration `010_publication_status_rls.sql` authored and **applied** on production (public SELECT uses `publication_status` + `deleted_at`).
+- [x] **CMS-drive Locations filter bar + Hero + Why Parmar + Home Insights** (Done: 2026-10-04) — Seeded existing Frontend content into `hero_slides` / `page_content` / `locations` / `insights_articles`; Frontend now reads these sections from Supabase with fallbacks.
+- [x] **Task 5.2: Dynamic Hero Carousel Slides** (Done: 2026-10-04) — `HeroCarousel` reads active slides from `hero_slides` + headline/subtext from `page_content`.
+- [x] **Backend RLS: publication_status authority for properties + children** (Done: 2026-10-04) — Migration `010_publication_status_rls.sql` authored (not yet applied to Supabase).
 - [x] **Admin Add/Edit Property: main Price (₹ Cr) in Property Information** (Done: 2026-10-04) — Canonical `price` field shown beside Property Type so create/edit can set catalogue price (avoids public “Price on Request”).
 - [x] **Task 4.1: Residential Properties Query Hook & Home Showcase** (Done: 2026-10-01) — Connected `/` and `/properties` to Supabase `properties` table with zero-breakage fallback.
 - [x] **Task 4.2: Single Property Dossier (`/properties/[slug]`)** (Done: 2026-10-01) — Connected dynamic slug lookup with configurations, gallery images, and lead inquiry hooks.

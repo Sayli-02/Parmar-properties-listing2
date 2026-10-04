@@ -12,53 +12,24 @@ export interface LocationInfo {
   lifestyle: string;
   keyEnclaves: string[];
   isPrimaryHome?: boolean;
+  primaryOrder?: number | null;
   isFuture?: boolean;
+  futureOrder?: number | null;
 }
 
+/** Offline/dev fallback only — never overrides a successful CMS response. */
 export const FALLBACK_LOCATIONS: Record<string, LocationInfo> = {
   worli: {
     name: 'Worli',
     slug: 'worli',
     tagline: 'Mumbai’s Premier Sea-Facing Luxury Mile',
-    description: 'Home to iconic skyline towers, the Bandra-Worli Sea Link promenade, and coveted multi-acre gated sky residences. Worli commands premier capital appreciation and uninterrupted Arabian Sea horizons.',
+    description:
+      'Home to iconic skyline towers, the Bandra-Worli Sea Link promenade, and coveted multi-acre gated sky residences. Worli commands premier capital appreciation and uninterrupted Arabian Sea horizons.',
     coverImage: '/properties/worli-aurum/cover.jpg',
     priceRange: '₹18 Cr - ₹75 Cr+',
     averageRate: '₹65,000 - ₹1,20,000 / sq.ft',
     lifestyle: 'Sea Link Promenade, High-Rise Sky Mansions, Michelin Dining',
     keyEnclaves: ['Worli Sea Face', 'Dr. Annie Besant Road', 'Pochkhanawala Road'],
-  },
-  'bandra-west': {
-    name: 'Bandra West',
-    slug: 'bandra-west',
-    tagline: 'The Cultural Epicenter of Discreet Elegance & Heritage',
-    description: 'The address of choice for creative luminaries, legacy industrialists, and tastemakers. Bandra West blends quiet leafy enclaves like Pali Hill and Carter Road with world-class bistros and exclusive boutique towers.',
-    coverImage: '/properties/bandra-palisades/cover.jpg',
-    priceRange: '₹15 Cr - ₹60 Cr+',
-    averageRate: '₹75,000 - ₹1,35,000 / sq.ft',
-    lifestyle: 'Pali Hill Sanctuary, Carter Road Promenade, Boutique Living',
-    keyEnclaves: ['Pali Hill', 'Bandstand', 'Carter Road', 'Perry Cross Road'],
-  },
-  juhu: {
-    name: 'Juhu',
-    slug: 'juhu',
-    tagline: 'Sun-Drenched Coastal Estates & Cinematic Glamour',
-    description: 'Mumbai’s original beachfront gold standard. Characterized by expansive private low-rise villas, sprawling penthouses overlooking private sands, and ultimate discreet coastal living.',
-    coverImage: '/properties/juhu-solitaire/cover.jpg',
-    priceRange: '₹20 Cr - ₹120 Cr+',
-    averageRate: '₹70,000 - ₹1,40,000 / sq.ft',
-    lifestyle: 'Direct Beach Access, Private Villa Compounds, Low-Density Living',
-    keyEnclaves: ['Juhu Tara Road', 'Ruia Park', 'JVPD Scheme', 'Gulmohar Avenue'],
-  },
-  'malabar-hill': {
-    name: 'Malabar Hill',
-    slug: 'malabar-hill',
-    tagline: 'The Zenith of Generational Power & Prestige',
-    description: 'Mumbai’s oldest and most closely guarded pin code. An ultra-exclusive hill promontory offering commanding vistas over Back Bay and Queens Necklace, home to business dynasties and consular residences.',
-    coverImage: '/properties/malabar-hill-manor/cover.jpg',
-    priceRange: '₹35 Cr - ₹150 Cr+',
-    averageRate: '₹95,000 - ₹1,80,000 / sq.ft',
-    lifestyle: 'Hanging Gardens Promenade, Consular Enclaves, Utmost Seclusion',
-    keyEnclaves: ['Walkeshwar Road', 'Little Gibbs Road', 'Ridge Road', 'Doongersey Road'],
   },
 };
 
@@ -75,8 +46,16 @@ export function mapDbLocationToFrontend(row: Record<string, any>): LocationInfo 
     lifestyle: row.lifestyle || '',
     keyEnclaves: Array.isArray(row.key_enclaves) ? row.key_enclaves : [],
     isPrimaryHome: Boolean(row.is_primary_home),
+    primaryOrder: typeof row.primary_order === 'number' ? row.primary_order : null,
     isFuture: Boolean(row.is_future),
+    futureOrder: typeof row.future_order === 'number' ? row.future_order : null,
   };
+}
+
+function isPublishedActive(row: Record<string, any>): boolean {
+  if (row.is_active === false) return false;
+  if (row.publication_status && row.publication_status !== 'published') return false;
+  return true;
 }
 
 export async function fetchLocations(): Promise<LocationInfo[]> {
@@ -92,15 +71,54 @@ export async function fetchLocations(): Promise<LocationInfo[]> {
       .eq('is_active', true)
       .order('sort_order', { ascending: true });
 
-    if (error || !data || data.length === 0) {
+    if (error || !data) {
       return Object.values(FALLBACK_LOCATIONS);
     }
 
-    return data.map(mapDbLocationToFrontend);
+    return data.filter(isPublishedActive).map(mapDbLocationToFrontend);
   } catch (err) {
     console.warn('Failed to fetch locations from Supabase, using fallback:', err);
     return Object.values(FALLBACK_LOCATIONS);
   }
+}
+
+/** Names for location filter bars: "All" first, then active/published backend locations by sort_order. */
+export async function fetchLocationFilterNames(): Promise<string[]> {
+  const locations = await fetchLocations();
+  return ['All', ...locations.map((l) => l.name)];
+}
+
+/**
+ * Homepage "EXPLORE PROPERTIES" cards.
+ * Only locations with is_primary_home, sorted by primary_order (home page order).
+ * Does NOT invent replacements when fewer than 4 are selected.
+ */
+export async function fetchPrimaryHomeLocations(): Promise<LocationInfo[]> {
+  const locations = await fetchLocations();
+  return locations
+    .filter((l) => l.isPrimaryHome)
+    .sort((a, b) => (a.primaryOrder ?? 99) - (b.primaryOrder ?? 99))
+    .slice(0, 4);
+}
+
+/** Future locations strip — independent of homepage primary selection. */
+export async function fetchFutureLocations(): Promise<LocationInfo[]> {
+  const locations = await fetchLocations();
+  return locations
+    .filter((l) => l.isFuture)
+    .sort((a, b) => (a.futureOrder ?? 99) - (b.futureOrder ?? 99));
+}
+
+/**
+ * Location detail "SWITCH TO ANOTHER PRIME CORRIDOR".
+ * All active+published locations except the current slug, by sort_order.
+ */
+export async function fetchCorridorSwitcherLocations(
+  excludeSlug: string
+): Promise<LocationInfo[]> {
+  const locations = await fetchLocations();
+  const current = excludeSlug.toLowerCase();
+  return locations.filter((l) => l.slug.toLowerCase() !== current);
 }
 
 export async function fetchLocationBySlug(slug: string): Promise<LocationInfo | null> {
@@ -117,7 +135,7 @@ export async function fetchLocationBySlug(slug: string): Promise<LocationInfo | 
       .eq('is_active', true)
       .maybeSingle();
 
-    if (error || !data) {
+    if (error || !data || !isPublishedActive(data)) {
       return FALLBACK_LOCATIONS[slug] || null;
     }
 

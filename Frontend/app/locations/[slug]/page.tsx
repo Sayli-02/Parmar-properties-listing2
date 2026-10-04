@@ -8,7 +8,11 @@ import { MapPin, ArrowLeft, ArrowRight, ShieldCheck, Building2, TrendingUp, Phon
 import { PropertyCard } from '@/components/property/PropertyCard';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { Property } from '@/types/property';
-import { fetchLocationBySlug } from '@/lib/supabase/locations';
+import {
+  fetchCorridorSwitcherLocations,
+  fetchLocationBySlug,
+  type LocationInfo as CmsLocationInfo,
+} from '@/lib/supabase/locations';
 import { fetchPublishedProperties } from '@/lib/supabase/properties';
 
 interface LocationInfo {
@@ -142,12 +146,14 @@ export default function LocationPropertiesPage() {
   const [dbLocation, setDbLocation] = useState<LocationInfo | null>(LOCATION_DATA[slug] || null);
   const [properties, setProperties] = useState<Property[]>([]);
   const [propertiesLoading, setPropertiesLoading] = useState(true);
+  const [corridorLocations, setCorridorLocations] = useState<CmsLocationInfo[]>([]);
 
   useEffect(() => {
     setPropertiesLoading(true);
     fetchLocationBySlug(slug).then((res) => {
       if (res) setDbLocation(res);
     });
+    fetchCorridorSwitcherLocations(slug).then(setCorridorLocations);
     fetchPublishedProperties()
       .then(setProperties)
       .finally(() => setPropertiesLoading(false));
@@ -300,28 +306,20 @@ export default function LocationPropertiesPage() {
           </div>
         )}
 
-        {/* Other Locations Quick Switcher */}
+        {/* Other Locations Quick Switcher — CMS: all active/published except current, by sort_order */}
         <div className="mt-20 pt-12 border-t border-[#CFD1CA]">
           <h3 className="text-xs uppercase tracking-[0.2em] font-bold text-[#5B605F] mb-6">
             SWITCH TO ANOTHER PRIME CORRIDOR
           </h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            {Object.values(LOCATION_DATA).map((loc) => (
+            {corridorLocations.map((loc) => (
               <Link
                 key={loc.slug}
                 href={`/locations/${loc.slug}`}
-                className={`p-4 border text-left transition-all ${
-                  loc.slug === slug
-                    ? 'bg-[#15181A] text-white border-[#15181A]'
-                    : 'bg-[#F7F7F4] text-[#15181A] border-[#CFD1CA] hover:border-[#C5282F]'
-                }`}
+                className="p-4 border text-left transition-all bg-[#F7F7F4] text-[#15181A] border-[#CFD1CA] hover:border-[#C5282F]"
               >
                 <span className="text-xs font-serif font-bold block">{loc.name}</span>
-                <span
-                  className={`text-[10px] uppercase tracking-wider block mt-1 ${
-                    loc.slug === slug ? 'text-[#C5282F]' : 'text-[#5B605F]'
-                  }`}
-                >
+                <span className="text-[10px] uppercase tracking-wider block mt-1 text-[#5B605F]">
                   {loc.priceRange}
                 </span>
               </Link>
