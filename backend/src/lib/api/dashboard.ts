@@ -12,7 +12,6 @@ import { getSupabase, throwOnError } from "./client";
 export interface ContentCounts {
   heroSlides: number;
   locations: number;
-  metrics: number;
   amenities: number;
   configurations: number;
   floorPlans: number;
@@ -89,11 +88,10 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 }
 
 export async function getContentCounts(): Promise<ContentCounts> {
-  const [heroSlides, locations, metrics, amenities, configurations, floorPlans] =
+  const [heroSlides, locations, amenities, configurations, floorPlans] =
     await Promise.all([
       countRows("hero_slides"),
       countRows("locations"),
-      countRows("market_intelligence"),
       countRows("amenities"),
       countRows("configurations"),
       countRows("floor_plans"),
@@ -102,7 +100,6 @@ export async function getContentCounts(): Promise<ContentCounts> {
   return {
     heroSlides,
     locations,
-    metrics,
     amenities,
     configurations,
     floorPlans,

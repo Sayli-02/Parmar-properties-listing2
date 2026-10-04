@@ -157,12 +157,6 @@ export function DashboardView() {
                 count={counts?.locations ?? 0}
               />
               <ContentLink
-                href="/admin/market-intelligence"
-                icon={TrendingUp}
-                label="Market metrics"
-                count={counts?.metrics ?? 0}
-              />
-              <ContentLink
                 href="/admin/amenities"
                 icon={Boxes}
                 label="Amenities"

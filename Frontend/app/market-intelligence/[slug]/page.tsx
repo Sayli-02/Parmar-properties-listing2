@@ -1,32 +1,30 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import {
   ArrowLeft,
   ArrowRight,
-  BookOpen,
   Calendar,
   Clock,
   Share2,
   CheckCircle2,
   User,
-  ShieldCheck,
-  Building,
   PhoneCall,
   Sparkles,
-  ChevronRight,
   Check,
   X
 } from 'lucide-react';
-import { INSIGHTS_ARTICLES, InsightArticle } from '@/data/insights';
 import { submitLead } from '@/lib/supabase/leads';
-import { fetchArticleBySlug, fetchInsightsArticles } from '@/lib/supabase/insights';
+import {
+  fetchArticleBySlug,
+  fetchInsightsArticles,
+  type InsightArticle,
+} from '@/lib/supabase/insights';
 
 export default function ArticleDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const slug = params?.slug as string;
 
   const [copied, setCopied] = useState(false);
@@ -40,33 +38,39 @@ export default function ArticleDetailPage() {
     note: '',
   });
 
-  const [article, setArticle] = useState<InsightArticle>(
-    () => INSIGHTS_ARTICLES.find((a) => a.id === slug || a.slug === slug) || INSIGHTS_ARTICLES[0]
-  );
-  const [allArticles, setAllArticles] = useState<InsightArticle[]>(INSIGHTS_ARTICLES);
+  const [article, setArticle] = useState<InsightArticle | null>(null);
+  const [allArticles, setAllArticles] = useState<InsightArticle[]>([]);
+  const [loading, setLoading] = useState(true);
 
   React.useEffect(() => {
     let isMounted = true;
-    if (slug) {
-      fetchArticleBySlug(slug).then((res) => {
-        if (res && isMounted) {
-          setArticle(res);
-        }
-      });
-    }
-    fetchInsightsArticles().then((res) => {
-      if (res && res.length > 0 && isMounted) {
-        setAllArticles(res);
+    setLoading(true);
+    setArticle(null);
+
+    const load = async () => {
+      if (slug) {
+        const res = await fetchArticleBySlug(slug);
+        if (isMounted) setArticle(res);
+      } else if (isMounted) {
+        setArticle(null);
       }
-    });
+
+      const list = await fetchInsightsArticles();
+      if (isMounted) setAllArticles(list);
+      if (isMounted) setLoading(false);
+    };
+
+    void load();
     return () => {
       isMounted = false;
     };
   }, [slug]);
 
-  const relatedArticles = allArticles.filter(
-    (a) => a.id !== article.id && a.slug !== article.slug
-  ).slice(0, 3);
+  const relatedArticles = article
+    ? allArticles
+        .filter((a) => a.id !== article.id && a.slug !== article.slug)
+        .slice(0, 3)
+    : [];
 
   const handleShare = () => {
     if (typeof window !== 'undefined') {
@@ -78,6 +82,7 @@ export default function ArticleDetailPage() {
 
   const handleConsultationSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!article) return;
     setConsultationSubmitted(true);
 
     try {
@@ -99,6 +104,38 @@ export default function ArticleDetailPage() {
       setFormData({ name: '', phone: '', email: '', budget: '₹15 Cr – ₹30 Cr', note: '' });
     }, 2500);
   };
+
+  if (loading) {
+    return (
+      <div className="w-full min-h-screen bg-[#EDEEE9] text-[#15181A] pt-24 font-sans">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <p className="text-sm text-[#5B605F]">Loading research article…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!article) {
+    return (
+      <div className="w-full min-h-screen bg-[#EDEEE9] text-[#15181A] pt-24 font-sans">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-4">
+          <h1 className="font-serif text-3xl font-light text-[#15181A]">
+            Article unavailable
+          </h1>
+          <p className="text-sm text-[#5B605F] font-sans leading-relaxed">
+            This research article is not published or could not be found.
+          </p>
+          <Link
+            href="/market-intelligence"
+            className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#C5282F] hover:text-[#15181A]"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Back to All Intelligence Reports</span>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen bg-[#EDEEE9] text-[#15181A] pt-24 font-sans selection:bg-[#C5282F] selection:text-white">
@@ -305,7 +342,7 @@ export default function ArticleDetailPage() {
             {relatedArticles.map((rel) => (
               <Link
                 key={rel.id}
-                href={`/market-intelligence/${rel.id}`}
+                href={`/market-intelligence/${rel.slug}`}
                 className="group bg-white border border-[#CFD1CA] p-6 hover:border-[#15181A] transition-all flex flex-col justify-between shadow-xs hover:shadow-md"
               >
                 <div>

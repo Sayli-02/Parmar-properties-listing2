@@ -18,45 +18,6 @@ export interface MarketInsight {
   tag: string;
 }
 
-const FALLBACK_FEATURED: MarketInsight[] = [
-  {
-    id: 'worli-guide-2026',
-    category: 'WORLI PROPERTY GUIDE 2026',
-    title: 'What Rs. 10–25 Cr buys in Worli today.',
-    description:
-      'Neighbourhood, product, price band and buyer-profile context across Sea Face and high-rise developments.',
-    readTime: '4 min read',
-    tag: 'Price Analysis',
-  },
-  {
-    id: 'mahalaxmi-vs-worli',
-    category: 'LOCATION COMPARISON',
-    title: 'Mahalaxmi vs Worli',
-    description:
-      "Understanding two of South Mumbai's evolving luxury corridors, racecourse vistas, and coastal connectivity.",
-    readTime: '5 min read',
-    tag: 'Macro Trends',
-  },
-  {
-    id: 'buying-penthouse-mumbai',
-    category: 'BUYER GUIDE',
-    title: 'Buying a Penthouse in Mumbai',
-    description:
-      'What buyers should evaluate beyond the view: private elevators, structural terrace loads, and wind engineering.',
-    readTime: '6 min read',
-    tag: 'Architecture & Law',
-  },
-  {
-    id: 'nri-mumbai-property',
-    category: 'NRI GUIDE',
-    title: 'Buying Mumbai property from overseas',
-    description:
-      'A practical guide to search, compare, repatriate funds, and transact under FEMA & RBI guidelines.',
-    readTime: '7 min read',
-    tag: 'Cross-Border Advisory',
-  },
-];
-
 export function MarketIntelligenceSection() {
   const router = useRouter();
   const [miContent, setMiContent] = useState({
@@ -66,26 +27,27 @@ export function MarketIntelligenceSection() {
     subheading: HOME_PAGE_CONTENT.marketIntelligence.subheading,
     viewAllLink: HOME_PAGE_CONTENT.marketIntelligence.viewAllLink,
   });
-  const [featuredInsights, setFeaturedInsights] = useState<MarketInsight[]>(FALLBACK_FEATURED);
+  const [featuredInsights, setFeaturedInsights] = useState<MarketInsight[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
 
-    Promise.all([fetchHomePageContent(), fetchInsightsArticles()]).then(([home, articles]) => {
-      if (!isMounted) return;
+    Promise.all([fetchHomePageContent(), fetchInsightsArticles()])
+      .then(([home, articles]) => {
+        if (!isMounted) return;
 
-      setMiContent({
-        sectionId: HOME_PAGE_CONTENT.marketIntelligence.sectionId,
-        badge: home.miBadge,
-        heading: home.miHeading,
-        subheading: home.miSubheading,
-        viewAllLink: {
-          text: home.miViewAllText,
-          link: home.miViewAllLink,
-        },
-      });
+        setMiContent({
+          sectionId: HOME_PAGE_CONTENT.marketIntelligence.sectionId,
+          badge: home.miBadge,
+          heading: home.miHeading,
+          subheading: home.miSubheading,
+          viewAllLink: {
+            text: home.miViewAllText,
+            link: home.miViewAllLink,
+          },
+        });
 
-      if (articles && articles.length > 0) {
         setFeaturedInsights(
           articles.slice(0, 4).map((article) => ({
             id: article.slug || article.id,
@@ -96,8 +58,10 @@ export function MarketIntelligenceSection() {
             tag: article.tag,
           }))
         );
-      }
-    });
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
 
     return () => {
       isMounted = false;
@@ -133,56 +97,64 @@ export function MarketIntelligenceSection() {
       </ScrollReveal>
 
       {/* 4 Square-styled Minimalist Editorial Boxes */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-        {featuredInsights.map((insight, idx) => {
-          return (
-            <ScrollReveal key={insight.id} animation="fade-up" delay={idx * 100}>
-              <div
-                role="button"
-                tabIndex={0}
-                onDoubleClick={() => router.push(`/market-intelligence/${insight.id}`)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') router.push(`/market-intelligence/${insight.id}`);
-                }}
-                title="Double click to open article"
-                className="group block bg-[#F7F7F4] border border-[#CFD1CA] p-8 sm:p-10 hover:border-[#15181A] hover:bg-white transition-all duration-300 shadow-xs hover:shadow-md relative flex flex-col justify-between min-h-[220px] cursor-pointer select-none"
-              >
-                <div>
-                  {/* Category in small tracking uppercase */}
-                  <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-[#5B605F] group-hover:text-[#C5282F] transition-colors block mb-3 font-sans">
-                    {insight.category}
-                  </span>
+      {loading ? (
+        <p className="text-sm text-[#5B605F] font-sans">Loading research articles…</p>
+      ) : featuredInsights.length === 0 ? (
+        <p className="text-sm text-[#5B605F] font-sans">
+          No published research articles are available yet.
+        </p>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+          {featuredInsights.map((insight, idx) => {
+            return (
+              <ScrollReveal key={insight.id} animation="fade-up" delay={idx * 100}>
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onDoubleClick={() => router.push(`/market-intelligence/${insight.id}`)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') router.push(`/market-intelligence/${insight.id}`);
+                  }}
+                  title="Double click to open article"
+                  className="group block bg-[#F7F7F4] border border-[#CFD1CA] p-8 sm:p-10 hover:border-[#15181A] hover:bg-white transition-all duration-300 shadow-xs hover:shadow-md relative flex flex-col justify-between min-h-[220px] cursor-pointer select-none"
+                >
+                  <div>
+                    {/* Category in small tracking uppercase */}
+                    <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-[#5B605F] group-hover:text-[#C5282F] transition-colors block mb-3 font-sans">
+                      {insight.category}
+                    </span>
 
-                  {/* Title in strong bold styling */}
-                  <h3 className="font-sans text-xl sm:text-2xl font-bold text-[#15181A] tracking-tight mb-3 leading-snug group-hover:text-[#C5282F] transition-colors">
-                    {insight.title}
-                  </h3>
+                    {/* Title in strong bold styling */}
+                    <h3 className="font-sans text-xl sm:text-2xl font-bold text-[#15181A] tracking-tight mb-3 leading-snug group-hover:text-[#C5282F] transition-colors">
+                      {insight.title}
+                    </h3>
 
-                  {/* Contextual Description */}
-                  <p className="text-xs sm:text-[13px] text-[#5B605F] leading-relaxed font-sans">
-                    {insight.description}
-                  </p>
+                    {/* Contextual Description */}
+                    <p className="text-xs sm:text-[13px] text-[#5B605F] leading-relaxed font-sans">
+                      {insight.description}
+                    </p>
+                  </div>
+
+                  {/* Footer bar */}
+                  <div className="pt-6 mt-6 border-t border-[#CFD1CA]/60 flex items-center justify-between text-xs text-[#5B605F]">
+                    <span className="font-mono text-[11px] uppercase tracking-wider text-[#15181A] font-medium">
+                      {insight.tag}
+                    </span>
+                    <Link
+                      href={`/market-intelligence/${insight.id}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#15181A] group-hover:text-[#C5282F] transition-colors"
+                    >
+                      <span>Read Detailed Article</span>
+                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                    </Link>
+                  </div>
                 </div>
-
-                {/* Footer bar */}
-                <div className="pt-6 mt-6 border-t border-[#CFD1CA]/60 flex items-center justify-between text-xs text-[#5B605F]">
-                  <span className="font-mono text-[11px] uppercase tracking-wider text-[#15181A] font-medium">
-                    {insight.tag}
-                  </span>
-                  <Link
-                    href={`/market-intelligence/${insight.id}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#15181A] group-hover:text-[#C5282F] transition-colors"
-                  >
-                    <span>Read Detailed Article</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                  </Link>
-                </div>
-              </div>
-            </ScrollReveal>
-          );
-        })}
-      </div>
+              </ScrollReveal>
+            );
+          })}
+        </div>
+      )}
 
       {/* Direct button at bottom as well */}
       <div className="mt-10 pt-6 flex justify-start">

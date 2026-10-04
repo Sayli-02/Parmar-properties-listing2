@@ -16,7 +16,6 @@ import {
   Sparkles,
   Star,
   Trash,
-  TrendingUp,
 } from "lucide-react";
 
 export interface NavItem {
@@ -110,12 +109,6 @@ export const navSections: NavSection[] = [
         label: "Insights",
         description: "Market intelligence articles",
         icon: Newspaper,
-      },
-      {
-        href: "/admin/market-intelligence",
-        label: "Headline metrics",
-        description: "Legacy home-page number widgets",
-        icon: TrendingUp,
       },
       {
         href: "/admin/page-content",
