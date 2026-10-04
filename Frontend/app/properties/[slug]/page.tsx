@@ -1,12 +1,15 @@
 import { notFound } from 'next/navigation';
-import { PROPERTIES } from '@/data/properties';
 import { PropertyDetailClient } from '@/components/property/PropertyDetailClient';
-import { fetchPropertyBySlug } from '@/lib/supabase/properties';
+import {
+  fetchPropertyBySlug,
+  fetchPublishedProperties,
+  fetchPublishedPropertySlugs,
+  pickSimilarProperties,
+} from '@/lib/supabase/properties';
 
-export function generateStaticParams() {
-  return PROPERTIES.map((property) => ({
-    slug: property.slug,
-  }));
+export async function generateStaticParams() {
+  const slugs = await fetchPublishedPropertySlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export default async function PropertyDetailPage({
@@ -20,5 +23,10 @@ export default async function PropertyDetailPage({
     notFound();
   }
 
-  return <PropertyDetailClient property={property} />;
+  const catalog = await fetchPublishedProperties();
+  const similarProperties = pickSimilarProperties(property, catalog);
+
+  return (
+    <PropertyDetailClient property={property} similarProperties={similarProperties} />
+  );
 }

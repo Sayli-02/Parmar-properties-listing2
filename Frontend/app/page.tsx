@@ -14,28 +14,33 @@ import { MarketIntelligenceSection } from '@/components/home/MarketIntelligenceS
 import { WhyParmar } from '@/components/home/WhyParmar';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { ScrollProgressBar } from '@/components/ui/ScrollProgressBar';
-import { PROPERTIES, Property } from '@/data/properties';
+import type { Property } from '@/types/property';
 import { HOME_PAGE_CONTENT } from '@/data/content/home.content';
-import { fetchPublishedProperties } from '@/lib/supabase/properties';
+import { fetchPublishedProperties, selectFeaturedProperties } from '@/lib/supabase/properties';
 
 export default function HomePage() {
   const { featuredProperties: featContent, locationSection: locContent } = HOME_PAGE_CONTENT;
-  const [properties, setProperties] = React.useState<Property[]>(PROPERTIES);
+  const [properties, setProperties] = React.useState<Property[]>([]);
+  const [propertiesLoading, setPropertiesLoading] = React.useState(true);
 
   React.useEffect(() => {
     let isMounted = true;
-    fetchPublishedProperties().then((data) => {
-      if (data && data.length > 0 && isMounted) {
-        setProperties(data);
-      }
-    });
+    fetchPublishedProperties()
+      .then((data) => {
+        if (isMounted) setProperties(data);
+      })
+      .finally(() => {
+        if (isMounted) setPropertiesLoading(false);
+      });
     return () => {
       isMounted = false;
     };
   }, []);
 
-  // Curated premier featured properties for home page showcase
-  const featuredProperties = properties.slice(0, featContent.maxDisplayCount || 6);
+  const featuredProperties = selectFeaturedProperties(
+    properties,
+    featContent.maxDisplayCount || 6
+  );
 
   return (
     <div className="w-full relative bg-[#EDEEE9] text-[#15181A] pt-[68px] sm:pt-[70px] md:pt-[72px]">
@@ -72,6 +77,11 @@ export default function HomePage() {
 
         {/* Featured Properties Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {propertiesLoading && featuredProperties.length === 0 ? (
+            <p className="col-span-full text-center text-sm text-[#5B605F] py-12">
+              Loading featured residences…
+            </p>
+          ) : null}
           {featuredProperties.map((property, idx) => (
             <ScrollReveal key={property.id} animation="fade-up" delay={(idx % 3) * 120}>
               <PropertyCard property={property} />

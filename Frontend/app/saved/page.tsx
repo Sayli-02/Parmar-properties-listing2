@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { useSavedStore } from '@/store/saved';
 import { useAuthStore } from '@/store/auth';
-import { PROPERTIES, Property } from '@/data/properties';
+import type { Property } from '@/types/property';
 import { PropertyCard } from '@/components/property/PropertyCard';
 import { CompareBar } from '@/components/property/CompareBar';
 import { SAVED_PAGE_CONTENT } from '@/data/content/saved.content';
@@ -20,7 +20,7 @@ import { fetchPublishedProperties } from '@/lib/supabase/properties';
 export default function SavedPage() {
   const { header, emptyState } = SAVED_PAGE_CONTENT;
   const [mounted, setMounted] = useState(false);
-  const [properties, setProperties] = useState<Property[]>(PROPERTIES);
+  const [properties, setProperties] = useState<Property[]>([]);
   const savedIds = useSavedStore((s) => s.savedIds);
   const clearSaved = useSavedStore((s) => s.clearSaved);
   const { isLoggedIn, user, login, logout } = useAuthStore();
@@ -29,9 +29,7 @@ export default function SavedPage() {
     setMounted(true);
     let isMounted = true;
     fetchPublishedProperties().then((data) => {
-      if (data && data.length > 0 && isMounted) {
-        setProperties(data);
-      }
+      if (isMounted) setProperties(data);
     });
     return () => {
       isMounted = false;

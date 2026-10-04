@@ -9,7 +9,7 @@ import {
   ArrowRight,
   Building2,
 } from 'lucide-react';
-import { PROPERTIES, Property } from '@/data/properties';
+import type { Property } from '@/types/property';
 import { PropertyCard } from '@/components/property/PropertyCard';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { ScrollProgressBar } from '@/components/ui/ScrollProgressBar';
@@ -120,16 +120,19 @@ function LocationsContent() {
   const initialLoc = searchParams ? searchParams.get('location') : null;
 
   const [selectedLoc, setSelectedLoc] = useState<string>(initialLoc || 'All');
-  const [properties, setProperties] = useState<Property[]>(PROPERTIES);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [propertiesLoading, setPropertiesLoading] = useState(true);
   const [locationsDirectory, setLocationsDirectory] = useState<LocationDirectoryItem[]>(ALL_LOCATIONS_DIRECTORY);
 
   React.useEffect(() => {
     let isMounted = true;
-    fetchPublishedProperties().then((data) => {
-      if (data && data.length > 0 && isMounted) {
-        setProperties(data);
-      }
-    });
+    fetchPublishedProperties()
+      .then((data) => {
+        if (isMounted) setProperties(data);
+      })
+      .finally(() => {
+        if (isMounted) setPropertiesLoading(false);
+      });
     fetchLocations().then((data) => {
       if (data && data.length > 0 && isMounted) {
         const mapped = data.map((l) => ({
@@ -283,7 +286,12 @@ function LocationsContent() {
           </span>
         </div>
 
-        {filteredProperties.length === 0 ? (
+        {propertiesLoading ? (
+          <div className="text-center py-20 bg-[#F7F7F4] border border-[#CFD1CA] p-8">
+            <Building2 className="w-12 h-12 text-[#5B605F] mx-auto mb-4 opacity-40 animate-pulse" />
+            <p className="text-sm text-[#5B605F]">Loading residences…</p>
+          </div>
+        ) : filteredProperties.length === 0 ? (
           <div className="text-center py-20 bg-[#F7F7F4] border border-[#CFD1CA] p-8">
             <Building2 className="w-12 h-12 text-[#5B605F] mx-auto mb-4 opacity-40" />
             <h3 className="font-serif text-2xl text-[#15181A] mb-2 font-light">

@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Scale, X, ArrowRight, Trash2 } from 'lucide-react';
 import { useCompareStore } from '@/store/compare';
-import { PROPERTIES } from '@/data/properties';
+import type { Property } from '@/types/property';
+import { fetchPublishedProperties } from '@/lib/supabase/properties';
 
 export const CompareBar: React.FC = () => {
   const [mounted, setMounted] = useState(false);
@@ -12,15 +13,18 @@ export const CompareBar: React.FC = () => {
   const removeFromCompare = useCompareStore((s) => s.removeFromCompare);
   const clearCompare = useCompareStore((s) => s.clearCompare);
 
+  const [catalog, setCatalog] = useState<Property[]>([]);
+
   useEffect(() => {
     setMounted(true);
+    fetchPublishedProperties().then(setCatalog);
   }, []);
 
   if (!mounted || compareIds.length === 0) {
     return null;
   }
 
-  const comparedProperties = PROPERTIES.filter((p) => compareIds.includes(p.id));
+  const comparedProperties = catalog.filter((p) => compareIds.includes(p.id));
 
   const handleScrollToCompare = (e: React.MouseEvent) => {
     e.preventDefault();

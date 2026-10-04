@@ -4,14 +4,14 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Scale, Trash2, ArrowRight, Check } from 'lucide-react';
 import { useCompareStore } from '@/store/compare';
-import { PROPERTIES, Property } from '@/data/properties';
+import type { Property } from '@/types/property';
 import { COMPARE_PAGE_CONTENT } from '@/data/content/compare.content';
 import { fetchPublishedProperties } from '@/lib/supabase/properties';
 
 export default function ComparePage() {
   const { header, emptyState } = COMPARE_PAGE_CONTENT;
   const [mounted, setMounted] = useState(false);
-  const [properties, setProperties] = useState<Property[]>(PROPERTIES);
+  const [properties, setProperties] = useState<Property[]>([]);
   const compareIds = useCompareStore((s) => s.compareIds);
   const removeFromCompare = useCompareStore((s) => s.removeFromCompare);
   const clearCompare = useCompareStore((s) => s.clearCompare);
@@ -20,9 +20,7 @@ export default function ComparePage() {
     setMounted(true);
     let isMounted = true;
     fetchPublishedProperties().then((data) => {
-      if (data && data.length > 0 && isMounted) {
-        setProperties(data);
-      }
+      if (isMounted) setProperties(data);
     });
     return () => {
       isMounted = false;

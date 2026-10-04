@@ -3,13 +3,25 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
+let warnedMissingConfig = false;
+
 export function isSupabaseConfigured(): boolean {
-  return Boolean(
+  const configured = Boolean(
     supabaseUrl &&
       supabaseAnonKey &&
       supabaseUrl !== 'https://your-project-id.supabase.co' &&
       supabaseAnonKey !== 'your-supabase-anon-key'
   );
+
+  if (!configured && !warnedMissingConfig) {
+    warnedMissingConfig = true;
+    console.error(
+      '[supabase] Missing or placeholder NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_ANON_KEY. ' +
+        'Copy Frontend/.env.example to Frontend/.env.local and restart the Next.js dev server.'
+    );
+  }
+
+  return configured;
 }
 
 let clientInstance: SupabaseClient | null = null;

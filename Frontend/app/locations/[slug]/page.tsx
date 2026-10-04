@@ -1,13 +1,12 @@
 'use client';
 
 import React, { useMemo, useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin, ArrowLeft, ArrowRight, ShieldCheck, Building2, TrendingUp, Phone, Mail } from 'lucide-react';
 import { PropertyCard } from '@/components/property/PropertyCard';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
-import { PROPERTIES } from '@/data/properties';
 import { Property } from '@/types/property';
 import { fetchLocationBySlug } from '@/lib/supabase/locations';
 import { fetchPublishedProperties } from '@/lib/supabase/properties';
@@ -135,335 +134,23 @@ const LOCATION_DATA: Record<string, LocationInfo> = {
   },
 };
 
-// Fallback mock properties if location doesn't have enough matching seed items
-const MOCK_LOCATION_FALLBACKS: Record<string, Partial<Property>[]> = {
-  worli: [
-    {
-      id: 'mock-worli-1',
-      slug: 'the-aurum-sea-residence-worli',
-      title: 'The Aurum Sea Residence',
-      tagline: 'Direct Sea-Facing Trophy Residence with Panoramic Arabian Horizons',
-      location: 'Worli',
-      subLocation: 'Worli Sea Face, Mumbai',
-      price: 32.5,
-      priceFormatted: '₹32.50 Cr',
-      bhk: '4 BHK',
-      carpetArea: 3850,
-      superArea: 4800,
-      propertyType: 'Penthouse',
-      possession: 'Ready to Move',
-      floor: '42nd Floor of 50',
-      featured: true,
-      recentlyAdded: false,
-      recommended: true,
-      coverImage: '/properties/worli-aurum/cover.jpg',
-      images: ['/properties/worli-aurum/cover.jpg', '/hero/hero-1-crisp.jpg'],
-      amenities: ['Private Lap Pool', 'Direct Sea Link View', 'Concierge Desk', '3 Car Parking'],
-      description: 'Exclusive 4 BHK sky residence with 180° uninterrupted Arabian sea horizons in prime Worli.',
-      highlights: ['Direct Sea View', 'Private elevator', 'Triple-height lobby'],
-      coordinates: { lat: 19.0144, lng: 72.8159 },
-    },
-    {
-      id: 'mock-worli-2',
-      slug: 'worli-sea-breeze-pavilion',
-      title: 'Sea Breeze Pavilion Worli',
-      tagline: 'Skyline Icon Overlooking Mahalaxmi Racecourse & Sea',
-      location: 'Worli',
-      subLocation: 'Dr. Annie Besant Road, Worli',
-      price: 27.5,
-      priceFormatted: '₹27.50 Cr',
-      bhk: '4 BHK',
-      carpetArea: 3100,
-      superArea: 4100,
-      propertyType: 'Sky Villa',
-      possession: 'Ready to Move',
-      floor: '38th Floor of 65',
-      featured: true,
-      recentlyAdded: true,
-      recommended: true,
-      coverImage: '/properties/prabhadevi-verve/cover.jpg',
-      images: ['/properties/prabhadevi-verve/cover.jpg', '/hero/hero-2-crisp.jpg'],
-      amenities: ['Dual Sea & Racecourse Views', 'Infinity Pool', 'Screening Theatre'],
-      description: 'Perched high in an iconic Worli landmark with dual vistas of the sea and racecourse.',
-      highlights: ['Dual-aspect view', 'Double-height sundeck', 'Private elevators'],
-      coordinates: { lat: 19.005, lng: 72.818 },
-    },
-  ],
-  prabhadevi: [
-    {
-      id: 'mock-prabhadevi-1',
-      slug: 'verve-belvedere-prabhadevi',
-      title: 'Verve Belvedere',
-      tagline: 'Refined Coastal Grandeur Near Siddhivinayak',
-      location: 'Prabhadevi',
-      subLocation: 'Prabhadevi Seafront, South Mumbai',
-      price: 21.8,
-      priceFormatted: '₹21.80 Cr',
-      bhk: '3 BHK',
-      carpetArea: 2600,
-      superArea: 3400,
-      propertyType: 'Sea-Facing Apartment',
-      possession: 'Ready to Move',
-      floor: '28th Floor of 40',
-      featured: true,
-      recentlyAdded: true,
-      recommended: true,
-      coverImage: '/properties/prabhadevi-verve/cover.jpg',
-      images: ['/properties/prabhadevi-verve/cover.jpg', '/hero/hero-2-crisp.jpg'],
-      amenities: ['State-of-the-Art Gymnasium', 'Yoga Pavilion', 'Private Elevators', 'Lush Podium Gardens'],
-      description: 'Perfect harmony between cultural heritage and ultra-modern coastal architecture.',
-      highlights: ['Unbroken view of Sea Link', 'LEED Platinum Certified', 'Vastu-compliant'],
-      coordinates: { lat: 19.0166, lng: 72.8295 },
-    },
-    {
-      id: 'mock-prabhadevi-2',
-      slug: 'prabhadevi-ocean-heights',
-      title: 'Ocean Heights Signature Residence',
-      tagline: 'Direct Seafront Promenade Living in South Mumbai',
-      location: 'Prabhadevi',
-      subLocation: 'Kirti College Seafront, Prabhadevi',
-      price: 28.5,
-      priceFormatted: '₹28.50 Cr',
-      bhk: '4 BHK',
-      carpetArea: 3250,
-      superArea: 4100,
-      propertyType: 'Penthouse',
-      possession: 'Ready to Move',
-      floor: '35th Floor of 45',
-      featured: true,
-      recentlyAdded: false,
-      recommended: true,
-      coverImage: '/hero/hero-2-crisp.jpg',
-      images: ['/hero/hero-2-crisp.jpg', '/properties/prabhadevi-verve/cover.jpg'],
-      amenities: ['Private Plunge Pool', 'Double-Height Foyer', 'Concierge Service', '4 Car Bays'],
-      description: 'A masterpiece on the Prabhadevi coastline with uninterrupted Arabian Sea horizon.',
-      highlights: ['Panoramic sea deck', 'Bespoke Italian finishes', 'Private lift lobby'],
-      coordinates: { lat: 19.017, lng: 72.828 },
-    },
-  ],
-  'lower-parel': [
-    {
-      id: 'mock-lp-1',
-      slug: 'the-pavilion-sky-villas-lower-parel',
-      title: 'The Pavilion Sky Villas',
-      tagline: 'Modern Opulence Above Mumbai’s Corporate & Lifestyle Epicenter',
-      location: 'Lower Parel',
-      subLocation: 'Senapati Bapat Marg, Lower Parel',
-      price: 19.5,
-      priceFormatted: '₹19.50 Cr',
-      bhk: '4 BHK',
-      carpetArea: 2900,
-      superArea: 3750,
-      propertyType: 'Sky Villa',
-      possession: 'Ready to Move',
-      floor: '55th Floor of 70',
-      featured: true,
-      recentlyAdded: true,
-      recommended: true,
-      coverImage: '/properties/lower-parel-pavilion/cover.jpg',
-      images: ['/properties/lower-parel-pavilion/cover.jpg', '/hero/hero-1-crisp.jpg'],
-      amenities: ['Olympic Heated Pool', 'Screening Theatre', 'Squash Court', 'Helipad Access'],
-      description: 'Rising grandly above Lower Parel, this sky villa commands breathtaking day-and-night skyline vistas.',
-      highlights: ['Floor-to-ceiling glass curtain walls', 'Dedicated lifestyle concierge', 'Zero common walls'],
-      coordinates: { lat: 18.9986, lng: 72.8315 },
-    },
-    {
-      id: 'mock-lp-2',
-      slug: 'lower-parel-grand-horizon',
-      title: 'Grand Horizon Residences',
-      tagline: 'Integrated Luxury Living in Central Mumbai’s Financial Hub',
-      location: 'Lower Parel',
-      subLocation: 'Curry Road Avenue, Lower Parel',
-      price: 15.75,
-      priceFormatted: '₹15.75 Cr',
-      bhk: '3 BHK',
-      carpetArea: 2200,
-      superArea: 2900,
-      propertyType: 'Sky Villa',
-      possession: 'Ready to Move',
-      floor: '41st Floor of 60',
-      featured: false,
-      recentlyAdded: true,
-      recommended: true,
-      coverImage: '/hero/hero-3-crisp.jpg',
-      images: ['/hero/hero-3-crisp.jpg', '/properties/lower-parel-pavilion/cover.jpg'],
-      amenities: ['Clubhouse & Spa', 'Valet Parking', 'Childrens Play Arena', 'Business Center'],
-      description: 'Effortless luxury in the heart of Mumbai midtown, adjacent to premier Michelin dining and high-street shopping.',
-      highlights: ['Central connectivity', 'Double-height sundeck', 'Multi-tier biometric security'],
-      coordinates: { lat: 18.995, lng: 72.83 },
-    },
-  ],
-  powai: [
-    {
-      id: 'mock-powai-1',
-      slug: 'lake-panache-estates-powai',
-      title: 'The Panache Sky Suites',
-      tagline: 'Tranquil Urban Luxury Overlooking Powai Lake',
-      location: 'Powai',
-      subLocation: 'Hiranandani Gardens, Powai',
-      price: 14.5,
-      priceFormatted: '₹14.50 Cr',
-      bhk: '4 BHK',
-      carpetArea: 2800,
-      superArea: 3600,
-      propertyType: 'Duplex',
-      possession: 'Ready to Move',
-      floor: '22nd & 23rd Duplex',
-      featured: true,
-      recentlyAdded: true,
-      recommended: true,
-      coverImage: '/properties/powai-lake/cover.jpg',
-      images: ['/properties/powai-lake/cover.jpg', '/hero/hero-3-crisp.jpg'],
-      amenities: ['Lakeview Terrace', 'Private Spa Suite', 'Biophilic Atrium', 'Tennis Academy Access'],
-      description: 'A bespoke double-storey duplex overlooking serene waters of Powai Lake and forested hill slopes.',
-      highlights: ['Direct lakefront promenade views', 'Double-height cathedral ceilings', 'Minutes from Powai business centers'],
-      coordinates: { lat: 19.1176, lng: 72.906 },
-    },
-    {
-      id: 'mock-powai-2',
-      slug: 'powai-cliff-sanctuary',
-      title: 'Cliffside Sovereign Residences',
-      tagline: 'Neoclassical Lakefront Mansions with Hillside Horizons',
-      location: 'Powai',
-      subLocation: 'Cliff Avenue, Powai',
-      price: 11.2,
-      priceFormatted: '₹11.20 Cr',
-      bhk: '3 BHK',
-      carpetArea: 2150,
-      superArea: 2850,
-      propertyType: 'Luxury Estate',
-      possession: 'Ready to Move',
-      floor: '18th Floor of 30',
-      featured: false,
-      recentlyAdded: true,
-      recommended: true,
-      coverImage: '/hero/hero-1-crisp.jpg',
-      images: ['/hero/hero-1-crisp.jpg', '/properties/powai-lake/cover.jpg'],
-      amenities: ['Infinity Lake View Pool', 'Private Forest Trails', 'Club Royale', 'Automated EV Bays'],
-      description: 'Lush greenery meets classical European stone architecture in Powai’s most prestigious elevated sector.',
-      highlights: ['Unobstructed lake panorama', 'Lush biodiversity surrounds', 'Close to top international schools'],
-      coordinates: { lat: 19.12, lng: 72.91 },
-    },
-  ],
-  sewri: [
-    {
-      id: 'mock-sewri-1',
-      slug: 'one-bayview-towers-sewri',
-      title: 'One Bayview Promenade',
-      tagline: 'Upcoming Coastal Tower Connected to Atal Setu (MTHL)',
-      location: 'Sewri',
-      subLocation: 'Marine Bay Corridor, Sewri',
-      price: 12.8,
-      priceFormatted: '₹12.80 Cr',
-      bhk: '3 BHK',
-      carpetArea: 1950,
-      superArea: 2550,
-      propertyType: 'Sea-Facing Apartment',
-      possession: 'Pre-Launch',
-      floor: 'Choice of High-Rise Floors',
-      featured: true,
-      recentlyAdded: true,
-      recommended: true,
-      coverImage: '/hero/hero-3-crisp.jpg',
-      images: ['/hero/hero-3-crisp.jpg', '/properties/lower-parel-pavilion/cover.jpg'],
-      amenities: ['Flamingo Bay Panoramas', 'Direct Atal Setu Expressway Ramp', '50,000 sq.ft Podium Club'],
-      description: 'Poised to become the eastern coastal icon of South-Central Mumbai with panoramic sea and flamingo sanctuary vistas.',
-      highlights: ['Pre-launch priority pricing', 'High-capital-appreciation corridor', 'Direct connector to Navi Mumbai'],
-      coordinates: { lat: 19.001, lng: 72.855 },
-    },
-    {
-      id: 'mock-sewri-2',
-      slug: 'sewri-harbor-crest',
-      title: 'Harbor Crest Sky Residences',
-      tagline: 'Front-Line Eastern Seaboard Sunrise Penthouses',
-      location: 'Sewri',
-      subLocation: 'Eastern Bay Promenade, Sewri',
-      price: 16.5,
-      priceFormatted: '₹16.50 Cr',
-      bhk: '4 BHK',
-      carpetArea: 2700,
-      superArea: 3500,
-      propertyType: 'Sky Villa',
-      possession: 'Under Construction',
-      floor: '32nd Floor of 48',
-      featured: false,
-      recentlyAdded: true,
-      recommended: true,
-      coverImage: '/properties/worli-aurum/cover.jpg',
-      images: ['/properties/worli-aurum/cover.jpg', '/hero/hero-3-crisp.jpg'],
-      amenities: ['Bay-Facing Decks', 'Private Elevators', 'Rooftop Sky Lounge', 'Concierge & Valet'],
-      description: 'Unbroken panoramic sunrise vistas over Mumbai harbor and the engineering marvel of Atal Setu.',
-      highlights: ['Front-line harbor vistas', 'High speed city connectivity', 'Luxury clubhouse'],
-      coordinates: { lat: 19.003, lng: 72.857 },
-    },
-  ],
-  'cuffe-parade': [
-    {
-      id: 'mock-cp-1',
-      slug: 'cuffe-parade-regalia',
-      title: 'Cuffe Parade Regalia',
-      tagline: 'Colaba Waterfront Haven with Arabian Sea Horizon',
-      location: 'Cuffe Parade',
-      subLocation: 'Cuffe Parade, South Mumbai',
-      price: 36.0,
-      priceFormatted: '₹36.00 Cr',
-      bhk: '4 BHK',
-      carpetArea: 3500,
-      superArea: 4400,
-      propertyType: 'Sea-Facing Apartment',
-      possession: 'Ready to Move',
-      floor: '31st Floor of 36',
-      featured: true,
-      recentlyAdded: false,
-      recommended: true,
-      coverImage: '/hero/hero-2-crisp.jpg',
-      images: ['/hero/hero-2-crisp.jpg', '/properties/bandra-palisades/cover.jpg'],
-      amenities: ['Deep Sea Facing Balconies', 'Private Foyer Elevators', 'Indoor Temperature Pool', 'Diplomatic Security Desk'],
-      description: 'Commanding front-line sea frontage at the southern tip of Mumbai with maritime architecture and sunset views.',
-      highlights: ['Front-line Arabian Sea frontage', 'Walkable to Colaba clubs', 'Ultra-low density community'],
-      coordinates: { lat: 18.91, lng: 72.82 },
-    },
-    {
-      id: 'mock-cp-2',
-      slug: 'cuffe-promontory-penthouse',
-      title: 'The Southern Promontory Penthouse',
-      tagline: 'Diplomatic Enclave Trophy Penthouse Overlooking Harbor & Ocean',
-      location: 'Cuffe Parade',
-      subLocation: 'Captain Prakash Pethe Marg, Cuffe Parade',
-      price: 48.0,
-      priceFormatted: '₹48.00 Cr',
-      bhk: '5 BHK',
-      carpetArea: 4800,
-      superArea: 6200,
-      propertyType: 'Penthouse',
-      possession: 'Ready to Move',
-      floor: '34th Floor Signature Duplex',
-      featured: true,
-      recentlyAdded: true,
-      recommended: true,
-      coverImage: '/properties/worli-aurum/cover.jpg',
-      images: ['/properties/worli-aurum/cover.jpg', '/hero/hero-2-crisp.jpg'],
-      amenities: ['Private Rooftop Helipad Transfer', 'Private Heated Pool', 'Wine Cellar', '6 Car Reserved Parking'],
-      description: 'One of South Mumbai’s most exclusive private addresses, offering generational prestige and 360-degree ocean views.',
-      highlights: ['360-degree ocean & harbor vistas', 'Private rooftop observatory', 'Diplomatic security'],
-      coordinates: { lat: 18.908, lng: 72.822 },
-    },
-  ],
-};
 
 export default function LocationPropertiesPage() {
   const params = useParams();
-  const router = useRouter();
   const slug = (params.slug as string)?.toLowerCase() || 'worli';
 
   const [dbLocation, setDbLocation] = useState<LocationInfo | null>(LOCATION_DATA[slug] || null);
-  const [properties, setProperties] = useState<Property[]>(PROPERTIES);
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [propertiesLoading, setPropertiesLoading] = useState(true);
 
   useEffect(() => {
+    setPropertiesLoading(true);
     fetchLocationBySlug(slug).then((res) => {
       if (res) setDbLocation(res);
     });
-    fetchPublishedProperties().then(setProperties);
+    fetchPublishedProperties()
+      .then(setProperties)
+      .finally(() => setPropertiesLoading(false));
   }, [slug]);
 
   const location = useMemo(() => {
@@ -484,26 +171,14 @@ export default function LocationPropertiesPage() {
     );
   }, [dbLocation, slug]);
 
-  // Find real properties in this location or provide fallback data
   const locationProperties = useMemo(() => {
-    const matched = properties.filter((p) => {
+    const target = location.name.toLowerCase();
+    return properties.filter((p) => {
       const pLoc = p.location.toLowerCase();
-      const pSub = p.subLocation.toLowerCase();
-      const target = location.name.toLowerCase();
+      const pSub = (p.subLocation || '').toLowerCase();
       return pLoc.includes(target) || pSub.includes(target) || target.includes(pLoc);
     });
-
-    const fallbacks = (MOCK_LOCATION_FALLBACKS[slug] || []) as Property[];
-    const combined = [...matched];
-    for (const fb of fallbacks) {
-      if (!combined.some((item) => item.id === fb.id || item.slug === fb.slug)) {
-        combined.push(fb as Property);
-      }
-    }
-
-    if (combined.length > 0) return combined;
-    return (MOCK_LOCATION_FALLBACKS.worli || []) as Property[];
-  }, [properties, location, slug]);
+  }, [properties, location]);
 
   return (
     <div className="w-full min-h-screen bg-[#EDEEE9] text-[#15181A] pt-24">
@@ -593,13 +268,37 @@ export default function LocationPropertiesPage() {
         </div>
 
         {/* Properties Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {locationProperties.map((property, idx) => (
-            <ScrollReveal key={property.id} animation="fade-up" delay={idx * 100}>
-              <PropertyCard property={property as Property} />
-            </ScrollReveal>
-          ))}
-        </div>
+        {propertiesLoading ? (
+          <div className="text-center py-20 bg-[#F7F7F4] border border-[#CFD1CA] p-8">
+            <Building2 className="w-12 h-12 text-[#5B605F] mx-auto mb-4 opacity-40 animate-pulse" />
+            <p className="text-sm text-[#5B605F]">Loading residences in {location.name}…</p>
+          </div>
+        ) : locationProperties.length === 0 ? (
+          <div className="text-center py-20 bg-[#F7F7F4] border border-[#CFD1CA] p-8">
+            <Building2 className="w-12 h-12 text-[#5B605F] mx-auto mb-4 opacity-40" />
+            <h3 className="font-serif text-2xl text-[#15181A] mb-2 font-light">
+              No Published Listings in {location.name} Yet
+            </h3>
+            <p className="text-sm text-[#5B605F] max-w-md mx-auto mb-6">
+              Our advisory desk can share off-market briefings for this enclave. Browse the full portfolio or contact us for a private tour.
+            </p>
+            <Link
+              href="/properties"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-[#C5282F] text-white text-xs uppercase tracking-widest font-semibold"
+            >
+              <span>Browse All Residences</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {locationProperties.map((property, idx) => (
+              <ScrollReveal key={property.id} animation="fade-up" delay={idx * 100}>
+                <PropertyCard property={property} />
+              </ScrollReveal>
+            ))}
+          </div>
+        )}
 
         {/* Other Locations Quick Switcher */}
         <div className="mt-20 pt-12 border-t border-[#CFD1CA]">

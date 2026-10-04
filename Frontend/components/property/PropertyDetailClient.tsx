@@ -29,7 +29,6 @@ import {
   QrCode,
 } from 'lucide-react';
 import { Property } from '@/types/property';
-import { PROPERTIES } from '@/data/properties';
 import { PropertyCard } from '@/components/property/PropertyCard';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
 import { ScrollProgressBar } from '@/components/ui/ScrollProgressBar';
@@ -38,6 +37,7 @@ import { useRecentStore } from '@/store/recent';
 
 interface PropertyDetailClientProps {
   property: Property;
+  similarProperties?: Property[];
 }
 
 interface LeadModalContext {
@@ -47,7 +47,10 @@ interface LeadModalContext {
   type: 'map' | 'floorplan' | 'brochure' | 'viewing' | 'general' | 'price-breakdown';
 }
 
-export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({ property }) => {
+export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({
+  property,
+  similarProperties = [],
+}) => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
   const [activeFloorPlan, setActiveFloorPlan] = useState(0);
@@ -101,10 +104,6 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({ prop
       // Ignore local storage errors
     }
   }, [property.slug, addRecent]);
-
-  const similarProperties = PROPERTIES.filter(
-    (p) => p.id !== property.id && (p.location === property.location || p.propertyType === property.propertyType)
-  ).slice(0, 3);
 
   const images = property.images && property.images.length > 0 ? property.images : [property.coverImage];
 
