@@ -143,41 +143,54 @@ export default function LocationPropertiesPage() {
   const params = useParams();
   const slug = (params.slug as string)?.toLowerCase() || 'worli';
 
-  const [dbLocation, setDbLocation] = useState<LocationInfo | null>(LOCATION_DATA[slug] || null);
+  const [dbLocation, setDbLocation] = useState<LocationInfo | null>(null);
+  const [locationLoading, setLocationLoading] = useState(true);
+  const [locationUnavailable, setLocationUnavailable] = useState(false);
   const [properties, setProperties] = useState<Property[]>([]);
   const [propertiesLoading, setPropertiesLoading] = useState(true);
   const [corridorLocations, setCorridorLocations] = useState<CmsLocationInfo[]>([]);
 
   useEffect(() => {
+    let isMounted = true;
+    setLocationLoading(true);
+    setLocationUnavailable(false);
     setPropertiesLoading(true);
+
     fetchLocationBySlug(slug).then((res) => {
-      if (res) setDbLocation(res);
+      if (!isMounted) return;
+      if (res) {
+        setDbLocation(res);
+        setLocationUnavailable(false);
+      } else {
+        setDbLocation(null);
+        setLocationUnavailable(true);
+      }
+      setLocationLoading(false);
     });
-    fetchCorridorSwitcherLocations(slug).then(setCorridorLocations);
+    fetchCorridorSwitcherLocations(slug).then((rows) => {
+      if (isMounted) setCorridorLocations(rows);
+    });
     fetchPublishedProperties()
-      .then(setProperties)
-      .finally(() => setPropertiesLoading(false));
+      .then((rows) => {
+        if (isMounted) setProperties(rows);
+      })
+      .finally(() => {
+        if (isMounted) setPropertiesLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
   }, [slug]);
 
   const location = useMemo(() => {
-    return (
-      dbLocation ||
-      LOCATION_DATA[slug] || {
-        name: slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-        slug,
-        tagline: 'Curated Luxury Residences & Private Enclaves',
-        description:
-          'Explore handpicked luxury properties, verified clear titles, and prime residential developments in this sought-after Mumbai neighbourhood.',
-        coverImage: '/properties/bandra-palisades/cover.jpg',
-        priceRange: '₹15 Cr - ₹80 Cr+',
-        averageRate: '₹60,000 - ₹1,10,000 / sq.ft',
-        lifestyle: 'Prime Connectivity, High-Rise Luxury, Coveted Enclave',
-        keyEnclaves: ['Prime Corridors', 'Bespoke Towers', 'Avenue Belts'],
-      }
-    );
+    if (dbLocation) return dbLocation;
+    // Static copy is only used as a loading placeholder — never for inactive CMS rows.
+    return LOCATION_DATA[slug] || null;
   }, [dbLocation, slug]);
 
   const locationProperties = useMemo(() => {
+    if (!location) return [];
     const target = location.name.toLowerCase();
     return properties.filter((p) => {
       const pLoc = p.location.toLowerCase();
@@ -185,6 +198,61 @@ export default function LocationPropertiesPage() {
       return pLoc.includes(target) || pSub.includes(target) || target.includes(pLoc);
     });
   }, [properties, location]);
+
+  if (locationLoading) {
+    return (
+      <div className="w-full min-h-screen bg-[#EDEEE9] text-[#15181A] pt-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
+          <Building2 className="w-12 h-12 text-[#5B605F] mx-auto mb-4 opacity-40 animate-pulse" />
+          <p className="text-sm text-[#5B605F]">Loading location…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (locationUnavailable || !location) {
+    return (
+      <div className="w-full min-h-screen bg-[#EDEEE9] text-[#15181A] pt-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
+          <MapPin className="w-12 h-12 text-[#5B605F] mx-auto mb-4 opacity-40" />
+          <h1 className="font-serif text-3xl sm:text-4xl font-light text-[#15181A] mb-3">
+            Location unavailable
+          </h1>
+          <p className="text-sm text-[#5B605F] max-w-md mx-auto mb-8">
+            This enclave is not currently published. Explore other prime corridors or return to the locations directory.
+          </p>
+          <Link
+            href="/locations"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-[#C5282F] text-white text-xs uppercase tracking-widest font-semibold"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to Locations</span>
+          </Link>
+          {corridorLocations.length > 0 ? (
+            <div className="mt-16 pt-10 border-t border-[#CFD1CA] text-left">
+              <h3 className="text-xs uppercase tracking-[0.2em] font-bold text-[#5B605F] mb-6">
+                SWITCH TO ANOTHER PRIME CORRIDOR
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {corridorLocations.map((loc) => (
+                  <Link
+                    key={loc.slug}
+                    href={`/locations/${loc.slug}`}
+                    className="p-4 border text-left transition-all bg-[#F7F7F4] text-[#15181A] border-[#CFD1CA] hover:border-[#C5282F]"
+                  >
+                    <span className="text-xs font-serif font-bold block">{loc.name}</span>
+                    <span className="text-[10px] uppercase tracking-wider block mt-1 text-[#5B605F]">
+                      {loc.priceRange}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full min-h-screen bg-[#EDEEE9] text-[#15181A] pt-24">

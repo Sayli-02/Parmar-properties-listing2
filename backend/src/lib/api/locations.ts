@@ -124,98 +124,6 @@ async function resequenceSortOrder(
 }
 
 /**
- * Maintains unique homepage primary_order values in 1..count (max 4).
- * Shifts peers when inserting/moving so two homepage locations never share
- * the same order.
- */
-async function resequencePrimaryHomeOrder(
-  movingId: string,
-  isPrimaryHome: boolean,
-  desiredOrder: number | null
-): Promise<{ primary_order: number | null; is_primary_home: boolean }> {
-  const all = await listLocations();
-  let others = all
-    .filter((l) => l.is_primary_home && l.id !== movingId)
-    .sort(
-      (a, b) =>
-        (a.primary_order ?? Number.MAX_SAFE_INTEGER) -
-        (b.primary_order ?? Number.MAX_SAFE_INTEGER)
-    );
-
-  if (!isPrimaryHome) {
-    const supabase = getSupabase();
-    const { error: clearError } = await supabase
-      .from(TABLE)
-      .update({ is_primary_home: false, primary_order: null })
-      .eq("id", movingId);
-    throwOnError(clearError, "Clearing homepage location");
-
-    await Promise.all(
-      others.map(async (loc, index) => {
-        const { error } = await getSupabase()
-          .from(TABLE)
-          .update({
-            is_primary_home: true,
-            primary_order: index + 1,
-          })
-          .eq("id", loc.id);
-        throwOnError(error, "Reordering homepage locations");
-      })
-    );
-
-    return { is_primary_home: false, primary_order: null };
-  }
-
-  const alreadyPrimary = all.some(
-    (l) => l.id === movingId && l.is_primary_home
-  );
-  if (!alreadyPrimary && others.length >= MAX_HOME_PRIMARY) {
-    throw new Error(
-      `At most ${MAX_HOME_PRIMARY} locations can be selected for the home page. Deselect another location first.`
-    );
-  }
-
-  // Legacy data may have >4 homepage rows. Keep this location + earliest peers.
-  if (others.length >= MAX_HOME_PRIMARY) {
-    const keepPeers = others.slice(0, MAX_HOME_PRIMARY - 1);
-    const dropPeers = others.slice(MAX_HOME_PRIMARY - 1);
-    await Promise.all(
-      dropPeers.map(async (loc) => {
-        const { error } = await getSupabase()
-          .from(TABLE)
-          .update({ is_primary_home: false, primary_order: null })
-          .eq("id", loc.id);
-        throwOnError(error, "Trimming homepage locations");
-      })
-    );
-    others = keepPeers;
-  }
-
-  const target = clampInt(
-    desiredOrder ?? others.length + 1,
-    1,
-    others.length + 1
-  );
-  const orderedIds = others.map((l) => l.id);
-  orderedIds.splice(target - 1, 0, movingId);
-
-  await Promise.all(
-    orderedIds.map(async (id, index) => {
-      const { error } = await getSupabase()
-        .from(TABLE)
-        .update({
-          is_primary_home: true,
-          primary_order: index + 1,
-        })
-        .eq("id", id);
-      throwOnError(error, "Updating homepage location order");
-    })
-  );
-
-  return { is_primary_home: true, primary_order: target };
-}
-
-/**
  * Master columns from 006 are written alongside the legacy ones so the public
  * website and the existing Admin screens stay in step.
  */
@@ -263,14 +171,15 @@ export async function createLocation(
   const created = data as unknown as Location;
 
   await resequenceSortOrder(created.id, input.sort_order || null);
-  await resequencePrimaryHomeOrder(
-    created.id,
-    Boolean(input.is_primary_home),
-    input.primary_order ?? null
-  );
+  // Homepage Top 4 is managed only via saveHomepageTop4 — never from the edit dialog.
 
   const refreshed = await getLocation(created.id);
-  return refreshed ?? created;
+  const result = refreshed ?? created;
+  await syncLookupActiveFromEditorial(
+    result,
+    Boolean(result.is_active)
+  );
+  return result;
 }
 
 export async function updateLocation(
@@ -299,14 +208,16 @@ export async function updateLocation(
   throwOnError(error, "Updating location");
 
   await resequenceSortOrder(id, input.sort_order ?? null);
-  await resequencePrimaryHomeOrder(
-    id,
-    Boolean(input.is_primary_home),
-    input.primary_order ?? null
-  );
+  // Homepage Top 4 (`is_primary_home` / `primary_order`) is owned by
+  // saveHomepageTop4 — leave those columns untouched here.
 
   const refreshed = await getLocation(id);
-  return refreshed ?? (data as unknown as Location);
+  const result = refreshed ?? (data as unknown as Location);
+  await syncLookupActiveFromEditorial(
+    result,
+    Boolean(result.is_active)
+  );
+  return result;
 }
 
 export async function deleteLocation(location: Location): Promise<void> {
@@ -336,13 +247,38 @@ export async function deleteLocation(location: Location): Promise<void> {
   );
 }
 
+/**
+ * Mirror editorial Live/Hidden onto the linked catalogue row so the two Admin
+ * Active controls cannot drift apart.
+ */
+async function syncLookupActiveFromEditorial(
+  location: Location,
+  isActive: boolean
+): Promise<void> {
+  const supabase = getSupabase();
+  let query = supabase
+    .from("lookup_locations")
+    .update({ is_active: isActive });
+
+  if (location.lookup_location_id) {
+    query = query.eq("id", location.lookup_location_id);
+  } else if (location.slug) {
+    query = query.eq("slug", location.slug);
+  } else {
+    return;
+  }
+
+  const { error } = await query;
+  throwOnError(error, "Syncing catalogue location visibility");
+}
+
 export async function setLocationActive(
   id: string,
   isActive: boolean
 ): Promise<Location> {
   const supabase = getSupabase();
   // Keep is_active + publication_status in lockstep — the public site gates on
-  // both, and Admin treats the Live/Hidden switch as the single visibility control.
+  // both, and Admin treats Live/Hidden / Active as the same visibility control.
   const { data, error } = await supabase
     .from(TABLE)
     .update({
@@ -359,7 +295,10 @@ export async function setLocationActive(
       "Updating location failed: no row was updated. Check admin permissions."
     );
   }
-  return data as unknown as Location;
+
+  const saved = data as unknown as Location;
+  await syncLookupActiveFromEditorial(saved, isActive);
+  return saved;
 }
 
 export async function countPropertiesForLocation(
@@ -379,6 +318,121 @@ export async function countPropertiesForLocation(
 export async function reorderLocations(ids: string[]): Promise<void> {
   // Drag-and-drop order becomes the canonical public sort_order.
   await applyContiguousSortOrder(ids);
+}
+
+/**
+ * Reads the four Homepage Top 4 slots from current location rows.
+ * Index 0 → primary_order 1, … Index 3 → primary_order 4.
+ */
+export function getHomepageTop4Slots(
+  locations: Location[]
+): Array<string | null> {
+  const slots: Array<string | null> = [null, null, null, null];
+  for (const location of locations) {
+    if (!location.is_primary_home) continue;
+    const order = location.primary_order;
+    if (typeof order === "number" && order >= 1 && order <= MAX_HOME_PRIMARY) {
+      slots[order - 1] = location.id;
+    }
+  }
+  return slots;
+}
+
+/**
+ * Atomically replaces the Homepage Top 4 selection.
+ * Uses existing `is_primary_home` + `primary_order` only — never touches sort_order.
+ */
+export async function saveHomepageTop4(
+  orderedIds: string[]
+): Promise<Location[]> {
+  if (orderedIds.length !== MAX_HOME_PRIMARY) {
+    throw new Error(
+      `Homepage Top 4 requires exactly ${MAX_HOME_PRIMARY} locations.`
+    );
+  }
+  if (orderedIds.some((id) => !id)) {
+    throw new Error("Every Homepage Top 4 slot must have a location selected.");
+  }
+  if (new Set(orderedIds).size !== MAX_HOME_PRIMARY) {
+    throw new Error(
+      "Each Homepage Top 4 slot must use a different location."
+    );
+  }
+
+  const all = await listLocations();
+  const byId = new Map(all.map((location) => [location.id, location]));
+
+  for (const id of orderedIds) {
+    const location = byId.get(id);
+    if (!location) {
+      throw new Error(
+        "One of the selected locations no longer exists. Refresh and try again."
+      );
+    }
+    if (!location.is_active || location.publication_status !== "published") {
+      throw new Error(
+        `“${location.name}” must be active and published before it can be saved in Homepage Top 4.`
+      );
+    }
+  }
+
+  const supabase = getSupabase();
+  const previouslyPrimary = all.filter((location) => location.is_primary_home);
+
+  // Validate-only complete. Now clear, then assign. On failure, restore previous.
+  await Promise.all(
+    previouslyPrimary.map(async (location) => {
+      const { error } = await supabase
+        .from(TABLE)
+        .update({ is_primary_home: false, primary_order: null })
+        .eq("id", location.id);
+      throwOnError(error, "Clearing Homepage Top 4");
+    })
+  );
+
+  try {
+    await Promise.all(
+      orderedIds.map(async (id, index) => {
+        const { error } = await supabase
+          .from(TABLE)
+          .update({ is_primary_home: true, primary_order: -(index + 1) })
+          .eq("id", id);
+        throwOnError(error, "Saving Homepage Top 4");
+      })
+    );
+
+    await Promise.all(
+      orderedIds.map(async (id, index) => {
+        const { data, error } = await supabase
+          .from(TABLE)
+          .update({ is_primary_home: true, primary_order: index + 1 })
+          .eq("id", id)
+          .select("id")
+          .single();
+        throwOnError(error, "Saving Homepage Top 4");
+        if (!data) {
+          throw new Error(
+            "Saving Homepage Top 4 failed: a slot was not updated."
+          );
+        }
+      })
+    );
+  } catch (error) {
+    await Promise.all(
+      previouslyPrimary.map(async (location, index) => {
+        await supabase
+          .from(TABLE)
+          .update({
+            is_primary_home: true,
+            primary_order: location.primary_order ?? index + 1,
+          })
+          .eq("id", location.id);
+      })
+    );
+    throw error;
+  }
+
+  return listLocations();
 }
 
 /**

@@ -164,7 +164,6 @@ export function LocationDialog({
   }
 
   const { errors, isSubmitting } = form.formState;
-  const isPrimaryHome = form.watch("is_primary_home") ?? false;
   const isFuture = form.watch("is_future") ?? false;
   const keyEnclaves = form.watch("key_enclaves") ?? [];
 
@@ -176,8 +175,9 @@ export function LocationDialog({
             {location ? "Edit location" : "New location"}
           </DialogTitle>
           <DialogDescription>
-            Micro-market pages: the directory card, the dossier page, and the
-            strips on the home page.
+            Editorial micro-market page. General Order controls directory and
+            filter lists. Homepage Top 4 is configured in the dedicated section
+            on the Locations page.
           </DialogDescription>
         </DialogHeader>
 
@@ -383,9 +383,9 @@ export function LocationDialog({
             </Field>
 
             <Field
-              label="Sort order"
+              label="General Order"
               htmlFor="sort_order"
-              hint="Unique directory order. Changing this shifts other locations so duplicates never occur."
+              hint="Directory / filter / corridor order only. Does not control the homepage Top 4 cards."
               error={errors.sort_order?.message}
             >
               <Input
@@ -399,38 +399,6 @@ export function LocationDialog({
           </FieldGrid>
 
           <div className="space-y-3">
-            <ToggleField
-              label="One of the four on the home page"
-              description="The home page shows at most four micro-markets."
-              control={
-                <Switch
-                  checked={isPrimaryHome}
-                  onCheckedChange={(checked) =>
-                    form.setValue("is_primary_home", checked, {
-                      shouldDirty: true,
-                    })
-                  }
-                />
-              }
-            />
-            {isPrimaryHome ? (
-              <Field
-                label="Home page order"
-                htmlFor="primary_order"
-                hint="Unique among the home-page four (1–4). Changing this shifts the other selected locations."
-                error={errors.primary_order?.message}
-              >
-                <Input
-                  id="primary_order"
-                  type="number"
-                  min={1}
-                  max={4}
-                  step="1"
-                  {...form.register("primary_order")}
-                />
-              </Field>
-            ) : null}
-
             <ToggleField
               label="Future enclave"
               description="Appears in the upcoming pipeline strip."

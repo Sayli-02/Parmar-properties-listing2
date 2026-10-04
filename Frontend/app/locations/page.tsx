@@ -27,81 +27,6 @@ interface LocationDirectoryItem {
   subLocation: string;
 }
 
-const ALL_LOCATIONS_DIRECTORY: LocationDirectoryItem[] = [
-  {
-    name: 'Worli',
-    slug: 'worli',
-    image: '/properties/worli-aurum/cover.jpg',
-    tagline: 'Sea Face & Skyline Towers',
-    rate: 'From ₹18 Cr',
-    subLocation: 'Worli Sea Face & South Mumbai Corridor',
-  },
-  {
-    name: 'Bandra West',
-    slug: 'bandra-west',
-    image: '/properties/bandra-palisades/cover.jpg',
-    tagline: 'Pali Hill & Coastal Enclaves',
-    rate: 'From ₹15 Cr',
-    subLocation: 'Pali Hill & Coastal Promenade',
-  },
-  {
-    name: 'Juhu',
-    slug: 'juhu',
-    image: '/properties/juhu-solitaire/cover.jpg',
-    tagline: 'Beachfront Estates & Penthouses',
-    rate: 'From ₹20 Cr',
-    subLocation: 'Beachfront & JVPD Scheme',
-  },
-  {
-    name: 'Malabar Hill',
-    slug: 'malabar-hill',
-    image: '/hero/hero-1-crisp.jpg',
-    tagline: 'Queens Necklace Panoramas',
-    rate: 'From ₹35 Cr',
-    subLocation: 'Walkeshwar & Ridge Road',
-  },
-  {
-    name: 'Prabhadevi',
-    slug: 'prabhadevi',
-    image: '/properties/prabhadevi-verve/cover.jpg',
-    tagline: 'Coastal Grandeur & Sea Link Access',
-    rate: 'From ₹18 Cr',
-    subLocation: 'Siddhivinayak Coastal Belt',
-  },
-  {
-    name: 'Lower Parel',
-    slug: 'lower-parel',
-    image: '/properties/lower-parel-pavilion/cover.jpg',
-    tagline: 'Midtown Sky Suites & Commercial Hub',
-    rate: 'From ₹12 Cr',
-    subLocation: 'Senapati Bapat Marg & Midtown',
-  },
-  {
-    name: 'Powai',
-    slug: 'powai',
-    image: '/properties/powai-lake/cover.jpg',
-    tagline: 'Lakeside Hills & Modern Architecture',
-    rate: 'From ₹8 Cr',
-    subLocation: 'Hiranandani Gardens & Lakefront',
-  },
-  {
-    name: 'Sewri',
-    slug: 'sewri',
-    image: '/hero/hero-3-crisp.jpg',
-    tagline: 'Eastern Waterfront & Atal Setu (MTHL)',
-    rate: 'From ₹10 Cr',
-    subLocation: 'Eastern Harbor Coastal Belt',
-  },
-  {
-    name: 'Cuffe Parade',
-    slug: 'cuffe-parade',
-    image: '/hero/hero-2-crisp.jpg',
-    tagline: 'Legacy Southern Promontory',
-    rate: 'From ₹22 Cr',
-    subLocation: 'Colaba & Southern Skyline',
-  },
-];
-
 function LocationsContent() {
   const searchParams = useSearchParams();
   const initialLoc = searchParams ? searchParams.get('location') : null;
@@ -109,11 +34,10 @@ function LocationsContent() {
   const [selectedLoc, setSelectedLoc] = useState<string>(initialLoc || 'All');
   const [properties, setProperties] = useState<Property[]>([]);
   const [propertiesLoading, setPropertiesLoading] = useState(true);
-  const [locationsDirectory, setLocationsDirectory] = useState<LocationDirectoryItem[]>(ALL_LOCATIONS_DIRECTORY);
-  const [locationsList, setLocationsList] = useState<string[]>([
-    'All',
-    ...ALL_LOCATIONS_DIRECTORY.map((l) => l.name),
-  ]);
+  // Start empty — public visibility comes only from CMS active+published locations.
+  const [locationsDirectory, setLocationsDirectory] = useState<LocationDirectoryItem[]>([]);
+  const [locationsList, setLocationsList] = useState<string[]>(['All']);
+  const [locationsLoading, setLocationsLoading] = useState(true);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -124,10 +48,10 @@ function LocationsContent() {
       .finally(() => {
         if (isMounted) setPropertiesLoading(false);
       });
-    Promise.all([fetchLocations(), fetchLocationFilterNames()]).then(([data, filterNames]) => {
-      if (!isMounted) return;
-      if (data && data.length > 0) {
-        const mapped = data.map((l) => ({
+    Promise.all([fetchLocations(), fetchLocationFilterNames()])
+      .then(([data, filterNames]) => {
+        if (!isMounted) return;
+        const mapped = (data ?? []).map((l) => ({
           name: l.name,
           slug: l.slug,
           image: l.coverImage || '/properties/worli-aurum/cover.jpg',
@@ -136,11 +60,11 @@ function LocationsContent() {
           subLocation: l.keyEnclaves?.length > 0 ? l.keyEnclaves.join(' & ') : l.lifestyle,
         }));
         setLocationsDirectory(mapped);
-      }
-      if (filterNames && filterNames.length > 1) {
-        setLocationsList(filterNames);
-      }
-    });
+        setLocationsList(filterNames?.length ? filterNames : ['All']);
+      })
+      .finally(() => {
+        if (isMounted) setLocationsLoading(false);
+      });
     return () => {
       isMounted = false;
     };
@@ -206,7 +130,7 @@ function LocationsContent() {
         </div>
       </div>
 
-      {/* PRIME ENCLAVES CARDS DIRECTORY */}
+      {/* PRIME ENCLAVES CARDS DIRECTORY — CMS active+published locations only */}
       {selectedLoc === 'All' && (
         <section className="mb-20">
           <div className="mb-6 flex items-center justify-between pb-3 border-b border-[#CFD1CA]">
@@ -218,55 +142,67 @@ function LocationsContent() {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {locationsDirectory.map((loc, idx) => (
-              <ScrollReveal key={loc.slug} animation="fade-up" delay={(idx % 4) * 80}>
-                <Link
-                  href={`/locations/${loc.slug}`}
-                  className="group bg-[#F7F7F4] border border-[#CFD1CA] hover:border-[#15181A] transition-all duration-300 overflow-hidden shadow-xs hover:shadow-md flex flex-col justify-between h-full cursor-pointer"
-                >
-                  <div>
-                    {/* Location Image */}
-                    <div className="relative h-48 w-full overflow-hidden bg-[#15181A]">
-                      <Image
-                        src={loc.image}
-                        alt={loc.name}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                      <div className="absolute bottom-3 left-3 right-3 text-white">
-                        <span className="text-[10px] uppercase tracking-wider text-white/70 block font-sans font-semibold">
-                          {loc.tagline}
+          {locationsLoading ? (
+            <div className="text-center py-16 bg-[#F7F7F4] border border-[#CFD1CA] p-8">
+              <Building2 className="w-12 h-12 text-[#5B605F] mx-auto mb-4 opacity-40 animate-pulse" />
+              <p className="text-sm text-[#5B605F]">Loading enclaves…</p>
+            </div>
+          ) : locationsDirectory.length === 0 ? (
+            <div className="text-center py-16 bg-[#F7F7F4] border border-[#CFD1CA] p-8">
+              <MapPin className="w-12 h-12 text-[#5B605F] mx-auto mb-4 opacity-40" />
+              <p className="text-sm text-[#5B605F]">No active enclaves are published right now.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {locationsDirectory.map((loc, idx) => (
+                <ScrollReveal key={loc.slug} animation="fade-up" delay={(idx % 4) * 80}>
+                  <Link
+                    href={`/locations/${loc.slug}`}
+                    className="group bg-[#F7F7F4] border border-[#CFD1CA] hover:border-[#15181A] transition-all duration-300 overflow-hidden shadow-xs hover:shadow-md flex flex-col justify-between h-full cursor-pointer"
+                  >
+                    <div>
+                      {/* Location Image */}
+                      <div className="relative h-48 w-full overflow-hidden bg-[#15181A]">
+                        <Image
+                          src={loc.image}
+                          alt={loc.name}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                        <div className="absolute bottom-3 left-3 right-3 text-white">
+                          <span className="text-[10px] uppercase tracking-wider text-white/70 block font-sans font-semibold">
+                            {loc.tagline}
+                          </span>
+                          <h3 className="font-sans text-xl font-extrabold tracking-tight text-white drop-shadow">
+                            {loc.name}
+                          </h3>
+                        </div>
+                      </div>
+
+                      {/* Metadata */}
+                      <div className="p-4 flex items-center justify-between text-xs text-[#5B605F] border-b border-[#CFD1CA]/60">
+                        <span className="flex items-center gap-1 font-medium">
+                          <MapPin className="w-3.5 h-3.5 text-[#C5282F]" />
+                          <span>Mumbai</span>
                         </span>
-                        <h3 className="font-sans text-xl font-extrabold tracking-tight text-white drop-shadow">
-                          {loc.name}
-                        </h3>
+                        <span className="font-semibold text-[#15181A]">{loc.rate}</span>
                       </div>
                     </div>
 
-                    {/* Metadata */}
-                    <div className="p-4 flex items-center justify-between text-xs text-[#5B605F] border-b border-[#CFD1CA]/60">
-                      <span className="flex items-center gap-1 font-medium">
-                        <MapPin className="w-3.5 h-3.5 text-[#C5282F]" />
-                        <span>Mumbai</span>
+                    {/* Explore Enclave Action */}
+                    <div className="p-4 pt-3">
+                      <span className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 bg-[#C5282F] group-hover:bg-[#A31D23] text-white text-[11px] uppercase tracking-[0.15em] font-semibold transition-all duration-200 shadow-xs">
+                        <span>VIEW {loc.name.toUpperCase()}</span>
+                        <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                       </span>
-                      <span className="font-semibold text-[#15181A]">{loc.rate}</span>
                     </div>
-                  </div>
-
-                  {/* Explore Enclave Action */}
-                  <div className="p-4 pt-3">
-                    <span className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 bg-[#C5282F] group-hover:bg-[#A31D23] text-white text-[11px] uppercase tracking-[0.15em] font-semibold transition-all duration-200 shadow-xs">
-                      <span>VIEW {loc.name.toUpperCase()}</span>
-                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                    </span>
-                  </div>
-                </Link>
-              </ScrollReveal>
-            ))}
-          </div>
+                  </Link>
+                </ScrollReveal>
+              ))}
+            </div>
+          )}
         </section>
       )}
 

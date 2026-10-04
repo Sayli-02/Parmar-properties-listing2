@@ -17,7 +17,10 @@ export interface LocationInfo {
   futureOrder?: number | null;
 }
 
-/** Offline/dev fallback only — never overrides a successful CMS response. */
+/**
+ * Offline/dev fallback only — used when Supabase is not configured.
+ * Never used to resurrect a location that the CMS marked inactive.
+ */
 export const FALLBACK_LOCATIONS: Record<string, LocationInfo> = {
   worli: {
     name: 'Worli',
@@ -58,6 +61,10 @@ function isPublishedActive(row: Record<string, any>): boolean {
   return true;
 }
 
+/**
+ * Canonical public location source: `locations` where is_active + published.
+ * Empty CMS result means "no public locations" — never invent rows from fallbacks.
+ */
 export async function fetchLocations(): Promise<LocationInfo[]> {
   const supabase = getSupabase();
   if (!supabase) {
@@ -71,14 +78,15 @@ export async function fetchLocations(): Promise<LocationInfo[]> {
       .eq('is_active', true)
       .order('sort_order', { ascending: true });
 
-    if (error || !data) {
-      return Object.values(FALLBACK_LOCATIONS);
+    if (error) {
+      console.warn('Failed to fetch locations from Supabase:', error.message);
+      return [];
     }
 
-    return data.filter(isPublishedActive).map(mapDbLocationToFrontend);
+    return (data ?? []).filter(isPublishedActive).map(mapDbLocationToFrontend);
   } catch (err) {
-    console.warn('Failed to fetch locations from Supabase, using fallback:', err);
-    return Object.values(FALLBACK_LOCATIONS);
+    console.warn('Failed to fetch locations from Supabase:', err);
+    return [];
   }
 }
 
@@ -90,8 +98,9 @@ export async function fetchLocationFilterNames(): Promise<string[]> {
 
 /**
  * Homepage "EXPLORE PROPERTIES" cards.
- * Only locations with is_primary_home, sorted by primary_order (home page order).
- * Does NOT invent replacements when fewer than 4 are selected.
+ * Uses Top 4 on Homepage (`is_primary_home`) + Top 4 Order (`primary_order`).
+ * Independent of general Location Order (`sort_order`).
+ * Never invents replacements when fewer than 4 are selected.
  */
 export async function fetchPrimaryHomeLocations(): Promise<LocationInfo[]> {
   const locations = await fetchLocations();
@@ -121,6 +130,10 @@ export async function fetchCorridorSwitcherLocations(
   return locations.filter((l) => l.slug.toLowerCase() !== current);
 }
 
+/**
+ * Returns the location when it is active+published; otherwise null.
+ * Does NOT fall back to hardcoded content for inactive/unpublished slugs.
+ */
 export async function fetchLocationBySlug(slug: string): Promise<LocationInfo | null> {
   const supabase = getSupabase();
   if (!supabase) {
@@ -132,16 +145,15 @@ export async function fetchLocationBySlug(slug: string): Promise<LocationInfo | 
       .from('locations')
       .select('*')
       .eq('slug', slug)
-      .eq('is_active', true)
       .maybeSingle();
 
     if (error || !data || !isPublishedActive(data)) {
-      return FALLBACK_LOCATIONS[slug] || null;
+      return null;
     }
 
     return mapDbLocationToFrontend(data);
   } catch (err) {
     console.warn(`Failed to fetch location ${slug} from Supabase:`, err);
-    return FALLBACK_LOCATIONS[slug] || null;
+    return null;
   }
 }

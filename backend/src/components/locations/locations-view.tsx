@@ -30,19 +30,21 @@ import { ConfirmDialog, useConfirm } from "@/components/shared/confirm-dialog";
 import { OrderControls, moveItem } from "@/components/shared/order-controls";
 import { LocationDialog } from "@/components/locations/location-dialog";
 import { LookupLocationsView } from "@/components/locations/lookup-locations-view";
+import { HomepageTop4Section } from "@/components/locations/homepage-top4-section";
 
 /**
  * Canonical admin location management (Website Content → Locations).
  *
- * - Editorial micro-market pages → `locations` table (section above).
- * - Property filter / catalogue entries → `lookup_locations` (section below).
- * Both are managed from this single screen; tables stay separate.
+ * - Editorial micro-market pages → `locations` table.
+ * - Homepage Top 4 → `is_primary_home` / `primary_order` (dedicated section).
+ * - Property filter / catalogue entries → `lookup_locations`.
  */
 export function LocationsView() {
   const [reordering, setReordering] = React.useState(false);
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<Location | null>(null);
   const [linkedCount, setLinkedCount] = React.useState<number | null>(null);
+  const [catalogueSyncToken, setCatalogueSyncToken] = React.useState(0);
   const confirm = useConfirm<Location>();
   const {
     data: locations,
@@ -97,6 +99,8 @@ export function LocationsView() {
       setLocations((current) =>
         current.map((item) => (item.id === saved.id ? saved : item))
       );
+      // Catalogue Active is synced in the API — refresh that table too.
+      setCatalogueSyncToken((token) => token + 1);
     } catch (caught) {
       setLocations(previous);
       toast.error(getErrorMessage(caught));
@@ -108,7 +112,7 @@ export function LocationsView() {
     <div className="space-y-6">
       <PageHeader
         title="Locations"
-        description="Editorial micro-market pages for the website, plus the property filter catalogue used on Buy and related listings."
+        description="Editorial micro-market pages and the property filter catalogue. Card arrows change General Order. Homepage Top 4 is configured in its own section at the bottom."
         actions={
           <Button
             onClick={() => {
@@ -202,8 +206,10 @@ export function LocationsView() {
                   <PublicationStatusBadge status={location.publication_status} />
                   {location.is_primary_home ? (
                     <Badge variant="secondary">
-                      Home page
-                      {location.primary_order ? ` · ${location.primary_order}` : ""}
+                      Top 4
+                      {location.primary_order
+                        ? ` · order ${location.primary_order}`
+                        : ""}
                     </Badge>
                   ) : null}
                   {location.is_future ? (
@@ -291,7 +297,14 @@ export function LocationsView() {
       />
 
       <div className="border-t border-border pt-8">
-        <LookupLocationsView />
+        <LookupLocationsView
+          syncToken={catalogueSyncToken}
+          onVisibilitySynced={reload}
+        />
+      </div>
+
+      <div className="border-t border-border pt-8">
+        <HomepageTop4Section locations={locations} onSaved={reload} />
       </div>
     </div>
   );

@@ -123,19 +123,20 @@ export async function fetchHeroContent(): Promise<HeroCmsContent> {
         ? slidesRes.data.map(mapHeroSlide)
         : HERO_SLIDES;
 
-    const locationOptions =
-      !locationsRes.error && locationsRes.data && locationsRes.data.length > 0
-        ? [
-            { label: 'All Prime Locations', val: '' },
-            ...locationsRes.data
-              .filter((l) => !l.publication_status || l.publication_status === 'published')
-              .map((l) => ({
-                label: l.name as string,
-                val: l.name as string,
-                slug: l.slug as string,
-              })),
-          ]
-        : fallback.locationOptions;
+    // Successful CMS read wins even when the active set is empty — never revive
+    // hardcoded location names that Admin marked inactive.
+    const locationOptions = !locationsRes.error
+      ? [
+          { label: 'All Prime Locations', val: '' },
+          ...(locationsRes.data ?? [])
+            .filter((l) => !l.publication_status || l.publication_status === 'published')
+            .map((l) => ({
+              label: l.name as string,
+              val: l.name as string,
+              slug: l.slug as string,
+            })),
+        ]
+      : fallback.locationOptions;
 
     return {
       headline: home.heroHeadline || slides[0]?.tagline || fallback.headline,

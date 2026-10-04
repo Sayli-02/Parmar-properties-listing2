@@ -136,6 +136,10 @@ export async function createLookupItem(
   throwOnError(error, `Creating ${table.replace(/_/g, " ")}`);
   const created = data as unknown as LookupItem;
 
+  if (table === "lookup_locations") {
+    await syncEditorialActiveFromLookup(created, input.is_active ?? true);
+  }
+
   await resequenceDisplayOrder(
     table,
     created.id,
@@ -170,6 +174,13 @@ export async function updateLookupItem(
     );
   }
 
+  if (table === "lookup_locations") {
+    await syncEditorialActiveFromLookup(
+      data as unknown as LookupItem,
+      input.is_active ?? true
+    );
+  }
+
   await resequenceDisplayOrder(
     table,
     id,
@@ -178,6 +189,26 @@ export async function updateLookupItem(
 
   const refreshed = await listLookup(table, false);
   return refreshed.find((item) => item.id === id) ?? (data as unknown as LookupItem);
+}
+
+/**
+ * Keep editorial `locations` visibility in lockstep with the catalogue Active
+ * toggle so Admin Active OFF cannot leave a published public location behind.
+ */
+async function syncEditorialActiveFromLookup(
+  lookup: LookupItem,
+  isActive: boolean
+): Promise<void> {
+  const supabase = getSupabase();
+  const { error } = await supabase
+    .from("locations")
+    .update({
+      is_active: isActive,
+      publication_status: isActive ? "published" : "draft",
+    })
+    .or(`lookup_location_id.eq.${lookup.id},slug.eq.${lookup.slug}`);
+
+  throwOnError(error, "Syncing editorial location visibility");
 }
 
 export async function setLookupItemActive(
@@ -199,7 +230,12 @@ export async function setLookupItemActive(
       `Updating ${table.replace(/_/g, " ")} failed: no row was updated. Check admin permissions.`
     );
   }
-  return data as unknown as LookupItem;
+
+  const saved = data as unknown as LookupItem;
+  if (table === "lookup_locations") {
+    await syncEditorialActiveFromLookup(saved, isActive);
+  }
+  return saved;
 }
 
 export async function deleteLookupItem(

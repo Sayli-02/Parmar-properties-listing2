@@ -47,12 +47,22 @@ async function countPropertiesForLookupLocation(
   return count ?? 0;
 }
 
+interface LookupLocationsViewProps {
+  /** Bumps when editorial Live/Hidden changes so catalogue Active refreshes. */
+  syncToken?: number;
+  /** Fired after catalogue Active changes (editorial rows were synced too). */
+  onVisibilitySynced?: () => void;
+}
+
 /**
  * Property filter catalogue (`lookup_locations`).
  * Embedded under Website Content → Locations alongside editorial `locations` pages.
  * Add Property continues to read the same catalogue via listLookupLocations().
  */
-export function LookupLocationsView() {
+export function LookupLocationsView({
+  syncToken = 0,
+  onVisibilitySynced,
+}: LookupLocationsViewProps) {
   const [search, setSearch] = React.useState("");
   const [dialogOpen, setDialogOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<LookupItem | null>(null);
@@ -71,6 +81,10 @@ export function LookupLocationsView() {
     error,
     reload,
   } = useResource<LookupItem[]>(fetchCatalogue, []);
+
+  React.useEffect(() => {
+    if (syncToken > 0) reload();
+  }, [syncToken, reload]);
 
   const filtered = React.useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -109,6 +123,7 @@ export function LookupLocationsView() {
       setLocations((current) =>
         current.map((item) => (item.id === saved.id ? saved : item))
       );
+      onVisibilitySynced?.();
     } catch (caught) {
       setLocations(previous);
       toast.error(getErrorMessage(caught));
