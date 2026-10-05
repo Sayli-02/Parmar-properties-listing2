@@ -47,7 +47,7 @@ function PropertiesContent() {
   const [selectedPossession, setSelectedPossession] = useState<string>(
     searchParams?.get('status') || searchParams?.get('possession') || 'All'
   );
-  const [minPrice, setMinPrice] = useState<number>(Number(searchParams?.get('minPrice')) || 10);
+  const [minPrice, setMinPrice] = useState<number>(Number(searchParams?.get('minPrice')) || 1);
   const [maxPrice, setMaxPrice] = useState<number>(Number(searchParams?.get('maxPrice')) || 60);
   const [selectedAmenity, setSelectedAmenity] = useState<string>(searchParams?.get('amenity') || 'All');
   const [sortBy, setSortBy] = useState<string>(searchParams?.get('sort') || 'featured');
@@ -91,7 +91,7 @@ function PropertiesContent() {
     if (selectedLocality !== 'All') params.set('location', selectedLocality);
     if (selectedBhk !== 'All') params.set('bhk', selectedBhk);
     if (selectedPossession !== 'All') params.set('status', selectedPossession);
-    if (minPrice > 10) params.set('minPrice', minPrice.toString());
+    if (minPrice > 1) params.set('minPrice', minPrice.toString());
     if (maxPrice < 60) params.set('maxPrice', maxPrice.toString());
     if (selectedAmenity !== 'All') params.set('amenity', selectedAmenity);
     if (sortBy !== 'featured') params.set('sort', sortBy);
@@ -105,7 +105,7 @@ function PropertiesContent() {
     setSelectedLocality('All');
     setSelectedBhk('All');
     setSelectedPossession('All');
-    setMinPrice(10);
+    setMinPrice(1);
     setMaxPrice(60);
     setSelectedAmenity('All');
     setSortBy('featured');
@@ -456,20 +456,20 @@ function PropertiesContent() {
                 <div
                   className="absolute h-1.5 bg-[#C5282F] rounded-full pointer-events-none shadow-xs"
                   style={{
-                    left: `${((minPrice - 10) / (60 - 10)) * 100}%`,
-                    width: `${((maxPrice - minPrice) / (60 - 10)) * 100}%`,
+                    left: `${((minPrice - 1) / (60 - 1)) * 100}%`,
+                    width: `${((maxPrice - minPrice) / (60 - 1)) * 100}%`,
                   }}
                 />
 
                 {/* Min Value Thumb Slider */}
                 <input
                   type="range"
-                  min="10"
+                  min="1"
                   max="60"
-                  step="2"
+                  step="1"
                   value={minPrice}
                   onChange={(e) => {
-                    const val = Math.min(Number(e.target.value), maxPrice - 2);
+                    const val = Math.min(Number(e.target.value), maxPrice - 1);
                     setMinPrice(val);
                   }}
                   aria-label="Minimum Budget"
@@ -479,12 +479,12 @@ function PropertiesContent() {
                 {/* Max Value Thumb Slider */}
                 <input
                   type="range"
-                  min="10"
+                  min="1"
                   max="60"
-                  step="2"
+                  step="1"
                   value={maxPrice}
                   onChange={(e) => {
-                    const val = Math.max(Number(e.target.value), minPrice + 2);
+                    const val = Math.max(Number(e.target.value), minPrice + 1);
                     setMaxPrice(val);
                   }}
                   aria-label="Maximum Budget"
@@ -615,20 +615,20 @@ function PropertiesContent() {
                   <div
                     className="absolute h-1.5 bg-[#C5282F] rounded-full pointer-events-none shadow-xs"
                     style={{
-                      left: `${((minPrice - 10) / (60 - 10)) * 100}%`,
-                      width: `${((maxPrice - minPrice) / (60 - 10)) * 100}%`,
+                      left: `${((minPrice - 1) / (60 - 1)) * 100}%`,
+                      width: `${((maxPrice - minPrice) / (60 - 1)) * 100}%`,
                     }}
                   />
 
                   {/* Min Value Thumb Slider */}
                   <input
                     type="range"
-                    min="10"
+                    min="1"
                     max="60"
-                    step="2"
+                    step="1"
                     value={minPrice}
                     onChange={(e) => {
-                      const val = Math.min(Number(e.target.value), maxPrice - 2);
+                      const val = Math.min(Number(e.target.value), maxPrice - 1);
                       setMinPrice(val);
                     }}
                     aria-label="Minimum Budget"
@@ -638,12 +638,12 @@ function PropertiesContent() {
                   {/* Max Value Thumb Slider */}
                   <input
                     type="range"
-                    min="10"
+                    min="1"
                     max="60"
-                    step="2"
+                    step="1"
                     value={maxPrice}
                     onChange={(e) => {
-                      const val = Math.max(Number(e.target.value), minPrice + 2);
+                      const val = Math.max(Number(e.target.value), minPrice + 1);
                       setMaxPrice(val);
                     }}
                     aria-label="Maximum Budget"
