@@ -276,12 +276,12 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({
       </div>
 
       {/* Title & Price Header */}
-      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-8 pb-6 border-b border-[#CFD1CA]">
+      <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 sm:gap-6 mb-8 pb-6 border-b border-[#CFD1CA]">
         <div>
           <span className="text-xs uppercase tracking-[0.2em] font-semibold text-[#C5282F] mb-1.5 block">
             {property.propertyType} &bull; {property.location}
           </span>
-          <h1 className="font-sans text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#15181A]">
+          <h1 className="font-sans text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#15181A]">
             {property.title}
           </h1>
           <div className="flex items-center gap-2 text-sm text-[#5B605F] mt-2.5">
@@ -294,20 +294,20 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({
           <span className="text-xs uppercase tracking-wider text-[#5B605F] block font-medium mb-0.5">
             Starting Price
           </span>
-          <span className="font-sans text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-[#C5282F]">
+          <span className="font-sans text-xl sm:text-3xl md:text-4xl font-bold tracking-tight text-[#C5282F]">
             {property.priceFormatted} onwards
           </span>
         </div>
       </div>
 
       {/* Gallery Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 mb-8 sm:mb-12">
         <div
           onClick={() => {
             setLightboxIndex(0);
             setLightboxOpen(true);
           }}
-          className="md:col-span-2 relative h-[380px] sm:h-[480px] bg-[#CFD1CA] cursor-pointer group overflow-hidden border border-[#CFD1CA]"
+          className="md:col-span-2 relative h-[250px] sm:h-[380px] md:h-[480px] bg-[#CFD1CA] cursor-pointer group overflow-hidden border border-[#CFD1CA]"
         >
           <Image
             src={images[0]}
@@ -320,7 +320,7 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({
           </span>
         </div>
 
-        <div className="grid grid-rows-2 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-1 md:grid-rows-2 gap-3 sm:gap-4">
           {images.slice(1, 3).map((img, idx) => (
             <div
               key={idx}
@@ -328,7 +328,7 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({
                 setLightboxIndex(idx + 1);
                 setLightboxOpen(true);
               }}
-              className="relative h-[180px] sm:h-[232px] bg-[#CFD1CA] cursor-pointer group overflow-hidden border border-[#CFD1CA]"
+              className="relative h-[120px] sm:h-[180px] md:h-[232px] bg-[#CFD1CA] cursor-pointer group overflow-hidden border border-[#CFD1CA]"
             >
               <Image
                 src={img}
@@ -362,8 +362,11 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs sm:text-sm border-collapse min-w-[680px]">
+          <div className="overflow-x-auto -mx-2 sm:mx-0 px-2 sm:px-0">
+            <div className="sm:hidden text-[11px] text-[#5B605F] mb-2 font-mono flex items-center gap-1">
+              <span>Scroll horizontally to view unit specifications &rarr;</span>
+            </div>
+            <table className="w-full text-left text-xs sm:text-sm border-collapse min-w-[620px] sm:min-w-[680px]">
               <thead>
                 <tr className="border-b border-[#CFD1CA] bg-[#EDEEE9] text-[11px] uppercase tracking-wider text-[#5B605F] font-semibold">
                   <th className="py-3.5 px-5 text-left w-[30%]">Typology / Variant</th>
@@ -963,7 +966,7 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({
           onClick={() => setLeadModalOpen(false)}
         >
           <div
-            className="relative w-full max-w-md bg-[#F7F7F4] border border-[#CFD1CA] shadow-2xl p-6 sm:p-8 animate-fadeIn"
+            className="relative w-full max-w-md bg-[#F7F7F4] border border-[#CFD1CA] shadow-2xl p-5 sm:p-8 animate-fadeIn max-h-[92vh] overflow-y-auto"
             role="dialog"
             aria-modal="true"
             onClick={(e) => e.stopPropagation()}
@@ -1160,7 +1163,7 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({
           >
             <X className="w-8 h-8" />
           </button>
-          <div className="relative w-full max-w-5xl h-[70vh]">
+          <div className="relative w-full max-w-5xl h-[55vh] sm:h-[70vh]">
             <Image
               src={images[lightboxIndex]}
               alt={`${property.title} full view`}

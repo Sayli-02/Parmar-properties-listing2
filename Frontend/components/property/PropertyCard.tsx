@@ -67,16 +67,16 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
           </p>
 
           {/* Quick Specifications */}
-          <div className="grid grid-cols-3 gap-2 py-3 border-y border-[#CFD1CA] text-xs text-[#15181A]">
-            <div className="flex items-center gap-1.5">
-              <BedDouble className="w-3.5 h-3.5 text-[#5B605F]" />
-              <span>{property.bhk}</span>
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2 py-3 border-y border-[#CFD1CA] text-[11px] sm:text-xs text-[#15181A]">
+            <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+              <BedDouble className="w-3.5 h-3.5 text-[#5B605F] shrink-0" />
+              <span className="truncate">{property.bhk}</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Maximize2 className="w-3.5 h-3.5 text-[#5B605F]" />
-              <span>{property.carpetArea} sq.ft</span>
+            <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
+              <Maximize2 className="w-3.5 h-3.5 text-[#5B605F] shrink-0" />
+              <span className="truncate">{property.carpetArea} sq.ft</span>
             </div>
-            <div className="text-right text-[#5B605F] truncate text-[11px]">
+            <div className="text-right text-[#5B605F] truncate text-[10px] sm:text-[11px] min-w-0">
               {property.possession}
             </div>
           </div>

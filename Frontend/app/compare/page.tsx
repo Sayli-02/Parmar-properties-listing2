@@ -85,8 +85,11 @@ export default function ComparePage() {
         </div>
       ) : (
         <div className="space-y-8">
-          <div className="overflow-x-auto bg-[#F7F7F4] border border-[#CFD1CA] shadow-xs">
-            <table className="w-full text-left border-collapse min-w-[750px]">
+          <div className="overflow-x-auto bg-[#F7F7F4] border border-[#CFD1CA] shadow-xs -mx-2 sm:mx-0">
+            <div className="sm:hidden px-3 pt-3 text-[11px] text-[#5B605F] font-mono">
+              Scroll horizontally to compare residences &rarr;
+            </div>
+            <table className="w-full text-left border-collapse min-w-[700px]">
               <thead>
                 <tr className="border-b border-[#CFD1CA] bg-[#EDEEE9]">
                   <th className="p-4 text-xs uppercase tracking-wider text-[#5B605F] w-1/5">Specification</th>

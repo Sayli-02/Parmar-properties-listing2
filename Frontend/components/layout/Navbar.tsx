@@ -124,7 +124,7 @@ function NavbarContent() {
               alt="Parmar Properties - Building Relationships"
               width={240}
               height={85}
-              className="h-12 sm:h-14 md:h-15 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+              className="h-10 sm:h-12 md:h-14 lg:h-15 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
               priority
             />
           </Link>
@@ -154,38 +154,32 @@ function NavbarContent() {
             })}
           </nav>
 
-          {/* Right Action: TALK TO OUR ADVISORY Button */}
-          <div className="hidden sm:flex items-center gap-3">
-            <button
-              onClick={() => {
-                setAdvisorySubmitted(false);
-                setAdvisoryModalOpen(true);
-              }}
-              className="px-4 py-2 bg-[#C5282F] hover:bg-[#A31D23] text-white text-[11px] uppercase tracking-[0.15em] font-semibold transition-all duration-200 shadow-xs cursor-pointer active:scale-98 flex items-center gap-1.5 whitespace-nowrap"
-            >
-              <PhoneCall className="w-3 h-3" />
-              <span>TALK TO OUR ADVISORY</span>
-            </button>
-          </div>
-
           {/* Mobile & Tablet Navigation Toggle */}
-          <div className="flex xl:hidden items-center gap-2">
-            <button
-              onClick={() => {
-                setAdvisorySubmitted(false);
-                setAdvisoryModalOpen(true);
-              }}
-              className="sm:hidden px-2.5 py-1.5 bg-[#C5282F] text-white text-[10px] uppercase tracking-wider font-semibold"
-            >
-              Advisory
-            </button>
+          <div className="flex xl:hidden items-center shrink-0">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2.5 focus:outline-none text-[#15181A] cursor-pointer"
+              className="p-2 sm:p-2.5 focus:outline-none text-[#15181A] hover:text-[#C5282F] transition-colors cursor-pointer flex items-center justify-center"
               aria-label="Toggle navigation menu"
               aria-expanded={mobileMenuOpen}
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? (
+                <X className="w-5 h-5" strokeWidth={1.5} />
+              ) : (
+                <div className="w-5 flex flex-col justify-center gap-[4.5px]" aria-hidden="true">
+                  <span
+                    className="w-full bg-[#15181A] block shrink-0"
+                    style={{ height: '1.5px', minHeight: '1.5px', maxHeight: '1.5px' }}
+                  />
+                  <span
+                    className="w-full bg-[#15181A] block shrink-0"
+                    style={{ height: '1.5px', minHeight: '1.5px', maxHeight: '1.5px' }}
+                  />
+                  <span
+                    className="w-full bg-[#15181A] block shrink-0"
+                    style={{ height: '1.5px', minHeight: '1.5px', maxHeight: '1.5px' }}
+                  />
+                </div>
+              )}
             </button>
           </div>
         </div>
@@ -198,16 +192,13 @@ function NavbarContent() {
           onClick={() => setMobileMenuOpen(false)}
         >
           <div
-            className="fixed top-[58px] sm:top-[64px] right-0 bottom-0 w-4/5 max-w-sm bg-[#EDEEE9] border-l border-[#CFD1CA] p-6 flex flex-col justify-between shadow-2xl overflow-y-auto"
+            className="fixed top-[52px] sm:top-[64px] right-0 bottom-0 w-[85%] max-w-xs sm:max-w-sm bg-[#EDEEE9] border-l border-[#CFD1CA] p-5 sm:p-6 flex flex-col justify-between shadow-2xl overflow-y-auto"
             role="dialog"
             aria-modal="true"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="space-y-6 pt-2">
-              <div className="text-xs uppercase tracking-widest text-[#5B605F] font-semibold border-b border-[#CFD1CA] pb-2">
-                Navigation
-              </div>
-              <nav className="flex flex-col space-y-2">
+            <div className="pt-1">
+              <nav className="flex flex-col space-y-1.5">
                 {navLinks.map((link) => {
                   const isActive = isLinkActive(link.id);
                   return (
@@ -227,27 +218,21 @@ function NavbarContent() {
                   );
                 })}
               </nav>
-
-              <div className="pt-2">
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    setAdvisorySubmitted(false);
-                    setAdvisoryModalOpen(true);
-                  }}
-                  className="w-full py-3 bg-[#C5282F] text-white text-xs uppercase tracking-wider font-semibold flex items-center justify-center gap-2 shadow-xs cursor-pointer"
-                >
-                  <PhoneCall className="w-3.5 h-3.5" />
-                  <span>TALK TO OUR ADVISORY</span>
-                </button>
-              </div>
             </div>
 
-            <div className="pt-6 border-t border-[#CFD1CA] space-y-2">
-              <div className="text-xs text-[#5B605F]">
-                Parmar Properties &bull; Mumbai Prime Real Estate
-              </div>
-              <div className="text-[11px] text-[#8E9291]">
+            <div className="pt-5 border-t border-[#CFD1CA] space-y-3">
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  setAdvisorySubmitted(false);
+                  setAdvisoryModalOpen(true);
+                }}
+                className="w-full py-3 bg-[#C5282F] hover:bg-[#A31D23] text-white text-xs uppercase tracking-[0.15em] font-semibold flex items-center justify-center gap-2 shadow-xs cursor-pointer active:scale-98 transition-colors"
+              >
+                <PhoneCall className="w-3.5 h-3.5" />
+                <span>TALK TO OUR ADVISORY</span>
+              </button>
+              <div className="text-[11px] text-[#8E9291] text-center">
                 MahaRERA: A51900018442
               </div>
             </div>
@@ -257,8 +242,8 @@ function NavbarContent() {
 
       {/* TALK TO OUR ADVISORY MODAL */}
       {advisoryModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg bg-[#F7F7F4] border border-[#CFD1CA] shadow-2xl p-6 sm:p-8 text-[#15181A]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg bg-[#F7F7F4] border border-[#CFD1CA] shadow-2xl p-5 sm:p-8 text-[#15181A] max-h-[92vh] overflow-y-auto">
             <button
               onClick={() => setAdvisoryModalOpen(false)}
               className="absolute top-4 right-4 p-2 text-[#5B605F] hover:text-[#15181A] hover:bg-black/5 rounded-full transition-colors cursor-pointer"

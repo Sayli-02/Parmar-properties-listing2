@@ -14,6 +14,8 @@ import {
   Briefcase,
   CheckCircle2,
   X,
+  ChevronDown,
+  Check,
 } from 'lucide-react';
 import { COMMERCIAL_PROPERTIES, CommercialProperty } from '@/data/commercials';
 import { ScrollReveal } from '@/components/ui/ScrollReveal';
@@ -101,7 +103,7 @@ function CommercialCard({ property }: { property: CommercialProperty }) {
       {/* Commercial Inquiry Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-          <div className="relative w-full max-w-md bg-[#F7F7F4] border border-[#CFD1CA] p-6 sm:p-8 shadow-2xl">
+          <div className="relative w-full max-w-md bg-[#F7F7F4] border border-[#CFD1CA] p-5 sm:p-8 shadow-2xl max-h-[92vh] overflow-y-auto">
             <button
               onClick={() => setModalOpen(false)}
               className="absolute top-4 right-4 p-2 text-[#5B605F] hover:text-[#15181A]"
@@ -202,6 +204,29 @@ function CommercialsContent() {
   const [maxPrice, setMaxPrice] = useState<number>(65);
   const [sortBy, setSortBy] = useState<string>('featured');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+
+  const sortOptions = [
+    { val: 'featured', label: 'Featured Curated' },
+    { val: 'price-asc', label: 'Price: Low to High' },
+    { val: 'price-desc', label: 'Price: High to Low' },
+    { val: 'area-desc', label: 'Carpet Area: Largest First' },
+  ];
+
+  const currentSortLabel = sortOptions.find((o) => o.val === sortBy)?.label || 'Featured Curated';
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.sort-dropdown-container')) {
+        setSortDropdownOpen(false);
+      }
+    };
+    if (sortDropdownOpen) {
+      document.addEventListener('click', handleOutsideClick);
+    }
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, [sortDropdownOpen]);
 
   useEffect(() => {
     fetchPublishedCommercials().then(setCommercials);
@@ -255,28 +280,67 @@ function CommercialsContent() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          {/* Quick Sort & Mobile Filter Button (Matching Buy Page Style) */}
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0 w-full sm:w-auto mt-4 sm:mt-0">
             <button
               onClick={() => setMobileFilterOpen(true)}
-              className="lg:hidden flex items-center gap-2 px-4 py-2 bg-[#F7F7F4] border border-[#CFD1CA] text-xs uppercase tracking-wider font-semibold text-[#15181A]"
+              className="lg:hidden flex-1 sm:flex-none flex items-center justify-center gap-2 px-3.5 py-2.5 bg-[#F7F7F4] border border-[#CFD1CA] text-xs uppercase tracking-wider font-semibold text-[#15181A] shadow-xs active:bg-[#EDEEE9]"
             >
               <Filter className="w-3.5 h-3.5 text-[#C5282F]" />
               <span>Filters</span>
             </button>
 
-            <div className="flex items-center gap-2 text-xs bg-[#F7F7F4] border border-[#CFD1CA] px-3 py-2">
-              <ArrowUpDown className="w-3.5 h-3.5 text-[#C5282F]" />
-              <span className="text-[#5B605F] hidden sm:inline">Sort:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="bg-transparent text-xs font-semibold text-[#15181A] focus:outline-none cursor-pointer"
+            <div className="relative sort-dropdown-container flex-1 sm:flex-none">
+              <button
+                type="button"
+                onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+                className="w-full sm:w-auto flex items-center justify-between gap-2 text-xs bg-[#F7F7F4] hover:bg-[#EDEEE9] border border-[#CFD1CA] px-3.5 py-2.5 shadow-xs transition-colors cursor-pointer"
+                aria-expanded={sortDropdownOpen}
+                aria-label="Sort commercial properties"
               >
-                <option value="featured">Featured Curated</option>
-                <option value="price-asc">Price: Low to High</option>
-                <option value="price-desc">Price: High to Low</option>
-                <option value="area-desc">Carpet Area: Largest First</option>
-              </select>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <ArrowUpDown className="w-3.5 h-3.5 text-[#C5282F]" />
+                  <span className="text-[#5B605F] hidden sm:inline">Sort:</span>
+                </div>
+                <span className="font-semibold text-[#15181A] truncate max-w-[125px] sm:max-w-none text-left">
+                  {currentSortLabel}
+                </span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-[#5B605F] transition-transform duration-200 shrink-0 ${
+                    sortDropdownOpen ? 'rotate-180 text-[#C5282F]' : ''
+                  }`}
+                />
+              </button>
+
+              {/* Luxury Custom Sort Dropdown Menu */}
+              {sortDropdownOpen && (
+                <div className="absolute right-0 top-[calc(100%+4px)] z-50 w-52 sm:w-56 bg-[#F7F7F4] border border-[#CFD1CA] shadow-2xl py-1 rounded-xs font-sans">
+                  <div className="px-3 pt-2 pb-1.5 text-[10px] uppercase tracking-[0.2em] text-[#5B605F] font-bold border-b border-[#CFD1CA]/60 flex items-center justify-between">
+                    <span>Sort Commercials</span>
+                  </div>
+                  {sortOptions.map((opt) => {
+                    const isSelected = sortBy === opt.val;
+                    return (
+                      <button
+                        key={opt.val}
+                        type="button"
+                        onClick={() => {
+                          setSortBy(opt.val);
+                          setSortDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3.5 py-2.5 text-xs transition-colors flex items-center justify-between cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#C5282F] text-white font-semibold'
+                            : 'text-[#15181A] hover:bg-[#EDEEE9]'
+                        }`}
+                      >
+                        <span>{opt.label}</span>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-white stroke-[2.5]" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -388,7 +452,7 @@ function CommercialsContent() {
         {/* Mobile Filter Drawer */}
         {mobileFilterOpen && (
           <div className="fixed inset-0 z-50 lg:hidden bg-black/60 backdrop-blur-sm flex justify-end">
-            <div className="w-full max-w-sm bg-[#EDEEE9] h-full p-6 overflow-y-auto space-y-6">
+            <div className="w-full max-w-xs sm:max-w-sm bg-[#EDEEE9] h-full p-5 sm:p-6 overflow-y-auto space-y-6">
               <div className="flex items-center justify-between pb-4 border-b border-[#CFD1CA]">
                 <span className="font-sans text-xs uppercase tracking-[0.2em] font-bold text-[#15181A]">Filter Commercials</span>
                 <button onClick={() => setMobileFilterOpen(false)} className="p-1">

@@ -370,8 +370,8 @@ export default function ArticleDetailPage() {
 
       {/* Advisory Modal */}
       {showConsultationModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
-          <div className="bg-[#15181A] text-white border border-[#CFD1CA]/40 max-w-lg w-full p-6 sm:p-8 relative shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-xs">
+          <div className="bg-[#15181A] text-white border border-[#CFD1CA]/40 max-w-lg w-full p-5 sm:p-8 relative shadow-2xl max-h-[92vh] overflow-y-auto">
             <button
               onClick={() => setShowConsultationModal(false)}
               className="absolute top-4 right-4 text-white/60 hover:text-white"

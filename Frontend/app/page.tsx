@@ -193,7 +193,7 @@ export default function HomePage() {
           </div>
 
           {/* Future Locations Bar with Individually Clickable Locations */}
-          <div className="mt-8 py-3.5 px-6 bg-[#F7F7F4] border border-[#CFD1CA] hover:border-[#15181A] transition-all flex flex-wrap items-center justify-between gap-4 text-xs shadow-2xs">
+          <div className="mt-8 py-3.5 px-4 sm:px-6 bg-[#F7F7F4] border border-[#CFD1CA] hover:border-[#15181A] transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 text-xs shadow-2xs">
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <span className="text-[10px] uppercase tracking-[0.2em] font-extrabold text-[#C5282F] shrink-0">
                 FUTURE LOCATIONS :

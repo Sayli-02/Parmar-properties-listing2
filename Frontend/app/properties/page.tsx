@@ -17,6 +17,8 @@ import {
   Calendar,
   Compass,
   ArrowRight,
+  ChevronDown,
+  Check,
 } from 'lucide-react';
 import { PropertyCard } from '@/components/property/PropertyCard';
 import { PrivateOpportunities } from '@/components/property/PrivateOpportunities';
@@ -50,6 +52,30 @@ function PropertiesContent() {
   const [selectedAmenity, setSelectedAmenity] = useState<string>(searchParams?.get('amenity') || 'All');
   const [sortBy, setSortBy] = useState<string>(searchParams?.get('sort') || 'featured');
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+
+  const sortOptions = [
+    { val: 'featured', label: 'Featured Curated' },
+    { val: 'price-asc', label: 'Price: Low to High' },
+    { val: 'price-desc', label: 'Price: High to Low' },
+    { val: 'area-desc', label: 'Carpet Area: Largest First' },
+    { val: 'newest', label: 'Recently Added' },
+  ];
+
+  const currentSortLabel = sortOptions.find((o) => o.val === sortBy)?.label || 'Featured Curated';
+
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.sort-dropdown-container')) {
+        setSortDropdownOpen(false);
+      }
+    };
+    if (sortDropdownOpen) {
+      document.addEventListener('click', handleOutsideClick);
+    }
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, [sortDropdownOpen]);
 
   // Set active tab via router
   const handleTabChange = (tab: PropertyCategory) => {
@@ -176,12 +202,12 @@ function PropertiesContent() {
   ];
 
   return (
-    <div className="pt-28 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto min-h-screen bg-[#EDEEE9] text-[#15181A]">
+    <div className="pt-28 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto min-h-screen bg-[#EDEEE9] text-[#15181A] w-full overflow-x-hidden">
       {/* Top Scroll Progress Indicator */}
       <ScrollProgressBar />
 
       {/* Breadcrumb */}
-      <div className="text-xs uppercase tracking-widest text-[#5B605F] font-semibold mb-3 flex items-center gap-1.5">
+      <div className="text-xs uppercase tracking-widest text-[#5B605F] font-semibold mb-3 flex items-center gap-1.5 flex-wrap">
         <Link href="/" className="hover:underline">Home</Link>
         <span>&bull;</span>
         <span>Mumbai Portfolio</span>
@@ -210,46 +236,85 @@ function PropertiesContent() {
           </div>
 
           {/* Quick Sort & Mobile Filter Button */}
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 shrink-0 w-full sm:w-auto mt-4 sm:mt-0">
             <button
               onClick={() => setMobileFilterOpen(true)}
-              className="lg:hidden flex items-center gap-2 px-4 py-2.5 bg-[#F7F7F4] border border-[#CFD1CA] text-xs uppercase tracking-wider font-semibold text-[#15181A]"
+              className="lg:hidden flex-1 sm:flex-none flex items-center justify-center gap-2 px-3.5 py-2.5 bg-[#F7F7F4] border border-[#CFD1CA] text-xs uppercase tracking-wider font-semibold text-[#15181A] shadow-xs active:bg-[#EDEEE9]"
             >
               <Filter className="w-3.5 h-3.5 text-[#C5282F]" />
               <span>Filters</span>
             </button>
 
-            <div className="flex items-center gap-2 text-xs bg-[#F7F7F4] border border-[#CFD1CA] px-3.5 py-2">
-              <ArrowUpDown className="w-3.5 h-3.5 text-[#C5282F]" />
-              <span className="text-[#5B605F] hidden sm:inline">Sort:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="bg-transparent text-xs font-semibold text-[#15181A] focus:outline-none cursor-pointer"
+            <div className="relative sort-dropdown-container flex-1 sm:flex-none">
+              <button
+                type="button"
+                onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+                className="w-full sm:w-auto flex items-center justify-between gap-2 text-xs bg-[#F7F7F4] hover:bg-[#EDEEE9] border border-[#CFD1CA] px-3.5 py-2.5 shadow-xs transition-colors cursor-pointer"
+                aria-expanded={sortDropdownOpen}
+                aria-label="Sort properties"
               >
-                <option value="featured">Featured Curated</option>
-                <option value="price-asc">Price: Low to High</option>
-                <option value="price-desc">Price: High to Low</option>
-                <option value="area-desc">Carpet Area: Largest First</option>
-                <option value="newest">Recently Added</option>
-              </select>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <ArrowUpDown className="w-3.5 h-3.5 text-[#C5282F]" />
+                  <span className="text-[#5B605F] hidden sm:inline">Sort:</span>
+                </div>
+                <span className="font-semibold text-[#15181A] truncate max-w-[125px] sm:max-w-none text-left">
+                  {currentSortLabel}
+                </span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-[#5B605F] transition-transform duration-200 shrink-0 ${
+                    sortDropdownOpen ? 'rotate-180 text-[#C5282F]' : ''
+                  }`}
+                />
+              </button>
+
+              {/* Luxury Custom Sort Dropdown Menu */}
+              {sortDropdownOpen && (
+                <div className="absolute right-0 top-[calc(100%+4px)] z-50 w-52 sm:w-56 bg-[#F7F7F4] border border-[#CFD1CA] shadow-2xl py-1 rounded-xs font-sans">
+                  <div className="px-3 pt-2 pb-1.5 text-[10px] uppercase tracking-[0.2em] text-[#5B605F] font-bold border-b border-[#CFD1CA]/60 flex items-center justify-between">
+                    <span>Sort Properties</span>
+                  </div>
+                  {sortOptions.map((opt) => {
+                    const isSelected = sortBy === opt.val;
+                    return (
+                      <button
+                        key={opt.val}
+                        type="button"
+                        onClick={() => {
+                          setSortBy(opt.val);
+                          setSortDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-3.5 py-2.5 text-xs transition-colors flex items-center justify-between cursor-pointer ${
+                          isSelected
+                            ? 'bg-[#C5282F] text-white font-semibold'
+                            : 'text-[#15181A] hover:bg-[#EDEEE9]'
+                        }`}
+                      >
+                        <span>{opt.label}</span>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-white stroke-[2.5]" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Prominent Architectural Segmented Tab Bar */}
-        <div className="mt-8 flex flex-wrap gap-2 sm:gap-3 bg-[#F7F7F4] p-2 border border-[#CFD1CA]">
+        {/* Prominent Architectural Segmented Tab Bar (Non-sliding on Mobile) */}
+        <div className="mt-4 sm:mt-8 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 sm:bg-[#F7F7F4] sm:p-2 sm:border sm:border-[#CFD1CA] w-full">
           {/* 1. BUY TAB */}
           <button
             onClick={() => handleTabChange('buy')}
-            className={`flex-1 min-w-[140px] py-3 px-4 text-xs uppercase tracking-[0.15em] font-semibold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+            className={`w-full sm:w-auto sm:flex-1 py-2.5 sm:py-3 px-3.5 sm:px-4 text-[11px] sm:text-xs uppercase tracking-[0.12em] sm:tracking-[0.15em] font-semibold transition-all duration-200 flex items-center justify-between sm:justify-center gap-2 cursor-pointer rounded-xs sm:rounded-none ${
               activeTab === 'buy'
-                ? 'bg-[#C5282F] text-white shadow-sm'
-                : 'text-[#5B605F] hover:text-[#15181A] hover:bg-[#EDEEE9]'
+                ? 'bg-[#C5282F] text-white shadow-xs'
+                : 'bg-white sm:bg-transparent border border-[#CFD1CA] sm:border-0 text-[#15181A] hover:bg-[#EDEEE9]'
             }`}
           >
-            <Compass className="w-3.5 h-3.5" />
-            <span>{BUY_PAGE_CONTENT.header.tabLabel}</span>
+            <div className="flex items-center gap-2">
+              <Compass className="w-3.5 h-3.5 shrink-0" />
+              <span>{BUY_PAGE_CONTENT.header.tabLabel}</span>
+            </div>
             <span
               className={`text-[10px] px-2 py-0.5 rounded-full font-mono ${
                 activeTab === 'buy' ? 'bg-white/20 text-white' : 'bg-[#CFD1CA]/60 text-[#15181A]'
@@ -262,14 +327,16 @@ function PropertiesContent() {
           {/* 2. NEW LAUNCHES TAB */}
           <button
             onClick={() => handleTabChange('new-launches')}
-            className={`flex-1 min-w-[160px] py-3 px-4 text-xs uppercase tracking-[0.15em] font-semibold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+            className={`w-full sm:w-auto sm:flex-1 py-2.5 sm:py-3 px-3.5 sm:px-4 text-[11px] sm:text-xs uppercase tracking-[0.12em] sm:tracking-[0.15em] font-semibold transition-all duration-200 flex items-center justify-between sm:justify-center gap-2 cursor-pointer rounded-xs sm:rounded-none ${
               activeTab === 'new-launches'
-                ? 'bg-[#393187] text-white shadow-sm'
-                : 'text-[#5B605F] hover:text-[#15181A] hover:bg-[#EDEEE9]'
+                ? 'bg-[#393187] text-white shadow-xs'
+                : 'bg-white sm:bg-transparent border border-[#CFD1CA] sm:border-0 text-[#15181A] hover:bg-[#EDEEE9]'
             }`}
           >
-            <Rocket className="w-3.5 h-3.5" />
-            <span>{NEW_LAUNCHES_CONTENT.header.tabLabel}</span>
+            <div className="flex items-center gap-2">
+              <Rocket className="w-3.5 h-3.5 shrink-0" />
+              <span>{NEW_LAUNCHES_CONTENT.header.tabLabel}</span>
+            </div>
             <span
               className={`text-[10px] px-2 py-0.5 rounded-full font-mono ${
                 activeTab === 'new-launches' ? 'bg-white/20 text-white' : 'bg-[#CFD1CA]/60 text-[#15181A]'
@@ -282,14 +349,16 @@ function PropertiesContent() {
           {/* 3. LUXURY COLLECTION TAB */}
           <button
             onClick={() => handleTabChange('luxury-collection')}
-            className={`flex-1 min-w-[180px] py-3 px-4 text-xs uppercase tracking-[0.15em] font-semibold transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer ${
+            className={`w-full sm:w-auto sm:flex-1 py-2.5 sm:py-3 px-3.5 sm:px-4 text-[11px] sm:text-xs uppercase tracking-[0.12em] sm:tracking-[0.15em] font-semibold transition-all duration-200 flex items-center justify-between sm:justify-center gap-2 cursor-pointer rounded-xs sm:rounded-none ${
               activeTab === 'luxury-collection'
-                ? 'bg-[#15181A] text-white shadow-sm'
-                : 'text-[#5B605F] hover:text-[#15181A] hover:bg-[#EDEEE9]'
+                ? 'bg-[#15181A] text-white shadow-xs'
+                : 'bg-white sm:bg-transparent border border-[#CFD1CA] sm:border-0 text-[#15181A] hover:bg-[#EDEEE9]'
             }`}
           >
-            <Crown className="w-3.5 h-3.5 text-[#C5282F]" />
-            <span>{LUXURY_COLLECTION_CONTENT.header.tabLabel}</span>
+            <div className="flex items-center gap-2">
+              <Crown className="w-3.5 h-3.5 text-[#C5282F] shrink-0" />
+              <span>{LUXURY_COLLECTION_CONTENT.header.tabLabel}</span>
+            </div>
             <span
               className={`text-[10px] px-2 py-0.5 rounded-full font-mono ${
                 activeTab === 'luxury-collection' ? 'bg-white/20 text-white' : 'bg-[#CFD1CA]/60 text-[#15181A]'
@@ -482,7 +551,7 @@ function PropertiesContent() {
         {/* Mobile Filter Drawer Modal */}
         {mobileFilterOpen && (
           <div className="fixed inset-0 z-50 lg:hidden bg-black/60 backdrop-blur-sm flex justify-end">
-            <div className="w-full max-w-sm bg-[#EDEEE9] h-full p-6 overflow-y-auto space-y-6">
+            <div className="w-full max-w-xs sm:max-w-sm bg-[#EDEEE9] h-full p-5 sm:p-6 overflow-y-auto space-y-6">
               <div className="flex items-center justify-between pb-4 border-b border-[#CFD1CA]">
                 <span className="font-serif text-lg font-medium text-[#15181A]">
                   Filter Residences
@@ -658,26 +727,9 @@ function PropertiesContent() {
       </div>
 
       {/* DISTINCT SECTION: PRIVATE OPPORTUNITIES */}
-      {/* Explicitly separated and clarifying distinction from Luxury Collection */}
-      <section className="mt-28 pt-16 border-t border-[#CFD1CA]">
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-[#15181A] text-white border border-[#23272A]">
-          <div className="flex items-center gap-3">
-            <span className="w-2 h-2 rounded-full bg-[#C5282F] animate-ping" />
-            <div>
-              <span className="text-[11px] uppercase tracking-[0.25em] font-bold text-[#C5282F] block">
-                SEPARATE DESK &bull; OFF-MARKET INVENTORY
-              </span>
-              <p className="text-xs text-[#CFD1CA] mt-0.5">
-                Looking for unlisted, discreet trophy assets? Private Opportunities is separate from our public Luxury Collection and requires verified NDA access.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div className="-mx-4 sm:-mx-6 lg:-mx-8">
-          <PrivateOpportunities />
-        </div>
-      </section>
+      <div className="-mx-4 sm:-mx-6 lg:-mx-8 mt-20">
+        <PrivateOpportunities />
+      </div>
     </div>
   );
 }

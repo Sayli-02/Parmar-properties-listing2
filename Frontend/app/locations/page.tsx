@@ -8,6 +8,8 @@ import {
   MapPin,
   ArrowRight,
   Building2,
+  ChevronDown,
+  Check,
 } from 'lucide-react';
 import type { Property } from '@/types/property';
 import { PropertyCard } from '@/components/property/PropertyCard';
@@ -38,6 +40,20 @@ function LocationsContent() {
   const [locationsDirectory, setLocationsDirectory] = useState<LocationDirectoryItem[]>([]);
   const [locationsList, setLocationsList] = useState<string[]>(['All']);
   const [locationsLoading, setLocationsLoading] = useState(true);
+  const [locationDropdownOpen, setLocationDropdownOpen] = useState(false);
+
+  React.useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.location-dropdown-container')) {
+        setLocationDropdownOpen(false);
+      }
+    };
+    if (locationDropdownOpen) {
+      document.addEventListener('click', handleOutsideClick);
+    }
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, [locationDropdownOpen]);
 
   React.useEffect(() => {
     let isMounted = true;
@@ -81,11 +97,11 @@ function LocationsContent() {
   }, [selectedLoc, properties]);
 
   return (
-    <div className="pt-28 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto min-h-screen bg-[#EDEEE9] text-[#15181A]">
+    <div className="pt-28 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto min-h-screen bg-[#EDEEE9] text-[#15181A] w-full overflow-x-hidden">
       <ScrollProgressBar />
 
       {/* Breadcrumb */}
-      <div className="text-xs uppercase tracking-widest text-[#5B605F] font-semibold mb-3 flex items-center gap-1.5">
+      <div className="text-xs uppercase tracking-widest text-[#5B605F] font-semibold mb-3 flex items-center gap-1.5 flex-wrap">
         <Link href="/" className="hover:underline">Home</Link>
         <span>&bull;</span>
         <span className="text-[#C5282F] font-bold">LOCATIONS</span>
@@ -108,25 +124,75 @@ function LocationsContent() {
           </div>
         </div>
 
-        {/* Scrollable Location Filter Bar */}
-        <div className="mt-8 flex gap-2 bg-[#F7F7F4] p-2 border border-[#CFD1CA] overflow-x-auto scrollbar-thin">
-          {locationsList.map((loc) => {
-            const isSelected = selectedLoc === loc;
-
-            return (
-              <button
-                key={loc}
-                onClick={() => setSelectedLoc(loc)}
-                className={`py-2 px-4 text-xs uppercase tracking-[0.12em] font-semibold transition-all duration-200 flex items-center gap-1.5 cursor-pointer whitespace-nowrap ${
-                  isSelected
-                    ? 'bg-[#C5282F] text-white shadow-sm'
-                    : 'text-[#5B605F] hover:text-[#15181A] hover:bg-[#EDEEE9]'
+        {/* Luxury Location Dropdown (Replaces horizontal side-scroll) */}
+        <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="relative location-dropdown-container w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => setLocationDropdownOpen(!locationDropdownOpen)}
+              className="w-full sm:min-w-[320px] flex items-center justify-between gap-3 bg-[#F7F7F4] hover:bg-[#EDEEE9] border border-[#CFD1CA] px-4 py-3 shadow-xs transition-colors cursor-pointer text-xs"
+              aria-expanded={locationDropdownOpen}
+              aria-label="Select Enclave"
+            >
+              <div className="flex items-center gap-2.5">
+                <MapPin className="w-3.5 h-3.5 text-[#C5282F] shrink-0" />
+                <span className="text-[#5B605F] uppercase tracking-wider text-[11px] font-medium">Filter Enclave:</span>
+                <span className="font-semibold text-[#15181A] uppercase tracking-wide">
+                  {selectedLoc === 'All' ? 'All Enclaves' : selectedLoc}
+                </span>
+              </div>
+              <ChevronDown
+                className={`w-3.5 h-3.5 text-[#5B605F] transition-transform duration-200 shrink-0 ${
+                  locationDropdownOpen ? 'rotate-180 text-[#C5282F]' : ''
                 }`}
-              >
-                <span>{loc}</span>
-              </button>
-            );
-          })}
+              />
+            </button>
+
+            {/* Dropdown Panel */}
+            {locationDropdownOpen && (
+              <div className="absolute left-0 top-[calc(100%+4px)] z-50 w-full sm:w-80 bg-[#F7F7F4] border border-[#CFD1CA] shadow-2xl py-1 rounded-xs font-sans max-h-72 overflow-y-auto">
+                <div className="px-3.5 pt-2 pb-1.5 text-[10px] uppercase tracking-[0.2em] text-[#5B605F] font-bold border-b border-[#CFD1CA]/60 flex items-center justify-between sticky top-0 bg-[#F7F7F4] z-10">
+                  <span>Mumbai Prime Enclaves</span>
+                  <span className="text-[#C5282F] font-mono font-bold text-[9px]">
+                    {locationsList.length} options
+                  </span>
+                </div>
+                {locationsList.map((loc) => {
+                  const isSelected = selectedLoc === loc;
+                  return (
+                    <button
+                      key={loc}
+                      type="button"
+                      onClick={() => {
+                        setSelectedLoc(loc);
+                        setLocationDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-3.5 py-2.5 text-xs uppercase tracking-wider transition-colors flex items-center justify-between cursor-pointer ${
+                        isSelected
+                          ? 'bg-[#C5282F] text-white font-semibold'
+                          : 'text-[#15181A] hover:bg-[#EDEEE9]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <MapPin className={`w-3 h-3 ${isSelected ? 'text-white' : 'text-[#C5282F]'}`} />
+                        <span>{loc === 'All' ? 'All Enclaves' : loc}</span>
+                      </div>
+                      {isSelected && <Check className="w-3.5 h-3.5 text-white stroke-[2.5]" />}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {selectedLoc !== 'All' && (
+            <button
+              onClick={() => setSelectedLoc('All')}
+              className="text-xs text-[#C5282F] hover:underline font-semibold uppercase tracking-wider flex items-center gap-1 self-start sm:self-auto cursor-pointer py-1"
+            >
+              <span>&times; Reset to All Enclaves</span>
+            </button>
+          )}
         </div>
       </div>
 

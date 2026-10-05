@@ -114,8 +114,8 @@ export function PrivateOpportunities({ minimal = true }: PrivateOpportunitiesPro
 
       {/* POPUP CONTACT MODAL FOR LEAD CONVERSION */}
       {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg bg-[#F7F7F4] border border-[#CFD1CA] shadow-2xl p-6 sm:p-8 text-[#15181A]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/75 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-lg bg-[#F7F7F4] border border-[#CFD1CA] shadow-2xl p-5 sm:p-8 text-[#15181A] max-h-[92vh] overflow-y-auto">
             {/* Close Button */}
             <button
               onClick={() => setModalOpen(false)}

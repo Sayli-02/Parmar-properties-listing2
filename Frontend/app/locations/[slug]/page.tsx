@@ -289,7 +289,7 @@ export default function LocationPropertiesPage() {
               <span>MUMBAI ENCLAVE SHOWCASE</span>
             </div>
 
-            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-light text-white tracking-tight mb-4">
+            <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl font-light text-white tracking-tight mb-4">
               {location.name.toUpperCase()}
             </h1>
             <p className="text-sm sm:text-base text-white/80 font-sans leading-relaxed mb-8">
@@ -297,7 +297,7 @@ export default function LocationPropertiesPage() {
             </p>
 
             {/* Micro Stats Bar */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-6 border-t border-white/15">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 pt-6 border-t border-white/15">
               <div>
                 <span className="block text-[10px] uppercase tracking-wider text-white/50">Price Band</span>
                 <span className="text-sm sm:text-base font-serif font-bold text-white">{location.priceRange}</span>
@@ -306,7 +306,7 @@ export default function LocationPropertiesPage() {
                 <span className="block text-[10px] uppercase tracking-wider text-white/50">Average Capital Rate</span>
                 <span className="text-sm sm:text-base font-serif font-bold text-white">{location.averageRate}</span>
               </div>
-              <div className="col-span-2 sm:col-span-1">
+              <div>
                 <span className="block text-[10px] uppercase tracking-wider text-white/50">Key Enclaves</span>
                 <span className="text-xs text-white/80 font-medium truncate block">
                   {location.keyEnclaves.join(', ')}
