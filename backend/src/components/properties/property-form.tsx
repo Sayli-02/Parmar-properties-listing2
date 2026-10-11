@@ -179,6 +179,7 @@ function toFormValues(property?: Property): DefaultValues<PropertyValues> {
     floor: property?.floor ?? "",
     is_featured: property?.is_featured ?? false,
     recently_added: property?.recently_added ?? false,
+    price_on_request: property?.price_on_request ?? false,
     is_recommended: property?.is_recommended ?? false,
     is_new_launch: property?.is_new_launch ?? false,
     is_luxury_collection: property?.is_luxury_collection ?? false,
@@ -624,7 +625,6 @@ export function PropertyForm({ property, onSaved }: PropertyFormProps) {
             <Field
               label="Price (₹ Cr)"
               htmlFor="price"
-              required
               hint="Enter crores as a number — 20 means ₹20 Cr, 32.5 means ₹32.50 Cr."
               error={errors.price?.message}
             >
@@ -638,6 +638,21 @@ export function PropertyForm({ property, onSaved }: PropertyFormProps) {
                 {...form.register("price")}
               />
             </Field>
+
+            <ToggleField
+              label="Show as “Price on Request”"
+              description="On: the public site hides the number above. Off: it shows the price."
+              control={
+                <Switch
+                  checked={form.watch("price_on_request") ?? false}
+                  onCheckedChange={(checked) =>
+                    form.setValue("price_on_request", checked, {
+                      shouldDirty: true,
+                    })
+                  }
+                />
+              }
+            />
           </FieldGrid>
         </CardContent>
       </Card>
