@@ -512,6 +512,8 @@ export function PropertyForm({ property, onSaved }: PropertyFormProps) {
         onSubmit,
         (errors) => {
           console.error("PROPERTY FORM VALIDATION ERRORS", errors);
+          toast.error("Please fix the highlighted fields before saving.");
+          document.querySelector('[aria-invalid="true"]')?.scrollIntoView({ block: "center" });
         }
       )}
       className="space-y-4 pb-20"
