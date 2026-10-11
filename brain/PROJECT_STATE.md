@@ -62,7 +62,8 @@
   12. `012_security_hardening.sql`: new signups get `is_active=false` — applied on the new project. Owner must still disable public email signup in the dashboard.
   13. `013_leads_policy.sql`: public lead inserts must be unverified (applied to the new project).
   14. `014_listing_fixes.sql`: `price_on_request`, Apartment type, OC-received status, Mahalaxmi draft page (applied to the new project).
-  - Note: migrations 001-014 are applied on the new Supabase project khrxatoccwoacgzsxsry.
+  15. `015_ppc_lead_source.sql`: lead source `google_ppc_landing` (applied to the new project).
+  - Note: migrations 001-015 are applied on the new Supabase project khrxatoccwoacgzsxsry.
   - Removed: the fake client login (`Frontend/store/auth.ts`, `/saved` auth gate). `/api/enquire` removed (it only logged and returned success).
   - `seed_master.sql`: Populates master catalogues and baseline page content.
   - `seed.sql`: Sample records for demonstration.

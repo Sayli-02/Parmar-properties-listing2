@@ -28,6 +28,17 @@
 
 ## 📜 Activity Stream
 
+### [2026-10-11 22:00] — Claude (AI) & Parmar Properties — Google PPC ads manager and landing pages
+- **Branch:** `fix/audit-hardening`
+- **What Was Done:**
+  - `/ads-manager` (Frontend, noindex, read-only): lists published properties with a copyable Final URL `https://<domain>/<slug>/project`, a Google ValueTrack tracking suffix (`{campaignid}`, `{keyword}`, `{creative}`) and a preview link.
+  - `/<slug>/project` (Frontend, noindex): fixed-layout landing page (hero, facts, overview, residences table, highlights, amenities, callback form, sticky call button) built from the same property data as the main page. Only published properties resolve; drafts 404.
+  - Leads from the landing page use source `google_ppc_landing` (migration 015, applied) and store the property id plus the URL's utm/gclid parameters in the message.
+  - `SiteChrome` hides the site nav and footer on `/ads-manager` and `/<slug>/project`. `withOnwards` moved to `lib/price.ts`.
+  - `next.config.mjs` now allows images from the Supabase project in `NEXT_PUBLIC_SUPABASE_URL` (it only allowed an old project's host).
+- **Current State:** `tsc --noEmit` clean; `/ads-manager` empty state, noindex and no-chrome verified in the browser; draft landing URL returns 404. Landing page with real data and the lead form NOT yet verified (needs a published property).
+- **Next Steps:** verify with a published property; set the real domain in the panel; decide whether `/ads-manager` needs a login before it goes public (it only exposes published property links).
+
 ### [2026-10-11 20:00] — Claude (AI) & Parmar Properties — Listing audit fix pass
 - **Branch:** `fix/audit-hardening`
 - **What Was Done:**

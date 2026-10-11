@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
+import { withOnwards } from '@/lib/price';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -46,9 +47,6 @@ interface LeadModalContext {
   tag: string;
   type: 'map' | 'floorplan' | 'brochure' | 'viewing' | 'general' | 'price-breakdown';
 }
-
-// Append "onwards" only to a plain price like "₹6.31 Cr"; leave ranges and free text as typed.
-const withOnwards = (p: string) => (/^₹[\d.,]+\s*Cr$/.test(p) ? `${p} onwards` : p);
 
 export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({
   property,
