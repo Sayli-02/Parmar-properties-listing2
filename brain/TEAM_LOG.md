@@ -52,7 +52,7 @@
 ### [2026-10-11 20:00] — Claude (AI) & Parmar Properties — Listing audit fix pass
 - **Branch:** `fix/audit-hardening`
 - **What Was Done:**
-  - New Supabase project (khrxatoccwoacgzsxsry) set up: migrations 001-014 and seeds applied; admin profile activated.
+  - A separate Supabase project was set up for this work: migrations 001-014 and seeds applied; admin profile activated. Other developers must apply 012-015 to their own project (see READ_FIRST.md).
   - 013: public lead inserts must be `is_otp_verified=false`, unassigned. Frontend no longer sends `true` (no real OTP yet). Removed dead `/api/enquire`.
   - 014: `properties.price_on_request` (admin switch + public "Price on Request"), property type `Apartment`, status `Ready (OC received)`, Mahalaxmi editorial page as unpublished draft.
   - Login form posts (no credentials in URL). New listings default to Draft. Detail pages revalidate every 60 s.

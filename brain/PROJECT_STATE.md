@@ -2,6 +2,7 @@
 
 > **Last Updated:** October 4, 2026  
 > **Status:** Backend Admin Complete | Frontend UI Complete | Home CMS sections wired (Locations/Hero/Why/Insights) | RLS publication_status migration authored (010, not yet applied)  
+> 🛑 **Before you code, read [`READ_FIRST.md`](./READ_FIRST.md)** (migrations 012-015 are required).  
 > **Repository:** `https://github.com/Sayli-02/Parmar-properties-listing2.git`  
 > **Main Branch Commit:** `87c5d1f` (*Complete backend admin CMS*)
 
@@ -63,7 +64,7 @@
   13. `013_leads_policy.sql`: public lead inserts must be unverified (applied to the new project).
   14. `014_listing_fixes.sql`: `price_on_request`, Apartment type, OC-received status, Mahalaxmi draft page (applied to the new project).
   15. `015_ppc_lead_source.sql`: lead source `google_ppc_landing` (applied to the new project).
-  - Note: migrations 001-015 are applied on the new Supabase project khrxatoccwoacgzsxsry.
+  - Note: migrations 001-015 are applied on a separate Supabase project used for the audit work. Other developers must apply 012-015 to their own project (see READ_FIRST.md).
   - Removed: the fake client login (`Frontend/store/auth.ts`, `/saved` auth gate). `/api/enquire` removed (it only logged and returned success).
   - `seed_master.sql`: Populates master catalogues and baseline page content.
   - `seed.sql`: Sample records for demonstration.
