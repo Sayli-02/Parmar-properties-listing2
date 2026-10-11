@@ -62,7 +62,6 @@ export function PrivateOpportunities({ minimal = true }: PrivateOpportunitiesPro
         phone,
         email,
         sourceSlug: 'private_opportunities_otp',
-        isOtpVerified: true,
         message: 'Requested confidential off-market private portfolio access',
       });
     } catch (err) {

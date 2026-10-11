@@ -200,7 +200,6 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({
       sourceSlug: 'property_gate_modal',
       gateType: leadModalContext.type,
       propertySlug: property.slug,
-      isOtpVerified: true,
       message: `Unlocked ${leadModalContext.type} (${leadModalContext.title}) for ${property.title}`,
     }).catch((err) => console.warn('Gated lead submit failed:', err));
 
