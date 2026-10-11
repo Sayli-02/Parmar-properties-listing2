@@ -186,7 +186,7 @@ function toFormValues(property?: Property): DefaultValues<PropertyValues> {
     rera_id: property?.rera_id ?? property?.rera_number ?? "",
     latitude: property?.latitude ?? null,
     longitude: property?.longitude ?? null,
-    publication_status: property?.publication_status ?? "published",
+    publication_status: property?.publication_status ?? "draft",
     sort_order: property?.sort_order ?? 0,
     meta_title: property?.meta_title ?? "",
     meta_description: property?.meta_description ?? "",
