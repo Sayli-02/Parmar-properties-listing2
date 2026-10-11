@@ -47,6 +47,9 @@ interface LeadModalContext {
   type: 'map' | 'floorplan' | 'brochure' | 'viewing' | 'general' | 'price-breakdown';
 }
 
+// Append "onwards" only to a plain price like "₹6.31 Cr"; leave ranges and free text as typed.
+const withOnwards = (p: string) => (/^₹[\d.,]+\s*Cr$/.test(p) ? `${p} onwards` : p);
+
 export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({
   property,
   similarProperties = [],
@@ -81,7 +84,7 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({
     name: '',
     phone: '',
     email: '',
-    message: `I am interested in arranging a private viewing for ${property.title} (${property.bhk} - ${property.priceFormatted} onwards).`,
+    message: `I am interested in arranging a private viewing for ${property.title} (${property.bhk} - ${withOnwards(property.priceFormatted)}).`,
   });
 
   // Stores
@@ -264,7 +267,7 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({
             Starting Price
           </span>
           <span className="font-sans text-xl sm:text-3xl md:text-4xl font-bold tracking-tight text-[#C5282F]">
-            {property.priceFormatted} onwards
+            {withOnwards(property.priceFormatted)}
           </span>
         </div>
       </div>
@@ -327,6 +330,7 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({
                 <Calendar className="w-3.5 h-3.5 text-[#C5282F]" />
                 <span>Construction Status:</span>
                 <span className="text-[#C5282F] font-bold">{property.possession}</span>
+                {property.possessionDate ? <span className="text-[#5B605F] font-normal">· {property.possessionDate}</span> : null}
               </div>
             </div>
           </div>
@@ -357,7 +361,7 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({
                       {variant.area}
                     </td>
                     <td className="py-4 px-5 font-bold text-[#15181A] text-left">
-                      <span>{variant.price} onwards</span>
+                      <span>{withOnwards(variant.price)}</span>
                     </td>
                     <td className="py-4 px-5 text-right">
                       <button

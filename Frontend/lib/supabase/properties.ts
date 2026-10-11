@@ -140,8 +140,9 @@ export function mapDbPropertyToFrontend(dbRow: Record<string, unknown>): Propert
         ? Number(dbRow.price_amount) / 10_000_000
         : 0;
   const price = Number.isFinite(priceRaw) ? priceRaw : 0;
-  const priceFormatted =
-    price > 0
+  const priceFormatted = dbRow.price_on_request
+    ? 'Price on Request'
+    : price > 0
       ? `₹${price.toFixed(2)} Cr`
       : typeof dbRow.price_display === 'string' && dbRow.price_display
         ? dbRow.price_display
