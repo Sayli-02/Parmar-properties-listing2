@@ -121,7 +121,7 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({
       carpetArea: property.carpetArea ? `${property.carpetArea} Sq.Ft` : 'Area on request',
       price: property.priceFormatted,
       tower: '—',
-      image: '/floorplans/unit-plan.jpg',
+      image: '/placeholder.png',
     },
   ];
 
@@ -202,7 +202,7 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({
       email: leadForm.email,
       sourceSlug: 'property_gate_modal',
       gateType: leadModalContext.type,
-      propertySlug: property.slug,
+      propertyId: property.id,
       message: `Unlocked ${leadModalContext.type} (${leadModalContext.title}) for ${property.title}`,
     }).catch((err) => console.warn('Gated lead submit failed:', err));
 
@@ -230,7 +230,7 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({
       phone: enquiryForm.phone,
       email: enquiryForm.email,
       sourceSlug: 'property_sidebar_inquiry',
-      propertySlug: property.slug,
+      propertyId: property.id,
       message: `Direct inquiry for ${property.title} (${property.priceFormatted})`,
     }).catch((err) => console.warn('Sidebar lead submit failed:', err));
   };
@@ -679,7 +679,7 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({
 
           {/* Beautified Amenities Section */}
           <ScrollReveal animation="fade-up" delay={150}>
-            <div className="bg-[#F7F7F4] border border-[#CFD1CA] p-6 sm:p-8">
+            <div className={`bg-[#F7F7F4] border border-[#CFD1CA] p-6 sm:p-8 ${(property.amenities || []).length === 0 ? 'hidden' : ''}`}>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6 border-b border-[#CFD1CA] pb-4">
                 <div>
                   <span className="text-[10px] uppercase tracking-[0.25em] font-semibold text-[#C5282F] block mb-1">
@@ -726,7 +726,7 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({
                     Enclave Location &amp; Vicinity
                   </h2>
                   <p className="text-xs text-[#5B605F] mt-1">
-                    Prime locality: {Array.from(new Map([property.subLocation, property.location].filter(Boolean).map((v) => [v.toLowerCase(), v])).values()).join(', ')}
+                    Prime locality: {property.subLocation?.toLowerCase().includes(property.location.toLowerCase()) ? property.subLocation : [property.subLocation, property.location].filter(Boolean).join(', ')}
                   </p>
                 </div>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#15181A] text-white text-[11px] uppercase tracking-wider font-medium">

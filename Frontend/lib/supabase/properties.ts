@@ -23,6 +23,7 @@ const PUBLISHED_PROPERTY_SELECT = `
   property_amenities (
     lookup_amenity_id,
     amenity_id,
+    custom_label,
     lookup_amenities ( name )
   )
 `;
@@ -101,6 +102,14 @@ function mapPropertyType(name: string | null | undefined): PropertyType {
   if (name?.toLowerCase().includes('villa')) return 'Sky Villa';
   if (name?.toLowerCase().includes('duplex')) return 'Duplex';
   return 'Apartment';
+}
+
+/** ["3 BHK","4 BHK"] -> "3 & 4 BHK"; anything else is joined as typed. */
+function joinBhkLabels(labels: string[]): string {
+  const uniq = labels.filter((l, i) => l && labels.indexOf(l) === i);
+  return uniq.every((l) => /^[\d.]+ BHK$/.test(l))
+    ? `${uniq.map((l) => l.replace(' BHK', '')).join(' & ')} BHK`
+    : uniq.join(', ');
 }
 
 function variantToBhkLabel(variant: string): string {
@@ -217,10 +226,10 @@ export function mapDbPropertyToFrontend(dbRow: Record<string, unknown>): Propert
             'Price on Request',
           tower:
             (typeof cfg.tower_zone === 'string' && cfg.tower_zone) ||
-            'Prime Tower',
+            '—',
           image:
             (typeof cfg.image_path === 'string' && cfg.image_path) ||
-            '/floorplans/unit-plan.jpg',
+            '/placeholder.png',
         });
       });
   }
@@ -242,8 +251,7 @@ export function mapDbPropertyToFrontend(dbRow: Record<string, unknown>): Propert
       else if (row.lookup_amenities?.name) linkedAmenities.push(row.lookup_amenities.name);
     });
   }
-  const amenitiesList =
-    linkedAmenities.length > 0 ? linkedAmenities : highlights;
+  const amenitiesList = linkedAmenities;
 
   const carpetRaw =
     dbRow.carpet_area_sqft != null
@@ -282,6 +290,8 @@ export function mapDbPropertyToFrontend(dbRow: Record<string, unknown>): Propert
       (typeof dbRow.name === 'string' && dbRow.name) ||
       'Prime Mumbai Residence',
     tagline: typeof dbRow.tagline === 'string' ? dbRow.tagline : '',
+    metaTitle: typeof dbRow.meta_title === 'string' ? dbRow.meta_title : undefined,
+    metaDescription: typeof dbRow.meta_description === 'string' ? dbRow.meta_description : undefined,
     location: normalizeLocality(localityName),
     subLocation:
       (typeof dbRow.sub_location === 'string' && dbRow.sub_location) ||
@@ -292,8 +302,10 @@ export function mapDbPropertyToFrontend(dbRow: Record<string, unknown>): Propert
     bhk:
       lookupBhk?.name ||
       (typeof dbRow.bhk === 'string' && dbRow.bhk) ||
-      (firstConfigVariant ? variantToBhkLabel(firstConfigVariant) : '3 BHK'),
+      joinBhkLabels(layoutVariants.map((v) => v.tabLabel)) ||
+      (firstConfigVariant ? variantToBhkLabel(firstConfigVariant) : ''),
     carpetArea,
+    areaText: layoutVariants[0]?.area !== 'Area on request' ? layoutVariants[0]?.area : undefined,
     superArea,
     propertyType: mapPropertyType(
       lookupType?.name ||
@@ -302,18 +314,18 @@ export function mapDbPropertyToFrontend(dbRow: Record<string, unknown>): Propert
     possession: mapPossession(possessionDate, lookupStatus?.name),
     possessionDate,
     floor:
-      (typeof dbRow.floor === 'string' && dbRow.floor) || 'High-Rise Sky Suites',
+      (typeof dbRow.floor === 'string' && dbRow.floor) || '',
     featured: Boolean(dbRow.is_featured),
     recentlyAdded: Boolean(dbRow.recently_added),
     recommended: Boolean(dbRow.is_recommended),
     isNewLaunch: Boolean(dbRow.is_new_launch),
     isLuxuryCollection: Boolean(dbRow.is_luxury_collection),
     coverImage:
-      coverFromRow || images[0] || '/properties/worli-aurum/cover.jpg',
+      coverFromRow || images[0] || '/placeholder.png',
     images:
       images.length > 0
         ? images
-        : [coverFromRow || '/properties/worli-aurum/cover.jpg'],
+        : [coverFromRow || '/placeholder.png'],
     amenities: amenitiesList,
     description:
       (typeof dbRow.description === 'string' && dbRow.description) ||

@@ -37,6 +37,10 @@ export interface Property {
   priceFormatted: string; // e.g. "₹18.50 Cr"
   bhk: string; // e.g. "4 BHK"
   carpetArea: number; // in sq ft
+  /** First configuration's area as typed in the admin (may be a range or note). */
+  areaText?: string;
+  metaTitle?: string;
+  metaDescription?: string;
   superArea: number; // in sq ft
   propertyType: PropertyType;
   possession: 'Ready to Move' | 'Under Construction' | 'Immediate' | 'Pre-Launch';

@@ -28,7 +28,7 @@ export const FALLBACK_LOCATIONS: Record<string, LocationInfo> = {
     tagline: 'Mumbai’s Premier Sea-Facing Luxury Mile',
     description:
       'Home to iconic skyline towers, the Bandra-Worli Sea Link promenade, and coveted multi-acre gated sky residences. Worli commands premier capital appreciation and uninterrupted Arabian Sea horizons.',
-    coverImage: '/properties/worli-aurum/cover.jpg',
+    coverImage: '/placeholder.png',
     priceRange: '₹18 Cr - ₹75 Cr+',
     averageRate: '₹65,000 - ₹1,20,000 / sq.ft',
     lifestyle: 'Sea Link Promenade, High-Rise Sky Mansions, Michelin Dining',
@@ -43,7 +43,7 @@ export function mapDbLocationToFrontend(row: Record<string, any>): LocationInfo 
     slug: row.slug || row.name.toLowerCase().replace(/\s+/g, '-'),
     tagline: row.tagline || '',
     description: row.description || '',
-    coverImage: row.cover_image || row.image_url || '/properties/worli-aurum/cover.jpg',
+    coverImage: row.cover_image || row.image_url || '/placeholder.png',
     priceRange: row.price_range || 'Price on Request',
     averageRate: row.average_rate || '₹65,000 - ₹1,20,000 / sq.ft',
     lifestyle: row.lifestyle || '',

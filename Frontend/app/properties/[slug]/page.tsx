@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { PropertyDetailClient } from '@/components/property/PropertyDetailClient';
 import {
@@ -13,6 +14,15 @@ export const revalidate = 60;
 export async function generateStaticParams() {
   const slugs = await fetchPublishedPropertySlugs();
   return slugs.map((slug) => ({ slug }));
+}
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const property = await fetchPropertyBySlug(params.slug);
+  if (!property) return {};
+  return {
+    title: property.metaTitle || `${property.title} | Parmar Properties`,
+    description: property.metaDescription || property.tagline || undefined,
+  };
 }
 
 export default async function PropertyDetailPage({

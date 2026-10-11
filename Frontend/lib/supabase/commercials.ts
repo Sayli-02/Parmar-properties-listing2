@@ -18,7 +18,7 @@ export function mapDbCommercialToFrontend(dbRow: Record<string, any>): Commercia
     propertyType: (dbRow.commercial_type?.name || 'Grade-A Office') as any,
     possession: (dbRow.possession || 'Ready to Move') as any,
     floor: dbRow.floor || '',
-    coverImage: dbRow.cover_image || '/properties/worli-aurum/cover.jpg',
+    coverImage: dbRow.cover_image || '/placeholder.png',
     amenities: Array.isArray(dbRow.highlights) ? dbRow.highlights : [],
     reraId: dbRow.rera_id || 'P51900018420',
     highlights: Array.isArray(dbRow.highlights) ? dbRow.highlights : [],

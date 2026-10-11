@@ -74,7 +74,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
             </div>
             <div className="flex items-center gap-1 sm:gap-1.5 min-w-0">
               <Maximize2 className="w-3.5 h-3.5 text-[#5B605F] shrink-0" />
-              <span className="truncate">{property.carpetArea > 0 ? `${property.carpetArea} sq.ft` : 'Area on request'}</span>
+              <span className="truncate">{property.carpetArea > 0 ? `${property.carpetArea} sq.ft` : property.areaText ? (/^[\d.,\s–-]+$/.test(property.areaText) ? `${property.areaText} sq.ft` : property.areaText) : 'Area on request'}</span>
             </div>
             <div className="text-right text-[#5B605F] truncate text-[10px] sm:text-[11px] min-w-0">
               {property.possession}
