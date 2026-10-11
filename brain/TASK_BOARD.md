@@ -23,6 +23,7 @@
 ### 2. To Do (Upcoming Tasks) 📋
 
 #### Audit hardening follow-ups
+- [ ] **Before going live:** the 8 listings are currently Published (so /ads-manager works on localhost). Set them back to Draft, or finish images and price decisions first.
 - [ ] Real OTP, then relax migration 013.
 - [ ] Owner decisions: homepage Featured fallback, hard-coded "From ₹X Cr" on location cards, Apartment type for the 8 drafts, Mumbai office details, Pune seed cleanup.
 - [ ] Add images, plans and RERA QR to the 8 draft listings, then publish.
