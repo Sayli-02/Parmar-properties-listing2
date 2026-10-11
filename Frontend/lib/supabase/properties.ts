@@ -107,9 +107,11 @@ function mapPropertyType(name: string | null | undefined): PropertyType {
 /** ["3 BHK","4 BHK"] -> "3 & 4 BHK"; anything else is joined as typed. */
 function joinBhkLabels(labels: string[]): string {
   const uniq = labels.filter((l, i) => l && labels.indexOf(l) === i);
-  return uniq.every((l) => /^[\d.]+ BHK$/.test(l))
-    ? `${uniq.map((l) => l.replace(' BHK', '')).join(' & ')} BHK`
-    : uniq.join(', ');
+  if (uniq.length === 0) return '';
+  if (!uniq.every((l) => /^[\d.]+ BHK$/.test(l))) return uniq.join(', ');
+  const nums = uniq.map((l) => l.replace(' BHK', ''));
+  const last = nums.pop();
+  return `${nums.length ? `${nums.join(', ')} & ` : ''}${last} BHK`;
 }
 
 function variantToBhkLabel(variant: string): string {
@@ -300,9 +302,9 @@ export function mapDbPropertyToFrontend(dbRow: Record<string, unknown>): Propert
     price,
     priceFormatted,
     bhk:
+      joinBhkLabels(layoutVariants.map((v) => v.tabLabel)) ||
       lookupBhk?.name ||
       (typeof dbRow.bhk === 'string' && dbRow.bhk) ||
-      joinBhkLabels(layoutVariants.map((v) => v.tabLabel)) ||
       (firstConfigVariant ? variantToBhkLabel(firstConfigVariant) : ''),
     carpetArea,
     areaText: layoutVariants[0]?.area !== 'Area on request' ? layoutVariants[0]?.area : undefined,

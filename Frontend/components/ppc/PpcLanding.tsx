@@ -34,10 +34,17 @@ export function PpcLanding({ property }: { property: Property }) {
     setState(res.success ? 'done' : 'error');
   }
 
+  // Show the date text alone when it already says the status ("Ready to move in").
+  const date = property.possessionDate?.trim();
+  const statusText =
+    date && date.toLowerCase().includes(property.possession.toLowerCase().split(' ')[0])
+      ? date
+      : property.possession + (date ? ` · ${date}` : '');
+
   const facts = (
     [
-      ['Location', [property.subLocation, property.location].filter(Boolean).join(', ')],
-      ['Status', property.possession + (property.possessionDate ? ` · ${property.possessionDate}` : '')],
+      ['Location', property.subLocation?.toLowerCase().includes(property.location.toLowerCase()) ? property.subLocation : [property.subLocation, property.location].filter(Boolean).join(', ')],
+      ['Status', statusText],
       ['Type', property.propertyType],
       ['Configurations', property.bhk],
       ['MahaRERA', property.reraId],
@@ -80,9 +87,9 @@ export function PpcLanding({ property }: { property: Property }) {
 
       <div className="max-w-5xl mx-auto px-4 sm:px-8 py-10 grid gap-10 md:grid-cols-[1fr_340px]">
         <div className="space-y-10">
-          <section className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-[#CFD1CA] border border-[#CFD1CA]">
+          <section className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {facts.map(([k, v]) => (
-              <div key={k} className="bg-[#F7F7F4] p-4">
+              <div key={k} className="bg-[#F7F7F4] border border-[#CFD1CA] p-4">
                 <span className="block text-[10px] uppercase tracking-wider text-[#5B605F]">{k}</span>
                 <span className="text-sm font-semibold break-words">{v}</span>
               </div>
