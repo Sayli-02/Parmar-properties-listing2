@@ -28,6 +28,16 @@
 
 ## 📜 Activity Stream
 
+### [2026-10-11 23:30] — Claude (AI) & Parmar Properties — Media tab: no reload on reorder, drag-and-swap for images and floor plans
+- **Branch:** `fix/audit-hardening`
+- **What Was Done:**
+  - Cause of the "page reloads": the property editor's `reload` shows a full-page "Loading property…" and was passed to every child as `onChanged`; `reload` in the image and floor plan managers also flipped their cards to a loading state.
+  - `useResource` gets `refresh()` (background refetch, no loading state). The property editor, images manager and floor plans manager use it for saves, deletes, cover changes and error recovery.
+  - Reordering is optimistic and saved in the background; it no longer refreshes the parent.
+  - Drag-and-swap (drop one card on another) for property images (already in the working tree, now compiling) and floor plans; up/down arrows kept for keyboard and touch.
+- **Current State:** `tsc --noEmit` clean. In the browser on a property with 4 images and 2 plans: drag-swap and arrows reorder instantly, order persists in the database, no loading screen appears, and a page marker survives. Not tested: real mouse drag on touch devices.
+- **Next Steps:** none required.
+
 ### [2026-10-11 22:00] — Claude (AI) & Parmar Properties — Google PPC ads manager and landing pages
 - **Branch:** `fix/audit-hardening`
 - **What Was Done:**

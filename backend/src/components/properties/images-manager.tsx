@@ -2,12 +2,18 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Image as ImageIcon, Star, Trash, Upload } from "lucide-react";
+import {
+  GripVertical,
+  Image as ImageIcon,
+  Star,
+  Trash,
+  Upload,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import type { PropertyImage } from "@/types";
 import { MAX_IMAGE_SIZE_MB } from "@/lib/constants";
-import { getErrorMessage, isValidImageFile } from "@/lib/utils";
+import { cn, getErrorMessage, isValidImageFile } from "@/lib/utils";
 import { useResource } from "@/lib/hooks/use-resource";
 import {
   addPropertyImage,
@@ -66,7 +72,12 @@ export function ImagesManager({
     loading,
     error,
     reload,
+    refresh,
   } = useResource<PropertyImage[]>(fetchImages, []);
+
+  // Drag-and-swap state: which card is being dragged / hovered.
+  const [dragIndex, setDragIndex] = React.useState<number | null>(null);
+  const [overIndex, setOverIndex] = React.useState<number | null>(null);
 
   const cover = images.find((image) => image.is_primary) ?? images[0] ?? null;
 
@@ -112,26 +123,44 @@ export function ImagesManager({
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
-      reload();
+      refresh();
       onChanged?.();
+    }
+  }
+
+  // Optimistic reorder: the list updates instantly and is saved in the
+  // background. Order does not change the property itself, so the parent
+  // editor is not refreshed (that is what used to blank the whole page).
+  async function persistOrder(next: PropertyImage[]) {
+    setImages(next);
+    setBusy(true);
+    try {
+      await reorderPropertyImages(next.map((image) => image.id));
+    } catch (caught) {
+      toast.error(getErrorMessage(caught));
+      refresh();
+    } finally {
+      setBusy(false);
     }
   }
 
   async function handleMove(from: number, to: number) {
     const next = moveItem(images, from, to);
     if (next === images) return;
+    await persistOrder(next);
+  }
 
-    setImages(next);
-    setBusy(true);
-    try {
-      await reorderPropertyImages(next.map((image) => image.id));
-      onChanged?.();
-    } catch (caught) {
-      toast.error(getErrorMessage(caught));
-      reload();
-    } finally {
-      setBusy(false);
-    }
+  async function handleSwap(from: number, to: number) {
+    if (from === to || busy) return;
+    if (!images[from] || !images[to]) return;
+    const next = [...images];
+    [next[from], next[to]] = [next[to], next[from]];
+    await persistOrder(next);
+  }
+
+  function endDrag() {
+    setDragIndex(null);
+    setOverIndex(null);
   }
 
   async function handleSetCover(image: PropertyImage) {
@@ -139,7 +168,7 @@ export function ImagesManager({
     try {
       await setPrimaryImage(propertyId, image.id);
       toast.success("Cover image updated");
-      reload();
+      refresh();
       onChanged?.();
     } catch (caught) {
       toast.error(getErrorMessage(caught));
@@ -253,13 +282,51 @@ export function ImagesManager({
                 {images.map((image, index) => (
                   <div
                     key={image.id}
-                    className="overflow-hidden rounded-lg border border-border"
+                    data-image-card
+                    className={cn(
+                      "overflow-hidden rounded-lg border border-border transition-[opacity,box-shadow]",
+                      dragIndex === index && "opacity-40",
+                      overIndex === index &&
+                        dragIndex !== index &&
+                        "ring-2 ring-primary"
+                    )}
+                    onDragOver={(event) => {
+                      if (dragIndex === null) return;
+                      event.preventDefault();
+                      event.dataTransfer.dropEffect = "move";
+                      if (overIndex !== index) setOverIndex(index);
+                    }}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      const from = dragIndex;
+                      endDrag();
+                      if (from !== null) void handleSwap(from, index);
+                    }}
                   >
-                    <div className="relative">
+                    <div
+                      className={cn(
+                        "relative",
+                        !busy && "cursor-grab active:cursor-grabbing"
+                      )}
+                      draggable={!busy}
+                      title="Drag onto another image to swap"
+                      onDragStart={(event) => {
+                        event.dataTransfer.effectAllowed = "move";
+                        event.dataTransfer.setData("text/plain", image.id);
+                        const card = event.currentTarget.closest(
+                          "[data-image-card]"
+                        );
+                        if (card) event.dataTransfer.setDragImage(card, 24, 24);
+                        setDragIndex(index);
+                      }}
+                      onDragEnd={endDrag}
+                    >
+                      <GripVertical className="pointer-events-none absolute top-2 right-2 z-10 size-5 rounded bg-background/80 p-0.5 text-muted-foreground shadow-sm" />
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={image.url}
                         alt={image.alt_text ?? ""}
+                        draggable={false}
                         className="aspect-video w-full bg-muted object-cover"
                       />
                       {image.is_primary ? (
@@ -337,7 +404,7 @@ export function ImagesManager({
           try {
             await deletePropertyImage(confirm.target);
             toast.success("Image deleted");
-            reload();
+            refresh();
             onChanged?.();
           } catch (caught) {
             toast.error(getErrorMessage(caught));

@@ -12,6 +12,8 @@ export interface Resource<T> {
   error: string | null;
   /** Fetch again, showing the loading state while it runs. */
   reload: () => void;
+  /** Fetch again in the background: current data stays on screen, no loading state. */
+  refresh: () => void;
 }
 
 /**
@@ -57,5 +59,7 @@ export function useResource<T>(
     setAttempt((value) => value + 1);
   }, []);
 
-  return { data, setData, loading, error, reload };
+  const refresh = React.useCallback(() => setAttempt((value) => value + 1), []);
+
+  return { data, setData, loading, error, reload, refresh };
 }
