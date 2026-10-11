@@ -111,48 +111,18 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({
     ? property.layoutVariants
     : [
     {
-      id: '2bhk',
-      tabLabel: '2 BHK',
-      title: '2 BHK Luxury Residence',
-      area: '850 – 1,020 sq.ft',
-      carpetArea: '1,020 Sq.Ft',
-      price: '₹3.85 Cr – ₹4.50 Cr',
-      tower: 'Mid-Rise Tower (Levels 4–18)',
-      image: '/floorplans/plan-2bhk.jpg',
-    },
-    {
-      id: '3bhk',
-      tabLabel: '3 BHK',
-      title: `3 BHK Grande (${property.bhk})`,
-      area: `${property.carpetArea} sq.ft`,
-      carpetArea: `${property.carpetArea} Sq.Ft`,
-      price: `${property.priceFormatted}`,
-      tower: 'Prime Wing (Levels 15–35)',
+      id: 'default',
+      tabLabel: property.bhk,
+      title: property.bhk,
+      area: property.carpetArea ? `${property.carpetArea} sq.ft` : 'Area on request',
+      carpetArea: property.carpetArea ? `${property.carpetArea} Sq.Ft` : 'Area on request',
+      price: property.priceFormatted,
+      tower: '—',
       image: '/floorplans/unit-plan.jpg',
-    },
-    {
-      id: '4bhk',
-      tabLabel: '4 BHK',
-      title: '4 BHK Sky Suite',
-      area: '2,200 – 2,850 sq.ft',
-      carpetArea: '2,450 Sq.Ft',
-      price: '₹9.50 Cr – ₹14.00 Cr',
-      tower: 'Skyline Wing (Levels 30–50)',
-      image: '/floorplans/floor-plate.jpg',
-    },
-    {
-      id: '5bhk',
-      tabLabel: '5 BHK Penthouse',
-      title: '5 BHK Sky Mansion / Duplex',
-      area: '3,800 – 5,200 sq.ft',
-      carpetArea: '4,200 Sq.Ft',
-      price: 'Price on Request',
-      tower: 'Penthouse Crown (Top Floors)',
-      image: '/floorplans/master-plan.jpg',
     },
   ];
 
-  const currentVariant = layoutVariants.find((v) => v.id === selectedLayoutVariant) || layoutVariants[1];
+  const currentVariant = layoutVariants.find((v) => v.id === selectedLayoutVariant) || layoutVariants[0];
 
   // Touch swipe gestures for Lightbox
   const lightboxTouchStartX = useRef<number | null>(null);
@@ -753,7 +723,7 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({
                     Enclave Location &amp; Vicinity
                   </h2>
                   <p className="text-xs text-[#5B605F] mt-1">
-                    Prime locality: {property.subLocation}, {property.location}
+                    Prime locality: {Array.from(new Map([property.subLocation, property.location].filter(Boolean).map((v) => [v.toLowerCase(), v])).values()).join(', ')}
                   </p>
                 </div>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-[#15181A] text-white text-[11px] uppercase tracking-wider font-medium">
