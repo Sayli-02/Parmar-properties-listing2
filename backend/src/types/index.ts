@@ -166,6 +166,7 @@ export interface Property extends AuditFields {
   possession_date: string | null;
   floor: string | null;
   recently_added: boolean;
+  price_on_request: boolean;
   is_recommended: boolean;
   is_new_launch: boolean;
   /** Editorial Luxury Collection inclusion (also derived from price ≥ ₹25 Cr). */

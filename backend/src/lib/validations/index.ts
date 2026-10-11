@@ -174,6 +174,8 @@ export const masterPropertySchema = z.object({
   /** Kept for legacy dual-write; no longer collected on Add Property. */
   floor: z.string().max(80).optional().nullable().or(z.literal("")),
   is_featured: z.boolean().default(false),
+  /** Hide the numeric price on the public site and show "Price on Request". */
+  price_on_request: z.boolean().default(false),
   recently_added: z.boolean().default(false),
   is_recommended: z.boolean().default(false),
   is_new_launch: z.boolean().default(false),

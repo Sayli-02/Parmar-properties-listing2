@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
+import { SiteChrome } from "@/components/layout/SiteChrome";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -32,9 +31,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${playfair.variable} ${plusJakarta.variable} scroll-smooth`}>
       <body className="min-h-screen flex flex-col bg-mineral text-ink">
-        <Navbar />
-        <main className="flex-1">{children}</main>
-        <Footer />
+        <SiteChrome>{children}</SiteChrome>
       </body>
     </html>
   );

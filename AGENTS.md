@@ -2,6 +2,12 @@
 
 You are an AI coding assistant working on the **Parmar Properties** repository with a 3-person engineering team.
 
+## 🛑 READ FIRST
+
+Before writing any code, read [`brain/READ_FIRST.md`](./brain/READ_FIRST.md). It lists database migrations the code now depends on, the two-Supabase-project warning, and what changed.
+
+---
+
 ## 🚨 MANDATORY DIRECTIVE: AUTOMATIC BRAIN UPDATES
 
 Whenever you perform ANY work in this repository (writing code, fixing bugs, creating features, modifying configurations, or adding migrations), **YOU MUST DIRECTLY UPDATE THE `brain/` FOLDER AS PART OF YOUR TASK.**

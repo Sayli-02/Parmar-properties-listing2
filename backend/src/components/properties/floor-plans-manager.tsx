@@ -3,13 +3,20 @@
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { FileText, Image as ImageIcon, Pencil, Plus, Trash } from "lucide-react";
+import {
+  FileText,
+  GripVertical,
+  Image as ImageIcon,
+  Pencil,
+  Plus,
+  Trash,
+} from "lucide-react";
 import { toast } from "sonner";
 import type { z } from "zod";
 
 import type { Configuration, FloorPlan } from "@/types";
 import { floorPlanSchema } from "@/lib/validations";
-import { getErrorMessage } from "@/lib/utils";
+import { cn, getErrorMessage } from "@/lib/utils";
 import { useResource } from "@/lib/hooks/use-resource";
 import { FLOOR_PLAN_TYPES, getFloorPlanTypeLabel } from "@/lib/constants";
 import {
@@ -90,7 +97,7 @@ export function FloorPlansManager({
     return { plans, configurations };
   }, [propertyId]);
 
-  const { data, setData, loading, error, reload } = useResource<{
+  const { data, setData, loading, error, reload, refresh } = useResource<{
     plans: FloorPlan[];
     configurations: Configuration[];
   }>(fetchPlans, { plans: [], configurations: [] });
@@ -107,20 +114,42 @@ export function FloorPlansManager({
     [setData]
   );
 
-  async function handleMove(from: number, to: number) {
-    const next = moveItem(plans, from, to);
-    if (next === plans) return;
+  // Drag-and-swap state: which card is being dragged / hovered.
+  const [dragIndex, setDragIndex] = React.useState<number | null>(null);
+  const [overIndex, setOverIndex] = React.useState<number | null>(null);
 
+  // Optimistic: the list updates instantly and is saved in the background.
+  // Order does not change the property, so the parent editor is not refreshed.
+  async function persistOrder(next: FloorPlan[]) {
     setPlans(next);
     setBusy(true);
     try {
       await reorderFloorPlans(next.map((plan) => plan.id));
     } catch (caught) {
       toast.error(getErrorMessage(caught));
-      reload();
+      refresh();
     } finally {
       setBusy(false);
     }
+  }
+
+  async function handleMove(from: number, to: number) {
+    const next = moveItem(plans, from, to);
+    if (next === plans) return;
+    await persistOrder(next);
+  }
+
+  async function handleSwap(from: number, to: number) {
+    if (from === to || busy) return;
+    if (!plans[from] || !plans[to]) return;
+    const next = [...plans];
+    [next[from], next[to]] = [next[to], next[from]];
+    await persistOrder(next);
+  }
+
+  function endDrag() {
+    setDragIndex(null);
+    setOverIndex(null);
   }
 
   async function handleToggle(plan: FloorPlan, isActive: boolean) {
@@ -134,7 +163,7 @@ export function FloorPlansManager({
       await setFloorPlanActive(plan.id, isActive);
     } catch (caught) {
       toast.error(getErrorMessage(caught));
-      reload();
+      refresh();
     }
   }
 
@@ -197,20 +226,53 @@ export function FloorPlansManager({
             {plans.map((plan, index) => (
               <div
                 key={plan.id}
-                className="overflow-hidden rounded-lg border border-border"
-              >
-                {plan.image_url ? (
-                  /* eslint-disable-next-line @next/next/no-img-element */
-                  <img
-                    src={plan.image_url}
-                    alt={plan.name}
-                    className="aspect-video w-full bg-muted object-contain"
-                  />
-                ) : (
-                  <div className="flex aspect-video w-full items-center justify-center bg-muted text-muted-foreground">
-                    <ImageIcon className="size-5" />
-                  </div>
+                data-plan-card
+                className={cn(
+                  "overflow-hidden rounded-lg border border-border transition-[opacity,box-shadow]",
+                  dragIndex === index && "opacity-40",
+                  overIndex === index && dragIndex !== index && "ring-2 ring-primary"
                 )}
+                onDragOver={(event) => {
+                  if (dragIndex === null) return;
+                  event.preventDefault();
+                  event.dataTransfer.dropEffect = "move";
+                  if (overIndex !== index) setOverIndex(index);
+                }}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  const from = dragIndex;
+                  endDrag();
+                  if (from !== null) void handleSwap(from, index);
+                }}
+              >
+                <div
+                  className={cn("relative", !busy && "cursor-grab active:cursor-grabbing")}
+                  draggable={!busy}
+                  title="Drag onto another plan to swap"
+                  onDragStart={(event) => {
+                    event.dataTransfer.effectAllowed = "move";
+                    event.dataTransfer.setData("text/plain", plan.id);
+                    const card = event.currentTarget.closest("[data-plan-card]");
+                    if (card) event.dataTransfer.setDragImage(card, 24, 24);
+                    setDragIndex(index);
+                  }}
+                  onDragEnd={endDrag}
+                >
+                  <GripVertical className="pointer-events-none absolute top-2 right-2 z-10 size-5 rounded bg-background/80 p-0.5 text-muted-foreground shadow-sm" />
+                  {plan.image_url ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={plan.image_url}
+                      alt={plan.name}
+                      draggable={false}
+                      className="aspect-video w-full bg-muted object-contain"
+                    />
+                  ) : (
+                    <div className="flex aspect-video w-full items-center justify-center bg-muted text-muted-foreground">
+                      <ImageIcon className="size-5" />
+                    </div>
+                  )}
+                </div>
 
                 <div className="space-y-2 p-3">
                   <div className="flex items-start justify-between gap-2">
@@ -292,7 +354,7 @@ export function FloorPlansManager({
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         onSaved={() => {
-          reload();
+          refresh();
           onChanged?.();
         }}
       />
@@ -309,7 +371,7 @@ export function FloorPlansManager({
           try {
             await deleteFloorPlan(confirm.target);
             toast.success("Plan deleted");
-            reload();
+            refresh();
             onChanged?.();
           } catch (caught) {
             toast.error(getErrorMessage(caught));

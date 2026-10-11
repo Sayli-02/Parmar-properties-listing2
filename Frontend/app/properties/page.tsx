@@ -112,6 +112,7 @@ function PropertiesContent() {
   };
 
   const [properties, setProperties] = useState<Property[]>([]);
+  const localities = useMemo(() => Array.from(new Set(properties.map((p) => p.location))).sort(), [properties]);
   const [propertiesLoading, setPropertiesLoading] = useState(true);
 
   useEffect(() => {
@@ -404,17 +405,7 @@ function PropertiesContent() {
                 className="w-full p-2.5 bg-[#EDEEE9] border border-[#CFD1CA] text-xs focus:outline-none focus:border-[#C5282F]"
               >
                 <option value="All">All Localities</option>
-                <option value="Worli">Worli &amp; Sea Face</option>
-                <option value="Bandra West">Bandra West &amp; Pali Hill</option>
-                <option value="Juhu">Juhu Beachfront</option>
-                <option value="Lower Parel">Lower Parel</option>
-                <option value="Prabhadevi">Prabhadevi</option>
-                <option value="Powai">Powai Waterfront</option>
-                <option value="Malabar Hill">Malabar Hill</option>
-                <option value="Cuffe Parade">Cuffe Parade</option>
-                <option value="BKC">Bandra Kurla Complex</option>
-                <option value="Khar West">Khar West</option>
-                <option value="Sewri">Sewri &amp; MTHL Promenade</option>
+                {localities.map((loc) => (<option key={loc} value={loc}>{loc}</option>))}
               </select>
             </div>
 
@@ -571,13 +562,7 @@ function PropertiesContent() {
                   className="w-full p-2.5 bg-[#F7F7F4] border border-[#CFD1CA] text-xs"
                 >
                   <option value="All">All Localities</option>
-                  <option value="Worli">Worli</option>
-                  <option value="Bandra West">Bandra West</option>
-                  <option value="Juhu">Juhu</option>
-                  <option value="Lower Parel">Lower Parel</option>
-                  <option value="Prabhadevi">Prabhadevi</option>
-                  <option value="Malabar Hill">Malabar Hill</option>
-                  <option value="Sewri">Sewri</option>
+                {localities.map((loc) => (<option key={loc} value={loc}>{loc}</option>))}
                 </select>
               </div>
 

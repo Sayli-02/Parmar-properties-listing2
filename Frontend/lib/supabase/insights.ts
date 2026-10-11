@@ -68,7 +68,7 @@ export function mapDbArticleToFrontend(row: Record<string, any>): InsightArticle
     readTime,
     tag: row.tag || 'Analysis',
     date: row.date_tag || '2026 Benchmark',
-    image: row.image_path || '/properties/worli-aurum/cover.jpg',
+    image: row.image_path || '/placeholder.png',
     author: {
       name: row.author_name || 'Advisory Research Desk',
       role: row.author_role || 'Head of Prime Residential Valuation',

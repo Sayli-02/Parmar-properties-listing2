@@ -345,6 +345,7 @@ function toMasterPropertyPayload(
         ? String(input.floor).trim()
         : null,
     is_featured: input.is_featured,
+    price_on_request: input.price_on_request,
     recently_added: input.recently_added,
     is_recommended: input.is_recommended,
     is_new_launch: input.is_new_launch,

@@ -146,7 +146,7 @@ export default function ComparePage() {
                   <td className="p-4 font-semibold text-[#5B605F] bg-[#EDEEE9]">Carpet Area</td>
                   {comparedProperties.map((p) => (
                     <td key={p.id} className="p-4 text-[#15181A]">
-                      {p.carpetArea} sq.ft
+                      {p.carpetArea > 0 ? `${p.carpetArea} sq.ft` : 'Area on request'}
                     </td>
                   ))}
                 </tr>

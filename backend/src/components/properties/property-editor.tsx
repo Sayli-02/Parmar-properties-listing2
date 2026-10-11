@@ -98,7 +98,7 @@ export function PropertyEditor({ propertyId }: { propertyId: string }) {
     return { property, currency };
   }, [propertyId]);
 
-  const { data, setData, loading, error, reload } = useResource<{
+  const { data, setData, loading, error, reload, refresh } = useResource<{
     property: PropertyWithRelations | null;
     currency: string;
   }>(fetchProperty, { property: null, currency: "INR" });
@@ -159,7 +159,7 @@ export function PropertyEditor({ propertyId }: { propertyId: string }) {
     try {
       await setPropertyFeatured(property.id, next);
       toast.success(next ? "Added to featured" : "Removed from featured");
-      reload();
+      refresh();
     } catch (caught) {
       toast.error(getErrorMessage(caught));
     }
@@ -258,7 +258,7 @@ export function PropertyEditor({ propertyId }: { propertyId: string }) {
         value={activeTab}
         onValueChange={(value) => {
           setTab(value);
-          if (value === "preview") void reload();
+          if (value === "preview") refresh();
         }}
       >
         <TabsList>
@@ -292,7 +292,7 @@ export function PropertyEditor({ propertyId }: { propertyId: string }) {
         </TabsContent>
 
         <TabsContent value="media">
-          <MediaDocumentsPanel property={property} onChanged={reload} />
+          <MediaDocumentsPanel property={property} onChanged={refresh} />
         </TabsContent>
 
         <TabsContent value="configurations" className="space-y-4">
@@ -306,7 +306,7 @@ export function PropertyEditor({ propertyId }: { propertyId: string }) {
           <PropertyConfigurationsManager
             propertyId={property.id}
             currency={currency}
-            onChanged={reload}
+            onChanged={refresh}
           />
         </TabsContent>
 

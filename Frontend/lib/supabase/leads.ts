@@ -6,7 +6,8 @@ export type LeadSourceSlug =
   | 'property_gate_modal'
   | 'property_sidebar_inquiry'
   | 'commercial_card_modal'
-  | 'article_consultation_modal';
+  | 'article_consultation_modal'
+  | 'google_ppc_landing';
 
 export interface SubmitLeadPayload {
   fullName: string;

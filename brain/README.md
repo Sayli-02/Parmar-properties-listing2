@@ -2,6 +2,8 @@
 
 Welcome to the centralized project memory for **Parmar Properties**.
 
+> 🛑 **Start with [`READ_FIRST.md`](./READ_FIRST.md)**: migrations your database needs, and what changed recently.
+
 This folder serves as the single source of truth for the **3-person engineering team** and AI coding assistants. It ensures that whenever any team member starts work, pulls code, or switches branches, they know **exactly what has been done, what is in progress, and what remains to be completed**.
 
 ---
@@ -10,6 +12,7 @@ This folder serves as the single source of truth for the **3-person engineering 
 
 | Document | Purpose | When to Read / Update |
 | :--- | :--- | :--- |
+| **[`READ_FIRST.md`](./READ_FIRST.md)** | **Heads-up for everyone starting work**: required migrations, environment warnings, recent changes. | Read before you code. Remove items once everyone has done them. |
 | **[`PROJECT_STATE.md`](./PROJECT_STATE.md)** | **Current Project Reality**: Live status of all modules, databases, environment setups, and architecture. | Read before starting any new feature. Update when major architecture shifts occur. |
 | **[`TEAM_LOG.md`](./TEAM_LOG.md)** | **Handover & Activity Stream**: Chronological record of who did what, commits, modified files, and handover notes. | **MANDATORY**: Append a note whenever you finish a task, create a PR, or push code. |
 | **[`TASK_BOARD.md`](./TASK_BOARD.md)** | **Task & Ownership Board**: Live kanban (To Do, In Progress, In Review, Done) with assigned developers. | Check before picking a task. Move your task to "In Progress" so no one duplicates your work. |

@@ -2,6 +2,7 @@
 
 > **Last Updated:** October 4, 2026  
 > **Status:** Backend Admin Complete | Frontend UI Complete | Home CMS sections wired (Locations/Hero/Why/Insights) | RLS publication_status migration authored (010, not yet applied)  
+> 🛑 **Before you code, read [`READ_FIRST.md`](./READ_FIRST.md)** (migrations 012-015 are required).  
 > **Repository:** `https://github.com/Sayli-02/Parmar-properties-listing2.git`  
 > **Main Branch Commit:** `87c5d1f` (*Complete backend admin CMS*)
 
@@ -58,6 +59,13 @@
   8. `008_property_configuration_price_breakdowns.sql`: Cost-sheet line items for configurations.
   9. `009_add_property_flow.sql`: 1 BHK variants + exclusive amenity `custom_label`.
   10. `010_publication_status_rls.sql`: Public property RLS gates on `publication_status` + `deleted_at` (authored; apply in Supabase when ready).
+  11. `011_repair_ordered_collections.sql`: authored, not applied.
+  12. `012_security_hardening.sql`: new signups get `is_active=false` — applied on the new project. Owner must still disable public email signup in the dashboard.
+  13. `013_leads_policy.sql`: public lead inserts must be unverified (applied to the new project).
+  14. `014_listing_fixes.sql`: `price_on_request`, Apartment type, OC-received status, Mahalaxmi draft page (applied to the new project).
+  15. `015_ppc_lead_source.sql`: lead source `google_ppc_landing` (applied to the new project).
+  - Note: migrations 001-015 are applied on a separate Supabase project used for the audit work. Other developers must apply 012-015 to their own project (see READ_FIRST.md).
+  - Removed: the fake client login (`Frontend/store/auth.ts`, `/saved` auth gate). `/api/enquire` removed (it only logged and returned success).
   - `seed_master.sql`: Populates master catalogues and baseline page content.
   - `seed.sql`: Sample records for demonstration.
   - `seed_cms_frontend_content.sql`: Migrates existing Frontend Mumbai hero/why/locations/insights content into live CMS tables (applied to linked Supabase).

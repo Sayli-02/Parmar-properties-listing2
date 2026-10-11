@@ -74,7 +74,7 @@ function CommercialCard({ property }: { property: CommercialProperty }) {
           <div className="grid grid-cols-3 gap-2 py-3 border-y border-[#CFD1CA] text-xs text-[#15181A]">
             <div className="flex items-center gap-1.5">
               <Maximize2 className="w-3.5 h-3.5 text-[#5B605F]" />
-              <span>{property.carpetArea.toLocaleString()} sq.ft</span>
+              <span>{property.carpetArea > 0 ? `${property.carpetArea.toLocaleString()} sq.ft` : 'Area on request'}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Briefcase className="w-3.5 h-3.5 text-[#5B605F]" />

@@ -1,0 +1,20 @@
+'use client';
+
+import React from 'react';
+import { usePathname } from 'next/navigation';
+import { Navbar } from '@/components/layout/Navbar';
+import { Footer } from '@/components/layout/Footer';
+
+/** PPC landing pages (/<slug>/project) and /ads-manager render without the site nav and footer. */
+export function SiteChrome({ children }: { children: React.ReactNode }) {
+  const path = usePathname() || '';
+  const bare = path.endsWith('/project') || path.startsWith('/ads-manager');
+  if (bare) return <main className="flex-1">{children}</main>;
+  return (
+    <>
+      <Navbar />
+      <main className="flex-1">{children}</main>
+      <Footer />
+    </>
+  );
+}

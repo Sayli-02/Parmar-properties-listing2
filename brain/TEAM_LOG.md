@@ -28,6 +28,63 @@
 
 ## 📜 Activity Stream
 
+### [2026-10-11 23:30] — Claude (AI) & Parmar Properties — Media tab: no reload on reorder, drag-and-swap for images and floor plans
+- **Branch:** `fix/audit-hardening`
+- **What Was Done:**
+  - Cause of the "page reloads": the property editor's `reload` shows a full-page "Loading property…" and was passed to every child as `onChanged`; `reload` in the image and floor plan managers also flipped their cards to a loading state.
+  - `useResource` gets `refresh()` (background refetch, no loading state). The property editor, images manager and floor plans manager use it for saves, deletes, cover changes and error recovery.
+  - Reordering is optimistic and saved in the background; it no longer refreshes the parent.
+  - Drag-and-swap (drop one card on another) for property images (already in the working tree, now compiling) and floor plans; up/down arrows kept for keyboard and touch.
+- **Current State:** `tsc --noEmit` clean. In the browser on a property with 4 images and 2 plans: drag-swap and arrows reorder instantly, order persists in the database, no loading screen appears, and a page marker survives. Not tested: real mouse drag on touch devices.
+- **Next Steps:** none required.
+
+### [2026-10-11 22:00] — Claude (AI) & Parmar Properties — Google PPC ads manager and landing pages
+- **Branch:** `fix/audit-hardening`
+- **What Was Done:**
+  - `/ads-manager` (Frontend, noindex, read-only): lists published properties with a copyable Final URL `https://<domain>/<slug>/project`, a Google ValueTrack tracking suffix (`{campaignid}`, `{keyword}`, `{creative}`) and a preview link.
+  - `/<slug>/project` (Frontend, noindex): fixed-layout landing page (hero, facts, overview, residences table, highlights, amenities, callback form, sticky call button) built from the same property data as the main page. Only published properties resolve; drafts 404.
+  - Leads from the landing page use source `google_ppc_landing` (migration 015, applied) and store the property id plus the URL's utm/gclid parameters in the message.
+  - `SiteChrome` hides the site nav and footer on `/ads-manager` and `/<slug>/project`. `withOnwards` moved to `lib/price.ts`.
+  - `next.config.mjs` now allows images from the Supabase project in `NEXT_PUBLIC_SUPABASE_URL` (it only allowed an old project's host).
+- **Current State:** `tsc --noEmit` clean; `/ads-manager` empty state, noindex and no-chrome verified in the browser; draft landing URL returns 404. Landing page with real data and the lead form NOT yet verified (needs a published property).
+- **Next Steps:** verify with a published property; set the real domain in the panel; decide whether `/ads-manager` needs a login before it goes public (it only exposes published property links).
+
+### [2026-10-11 20:00] — Claude (AI) & Parmar Properties — Listing audit fix pass
+- **Branch:** `fix/audit-hardening`
+- **What Was Done:**
+  - A separate Supabase project was set up for this work: migrations 001-014 and seeds applied; admin profile activated. Other developers must apply 012-015 to their own project (see READ_FIRST.md).
+  - 013: public lead inserts must be `is_otp_verified=false`, unassigned. Frontend no longer sends `true` (no real OTP yet). Removed dead `/api/enquire`.
+  - 014: `properties.price_on_request` (admin switch + public "Price on Request"), property type `Apartment`, status `Ready (OC received)`, Mahalaxmi editorial page as unpublished draft.
+  - Login form posts (no credentials in URL). New listings default to Draft. Detail pages revalidate every 60 s.
+  - Public pages: possession date, exclusive amenities (`custom_label`), no highlights-as-amenities, no "onwards" on text prices, card BHK and area from configurations, locality dedupe, neutral placeholder image, SEO metadata, lead linked to property, catalogue locality options from loaded listings.
+  - Entered the 8 listing drafts (see AUDIT_8_LISTINGS.md); all remain Draft.
+- **Files Touched:** see `git log`; migrations [013](../backend/supabase/migrations/013_leads_policy.sql) and [014](../backend/supabase/migrations/014_listing_fixes.sql); [AUDIT_8_LISTINGS.md](../AUDIT_8_LISTINGS.md); [FIX_PLAN.md](../FIX_PLAN.md).
+- **Current State:** `tsc --noEmit` clean and `next build` passes in both apps; `tests/012_security.sql` passes on the new project (all 3 checks); live check of detail pages, price switch and lead form done and test data deleted.
+- **Next Steps for Next Developer:** real OTP (then relax 013); owner decisions on homepage Featured fallback, hard-coded location prices, Apartment type for the 8 drafts, office details and Pune seed cleanup; images, plans and RERA QR for the 8 drafts; deferred audit items (A3, A6, C3).
+
+### [2026-10-11 12:00] — Claude (AI) & Parmar Properties — Audit hardening pass
+- **Branch:** `fix/audit-hardening`
+- **What Was Done:** (only Fixes 1 and 10-15 were in the prompt received; Fixes 2-9 were NOT supplied and are NOT done)
+  - Fix 1: migration 012 redefines `handle_new_user()` so new signups get `is_active=false` (locked out of `is_admin()`).
+  - Fix 10: detail-page layout-variant fallback is now one variant built from `property` data; default selection is `layoutVariants[0]`.
+  - Fix 11: "Prime locality" joins sub-location and location, dropping empty and case-insensitive duplicates.
+  - Fix 12: no invented `superArea` (0 when missing); variant area falls back to `Area on request`; `PropertyCard`, `compare`, `commercials` show `Area on request` when carpet area is 0; added `'Apartment'` to `PropertyType`, allowed list, and as the default.
+  - Fix 13: removed the fake client login and auth gate from `/saved`, deleted `store/auth.ts`, reworded the unused guest notice copy.
+  - Fix 14: SKIPPED (needs >30 lines). Finding recorded in TASK_BOARD.
+  - Fix 15: `backend/supabase/tests/012_security.sql` written but NOT executed. Assertion 3 (anon lead with `is_otp_verified=true` rejected) will fail until a migration tightens the `leads` insert policy (004 still has `WITH CHECK (true)`).
+- **Files Touched / Created:**
+  - [012_security_hardening.sql](../backend/supabase/migrations/012_security_hardening.sql)
+  - [012_security.sql](../backend/supabase/tests/012_security.sql)
+  - [PropertyDetailClient.tsx](../Frontend/components/property/PropertyDetailClient.tsx)
+  - [properties.ts](../Frontend/lib/supabase/properties.ts), [property.ts](../Frontend/types/property.ts), [PropertyCard.tsx](../Frontend/components/property/PropertyCard.tsx)
+  - [compare/page.tsx](../Frontend/app/compare/page.tsx), [commercials/page.tsx](../Frontend/app/commercials/page.tsx)
+  - [saved/page.tsx](../Frontend/app/saved/page.tsx), [saved.content.ts](../Frontend/data/content/saved.content.ts), `Frontend/store/auth.ts` (deleted)
+- **Current State:** Baseline and after: `npx tsc --noEmit` clean in Frontend; backend only `src/app/layout.tsx(27,50) TS2304 LayoutProps` pre-change (go away after `next build` generates types). `npm run build` passes in both apps. `npm run lint` is NOT configured in Frontend (prompts interactively), not run. Dev server / browser check NOT run. SQL migration and test NOT executed.
+- **Next Steps for Next Developer:**
+  - Owner applies 010, 011, 012 in the Supabase SQL editor (in that order) and turns off public email signup.
+  - Supply/do Fixes 2-9 (incl. leads insert rule and `/api/enquire`, which still exists), real OTP, then run `tests/012_security.sql`.
+  - Deferred items are listed in TASK_BOARD.
+
 ### [2026-10-04 16:45] — Antigravity (AI) & Arisha — Location ordering + homepage filter CMS wiring
 - **Branch:** `main` (working tree)
 - **What Was Done:**

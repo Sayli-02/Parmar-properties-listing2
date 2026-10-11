@@ -35,9 +35,8 @@ export const SAVED_PAGE_CONTENT = {
   },
   guestNotice: {
     badge: "PRIVATE SESSION",
-    title: "Access from Any Device",
-    description: "Your shortlisted properties are currently saved in this browser. Log in or register to sync your private portfolio seamlessly across your desktop and mobile devices.",
-    loginButtonText: "SIGN IN / REGISTER",
+    title: "Saved on This Device",
+    description: "Your shortlisted properties are currently saved in this browser. They stay on this device until you clear your browser data.",
   },
   emptyState: {
     heading: "No Residences Saved Yet",

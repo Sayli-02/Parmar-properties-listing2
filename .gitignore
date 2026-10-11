@@ -35,3 +35,6 @@ next-env.d.ts
 Thumbs.db
 *.pem
 .vercel/
+
+# Supabase CLI link state (per-developer)
+backend/supabase/.temp/
