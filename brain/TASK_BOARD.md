@@ -22,6 +22,13 @@
 
 ### 2. To Do (Upcoming Tasks) 📋
 
+#### Audit hardening follow-ups
+- [ ] **Audit Fixes 2-9** — not supplied in the prompt of 2026-10-11; not done (includes the `leads` insert rule and `/api/enquire`, which still exists).
+- [ ] **Fix 14: catalogue location filter** — `Frontend/app/properties/page.tsx` hardcodes localities (desktop ~L396, mobile ~L566) and compares `p.location !== selectedLocality` (L155); same in `app/commercials/page.tsx` L244. Root cause: `normalizeLocality` in `Frontend/lib/supabase/properties.ts` coerces any CMS locality to an 11-name union and defaults unknown to `'Worli'`. Homepage uses `locations` table via `fetchLocationFilterNames`; properties use `lookup_locations`. Needs a shared key (slug) and a widened `location` type (>30 lines).
+- [ ] Apply migrations 010, 011, 012 (owner, SQL editor, in order) and turn off public signup.
+- [ ] Run `backend/supabase/tests/012_security.sql`.
+- [ ] Do not-now items: split large files (`PropertyDetailClient.tsx`, `property-form.tsx`, `HeroCarousel.tsx`, `backend/src/lib/api/properties.ts`); align/upgrade Next/React/Tailwind; move 39 MB of `Frontend/public` images; remove `Frontend/data/*.ts` fallback content (plan first).
+
 #### Phase 3: Global Settings & Branding
 - [ ] **Task 5.1: Dynamic Header & Footer Branding**
   - **Assigned:** `[Unassigned]`
@@ -32,6 +39,7 @@
 
 ### 3. Completed Tasks ✅
 
+- [x] **Audit hardening: Fixes 1, 10, 11, 12, 13, 15** (Done: 2026-10-11) — branch `fix/audit-hardening`; migration 012 authored, not applied.
 - [x] **CMS-drive Locations filter bar + Hero + Why Parmar + Home Insights** (Done: 2026-10-04) — Seeded existing Frontend content into `hero_slides` / `page_content` / `locations` / `insights_articles`; Frontend now reads these sections from Supabase with fallbacks.
 - [x] **Task 5.2: Dynamic Hero Carousel Slides** (Done: 2026-10-04) — `HeroCarousel` reads active slides from `hero_slides` + headline/subtext from `page_content`.
 - [x] **Backend RLS: publication_status authority for properties + children** (Done: 2026-10-04) — Migration `010_publication_status_rls.sql` authored (not yet applied to Supabase).

@@ -28,6 +28,29 @@
 
 ## 📜 Activity Stream
 
+### [2026-10-11 12:00] — Claude (AI) & Parmar Properties — Audit hardening pass
+- **Branch:** `fix/audit-hardening`
+- **What Was Done:** (only Fixes 1 and 10-15 were in the prompt received; Fixes 2-9 were NOT supplied and are NOT done)
+  - Fix 1: migration 012 redefines `handle_new_user()` so new signups get `is_active=false` (locked out of `is_admin()`).
+  - Fix 10: detail-page layout-variant fallback is now one variant built from `property` data; default selection is `layoutVariants[0]`.
+  - Fix 11: "Prime locality" joins sub-location and location, dropping empty and case-insensitive duplicates.
+  - Fix 12: no invented `superArea` (0 when missing); variant area falls back to `Area on request`; `PropertyCard`, `compare`, `commercials` show `Area on request` when carpet area is 0; added `'Apartment'` to `PropertyType`, allowed list, and as the default.
+  - Fix 13: removed the fake client login and auth gate from `/saved`, deleted `store/auth.ts`, reworded the unused guest notice copy.
+  - Fix 14: SKIPPED (needs >30 lines). Finding recorded in TASK_BOARD.
+  - Fix 15: `backend/supabase/tests/012_security.sql` written but NOT executed. Assertion 3 (anon lead with `is_otp_verified=true` rejected) will fail until a migration tightens the `leads` insert policy (004 still has `WITH CHECK (true)`).
+- **Files Touched / Created:**
+  - [012_security_hardening.sql](../backend/supabase/migrations/012_security_hardening.sql)
+  - [012_security.sql](../backend/supabase/tests/012_security.sql)
+  - [PropertyDetailClient.tsx](../Frontend/components/property/PropertyDetailClient.tsx)
+  - [properties.ts](../Frontend/lib/supabase/properties.ts), [property.ts](../Frontend/types/property.ts), [PropertyCard.tsx](../Frontend/components/property/PropertyCard.tsx)
+  - [compare/page.tsx](../Frontend/app/compare/page.tsx), [commercials/page.tsx](../Frontend/app/commercials/page.tsx)
+  - [saved/page.tsx](../Frontend/app/saved/page.tsx), [saved.content.ts](../Frontend/data/content/saved.content.ts), `Frontend/store/auth.ts` (deleted)
+- **Current State:** Baseline and after: `npx tsc --noEmit` clean in Frontend; backend only `src/app/layout.tsx(27,50) TS2304 LayoutProps` pre-change (go away after `next build` generates types). `npm run build` passes in both apps. `npm run lint` is NOT configured in Frontend (prompts interactively), not run. Dev server / browser check NOT run. SQL migration and test NOT executed.
+- **Next Steps for Next Developer:**
+  - Owner applies 010, 011, 012 in the Supabase SQL editor (in that order) and turns off public email signup.
+  - Supply/do Fixes 2-9 (incl. leads insert rule and `/api/enquire`, which still exists), real OTP, then run `tests/012_security.sql`.
+  - Deferred items are listed in TASK_BOARD.
+
 ### [2026-10-04 16:45] — Antigravity (AI) & Arisha — Location ordering + homepage filter CMS wiring
 - **Branch:** `main` (working tree)
 - **What Was Done:**

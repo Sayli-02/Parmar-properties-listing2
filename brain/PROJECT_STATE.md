@@ -58,6 +58,9 @@
   8. `008_property_configuration_price_breakdowns.sql`: Cost-sheet line items for configurations.
   9. `009_add_property_flow.sql`: 1 BHK variants + exclusive amenity `custom_label`.
   10. `010_publication_status_rls.sql`: Public property RLS gates on `publication_status` + `deleted_at` (authored; apply in Supabase when ready).
+  11. `011_repair_ordered_collections.sql`: authored, not applied.
+  12. `012_security_hardening.sql`: new signups get `is_active=false` — authored, NOT applied. Owner must also disable public email signup.
+  - Removed: the fake client login (`Frontend/store/auth.ts`, `/saved` auth gate). `/api/enquire` still exists (not removed; Fixes 2-9 not supplied).
   - `seed_master.sql`: Populates master catalogues and baseline page content.
   - `seed.sql`: Sample records for demonstration.
   - `seed_cms_frontend_content.sql`: Migrates existing Frontend Mumbai hero/why/locations/insights content into live CMS tables (applied to linked Supabase).

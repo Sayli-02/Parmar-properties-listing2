@@ -17,7 +17,7 @@ This document explains the technical mapping between **Frontend TypeScript compo
 | `locations` | `001`, `006` | Micro-market editorial guides (Worli, Bandra, etc.) | Public: `SELECT` active; Admin: CRUD |
 | `insights_articles` | `005` | Market Intelligence research reports | Public: `SELECT` published; Admin: CRUD |
 | `article_sections` | `005` | Structured paragraphs, tables & quotes per article | Public: `SELECT`; Admin: CRUD |
-| `leads` | `004`, `005` | Consolidated inquiry inbox from all website forms | **Public: INSERT ONLY (Anon)**; Admin: SELECT/UPDATE |
+| `leads` | `004`, `005` | Consolidated inquiry inbox from all website forms | **Public: INSERT ONLY (Anon)** (policy is still `WITH CHECK (true)`; not yet restricted — see TASK_BOARD); Admin: SELECT/UPDATE |
 | `hero_slides` | `001` | Home page full-bleed carousel slides | Public: `SELECT` active; Admin: CRUD |
 | `site_branding` | `005` | Singleton company info, MahaRERA ID, contacts, address | Public: `SELECT`; Admin: CRUD |
 | `page_content` | `004` | Per-route headlines, badges, subtitles & JSON sections | Public: `SELECT`; Admin: CRUD |
@@ -131,3 +131,5 @@ export async function getProperties(): Promise<Property[]> {
   }
 }
 ```
+
+> **profiles (012, not applied):** `handle_new_user()` inserts `role='admin'`, `is_active=false`; `is_admin()` needs `is_active=true`, so new signups are locked out until promoted. Policies from 003 unchanged. Frontend `PropertyType` now includes `'Apartment'` (default).
