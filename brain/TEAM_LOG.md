@@ -28,6 +28,19 @@
 
 ## 📜 Activity Stream
 
+### [2026-10-11 18:00] — Claude (AI) & Parmar Properties — /ads-manager: impeccable critique + fixes
+- **Branch:** `claude/gracious-ramanujan-vtxsrx` (local only, not pushed)
+- **What Was Done:**
+  - Ran `/impeccable critique` on `/ads-manager` (dual-agent). Score 21/40, 5 priority issues; archive in `.impeccable/critique/`.
+  - Rewrote `AdsManager.tsx` in place (card layout kept): loading/ready/error states with Retry (a failed fetch no longer reads as "no properties"); copy now confirms in text, falls back to a hidden textarea when `navigator.clipboard` is missing, and reports failure; timers cleared on unmount.
+  - Domain is validated and normalised with `new URL()` (adds `https://`, drops pasted paths); both inputs persist in `localStorage`; campaign slug shown as typed-vs-sent.
+  - One shared tracking-suffix block (identical for every property) instead of a button per row; per row: filled "Copy Final URL", secondary "Copy URL with tracking", "Preview on this site" link; slug is URL-encoded.
+  - Accessibility/type: how-to moved to numbered steps at the top, 14px text, 40px controls, `focus-visible` rings, per-property `aria-label`s, palette tokens (`ink`, `surface`, `line`, `slateText`, `brick`) instead of hard-coded hex.
+- **Files Touched / Created:**
+  - [`Frontend/components/ppc/AdsManager.tsx`](../Frontend/components/ppc/AdsManager.tsx)
+- **Current State:** `npx tsc --noEmit` clean; `impeccable detect` 0 findings; dev server rendered `/ads-manager` at 1280px and 390px with no horizontal overflow. Property rows were NOT rendered (no Supabase env in this session), so the per-row layout is unverified visually. ESLint is not configured in `Frontend`.
+- **Next Steps for Next Developer:** Open `/ads-manager` against a real Supabase project and check the rows. `/ads-manager` has no login check (only `noindex`); decided to leave as is for now.
+
 ### [2026-10-11 23:30] — Claude (AI) & Parmar Properties — Media tab: no reload on reorder, drag-and-swap for images and floor plans
 - **Branch:** `fix/audit-hardening`
 - **What Was Done:**
