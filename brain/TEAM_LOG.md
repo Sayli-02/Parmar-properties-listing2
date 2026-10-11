@@ -28,6 +28,18 @@
 
 ## 📜 Activity Stream
 
+### [2026-10-11 20:00] — Claude (AI) & Parmar Properties — Premium per-property landing page (/<slug>/project)
+- **Branch:** `claude/gracious-ramanujan-vtxsrx` (local only, not pushed)
+- **What Was Done:**
+  - Redesigned `PpcLanding.tsx`, the page opened by "Preview" in `/ads-manager`, for every published property: full-bleed hero with the enquiry form beside it (stacked right under the hero on mobile), a key-facts band, overview + highlights, a gallery (uses the property's other photos), residences table, floor plans (only those with an image), amenities, Google Maps link, developer block with RERA QR, closing call-to-action, fixed mobile Call bar.
+  - Every section renders only when the property has that data, so thin listings still look right; no invented content.
+  - Same site palette tokens (`mineral`, `surface`, `line`, `slateText`, `ink`, `brick`) and serif headings; real form labels, focus rings, 44px+ fields.
+  - Form logic unchanged (`submitLead`, source `google_ppc_landing`, utm/gclid kept in the lead message).
+- **Files Touched / Created:**
+  - [`Frontend/components/ppc/PpcLanding.tsx`](../Frontend/components/ppc/PpcLanding.tsx)
+- **Current State:** `tsc --noEmit` clean; impeccable detector 0 findings. Rendered locally at 1280px and 390px against a throwaway fake Supabase server with two sample properties (nothing committed), including a sparse property. Not tested against the live database; the callback form submit was not exercised.
+- **Next Steps for Next Developer:** Check a few real published properties on live data; add a real photo/plan to a draft to see the gallery and floor-plan sections; consider `/impeccable critique` on this page.
+
 ### [2026-10-11 18:00] — Claude (AI) & Parmar Properties — /ads-manager: impeccable critique + fixes
 - **Branch:** `claude/gracious-ramanujan-vtxsrx` (local only, not pushed)
 - **What Was Done:**
