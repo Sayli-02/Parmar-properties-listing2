@@ -59,8 +59,11 @@
   9. `009_add_property_flow.sql`: 1 BHK variants + exclusive amenity `custom_label`.
   10. `010_publication_status_rls.sql`: Public property RLS gates on `publication_status` + `deleted_at` (authored; apply in Supabase when ready).
   11. `011_repair_ordered_collections.sql`: authored, not applied.
-  12. `012_security_hardening.sql`: new signups get `is_active=false` — authored, NOT applied. Owner must also disable public email signup.
-  - Removed: the fake client login (`Frontend/store/auth.ts`, `/saved` auth gate). `/api/enquire` still exists (not removed; Fixes 2-9 not supplied).
+  12. `012_security_hardening.sql`: new signups get `is_active=false` — applied on the new project. Owner must still disable public email signup in the dashboard.
+  13. `013_leads_policy.sql`: public lead inserts must be unverified (applied to the new project).
+  14. `014_listing_fixes.sql`: `price_on_request`, Apartment type, OC-received status, Mahalaxmi draft page (applied to the new project).
+  - Note: migrations 001-014 are applied on the new Supabase project khrxatoccwoacgzsxsry.
+  - Removed: the fake client login (`Frontend/store/auth.ts`, `/saved` auth gate). `/api/enquire` removed (it only logged and returned success).
   - `seed_master.sql`: Populates master catalogues and baseline page content.
   - `seed.sql`: Sample records for demonstration.
   - `seed_cms_frontend_content.sql`: Migrates existing Frontend Mumbai hero/why/locations/insights content into live CMS tables (applied to linked Supabase).

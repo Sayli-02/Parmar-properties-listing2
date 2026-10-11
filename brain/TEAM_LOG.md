@@ -28,6 +28,19 @@
 
 ## 📜 Activity Stream
 
+### [2026-10-11 20:00] — Claude (AI) & Parmar Properties — Listing audit fix pass
+- **Branch:** `fix/audit-hardening`
+- **What Was Done:**
+  - New Supabase project (khrxatoccwoacgzsxsry) set up: migrations 001-014 and seeds applied; admin profile activated.
+  - 013: public lead inserts must be `is_otp_verified=false`, unassigned. Frontend no longer sends `true` (no real OTP yet). Removed dead `/api/enquire`.
+  - 014: `properties.price_on_request` (admin switch + public "Price on Request"), property type `Apartment`, status `Ready (OC received)`, Mahalaxmi editorial page as unpublished draft.
+  - Login form posts (no credentials in URL). New listings default to Draft. Detail pages revalidate every 60 s.
+  - Public pages: possession date, exclusive amenities (`custom_label`), no highlights-as-amenities, no "onwards" on text prices, card BHK and area from configurations, locality dedupe, neutral placeholder image, SEO metadata, lead linked to property, catalogue locality options from loaded listings.
+  - Entered the 8 listing drafts (see AUDIT_8_LISTINGS.md); all remain Draft.
+- **Files Touched:** see `git log`; migrations [013](../backend/supabase/migrations/013_leads_policy.sql) and [014](../backend/supabase/migrations/014_listing_fixes.sql); [AUDIT_8_LISTINGS.md](../AUDIT_8_LISTINGS.md); [FIX_PLAN.md](../FIX_PLAN.md).
+- **Current State:** `tsc --noEmit` clean and `next build` passes in both apps; `tests/012_security.sql` passes on the new project (all 3 checks); live check of detail pages, price switch and lead form done and test data deleted.
+- **Next Steps for Next Developer:** real OTP (then relax 013); owner decisions on homepage Featured fallback, hard-coded location prices, Apartment type for the 8 drafts, office details and Pune seed cleanup; images, plans and RERA QR for the 8 drafts; deferred audit items (A3, A6, C3).
+
 ### [2026-10-11 12:00] — Claude (AI) & Parmar Properties — Audit hardening pass
 - **Branch:** `fix/audit-hardening`
 - **What Was Done:** (only Fixes 1 and 10-15 were in the prompt received; Fixes 2-9 were NOT supplied and are NOT done)

@@ -2,6 +2,14 @@
 
 Date: 2026-10-11 · Source: `Parmar_Properties_8_Listing_Drafts.docx` · Method: created every listing through the admin form (localhost:3001) as the signed-in admin, then checked the database and the public site code/behaviour (localhost:3000).
 
+## 0. Status after the fix pass (2026-10-11)
+
+Fixed and verified live (listings temporarily published, then reverted to Draft): D1, D2, L1, L2, L3, L5, L8, C1, C2/L7 (card area and BHK), C5/L6 (see correction), C6, C7, C9, L10, B3, A1, A2 (draft page), A5 (status option added), price-on-request switch (new, per your request). B1 field-error path (toast and scroll).
+
+Not fixed, by decision: homepage Featured fallback (L9, deliberate design, your call), hard-coded "From ₹X Cr" on location cards, Lodha Vista "starting price" (now the owner's choice via the Price on Request switch), A3, A6, A7, B4-B6, C3, per-tower status, Pune seed and office details (waiting for details), re-pointing the 8 listings to the new Apartment type (waiting for your call).
+
+Corrections to this audit: (1) the cover image path `/properties/worli-aurum/cover.jpg` does not exist, so visitors saw a broken image, not another property's photo. (2) The config-error path in the admin form already showed a toast; only field errors were silent.
+
 ## 1. What was entered
 
 All 8 listings exist as **Draft** (document rule), with title, slug, tagline, overview, highlights, developer name and overview, location, sub-location, possession, MahaRERA text, exclusive amenities, sort order 1-8, meta title and description, and **18 configuration rows**. Shared amenities, images, plans, coordinates and RERA QR are empty, as the document says. Saved values were read back from the database and match the document.

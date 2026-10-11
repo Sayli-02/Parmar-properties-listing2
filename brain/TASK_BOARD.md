@@ -23,6 +23,9 @@
 ### 2. To Do (Upcoming Tasks) 📋
 
 #### Audit hardening follow-ups
+- [ ] Real OTP, then relax migration 013.
+- [ ] Owner decisions: homepage Featured fallback, hard-coded "From ₹X Cr" on location cards, Apartment type for the 8 drafts, Mumbai office details, Pune seed cleanup.
+- [ ] Add images, plans and RERA QR to the 8 draft listings, then publish.
 - [ ] **Audit Fixes 2-9** — not supplied in the prompt of 2026-10-11; not done (includes the `leads` insert rule and `/api/enquire`, which still exists).
 - [ ] **Fix 14: catalogue location filter** — `Frontend/app/properties/page.tsx` hardcodes localities (desktop ~L396, mobile ~L566) and compares `p.location !== selectedLocality` (L155); same in `app/commercials/page.tsx` L244. Root cause: `normalizeLocality` in `Frontend/lib/supabase/properties.ts` coerces any CMS locality to an 11-name union and defaults unknown to `'Worli'`. Homepage uses `locations` table via `fetchLocationFilterNames`; properties use `lookup_locations`. Needs a shared key (slug) and a widened `location` type (>30 lines).
 - [ ] Apply migrations 010, 011, 012 (owner, SQL editor, in order) and turn off public signup.
@@ -39,6 +42,7 @@
 
 ### 3. Completed Tasks ✅
 
+- [x] **Listing audit fix pass** (Done: 2026-10-11) — see TEAM_LOG; plan in FIX_PLAN.md, findings in AUDIT_8_LISTINGS.md.
 - [x] **Audit hardening: Fixes 1, 10, 11, 12, 13, 15** (Done: 2026-10-11) — branch `fix/audit-hardening`; migration 012 authored, not applied.
 - [x] **CMS-drive Locations filter bar + Hero + Why Parmar + Home Insights** (Done: 2026-10-04) — Seeded existing Frontend content into `hero_slides` / `page_content` / `locations` / `insights_articles`; Frontend now reads these sections from Supabase with fallbacks.
 - [x] **Task 5.2: Dynamic Hero Carousel Slides** (Done: 2026-10-04) — `HeroCarousel` reads active slides from `hero_slides` + headline/subtext from `page_content`.
