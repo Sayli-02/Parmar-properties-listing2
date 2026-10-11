@@ -88,6 +88,7 @@ function mapPossession(
 function mapPropertyType(name: string | null | undefined): PropertyType {
   const allowed: PropertyType[] = [
     'Penthouse',
+    'Apartment',
     'Sea-Facing Apartment',
     'Duplex',
     'Sky Villa',
@@ -99,7 +100,7 @@ function mapPropertyType(name: string | null | undefined): PropertyType {
   if (name?.toLowerCase().includes('penthouse')) return 'Penthouse';
   if (name?.toLowerCase().includes('villa')) return 'Sky Villa';
   if (name?.toLowerCase().includes('duplex')) return 'Duplex';
-  return 'Sea-Facing Apartment';
+  return 'Apartment';
 }
 
 function variantToBhkLabel(variant: string): string {
@@ -205,7 +206,7 @@ export function mapDbPropertyToFrontend(dbRow: Record<string, unknown>): Propert
             (typeof cfg.tab_label === 'string' && cfg.tab_label) ||
             variantToBhkLabel(variantCode),
           title,
-          area: area || `${cfg.carpet_area ?? ''} sq.ft`,
+          area: area || (cfg.carpet_area ? `${cfg.carpet_area} sq.ft` : 'Area on request'),
           carpetArea:
             typeof cfg.carpet_area === 'string' && cfg.carpet_area
               ? `${cfg.carpet_area} Sq.Ft`
@@ -251,12 +252,7 @@ export function mapDbPropertyToFrontend(dbRow: Record<string, unknown>): Propert
         : 0;
   const carpetArea = Number.isFinite(carpetRaw) && carpetRaw > 0 ? carpetRaw : 0;
   const superRaw = dbRow.super_area != null ? Number(dbRow.super_area) : 0;
-  const superArea =
-    Number.isFinite(superRaw) && superRaw > 0
-      ? superRaw
-      : carpetArea > 0
-        ? Math.round(carpetArea * 1.35)
-        : 0;
+  const superArea = Number.isFinite(superRaw) && superRaw > 0 ? superRaw : 0;
 
   const firstConfigVariant =
     configurations?.[0] && typeof configurations[0].variant_code === 'string'

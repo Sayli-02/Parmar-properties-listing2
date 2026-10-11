@@ -11,7 +11,7 @@ export type MumbaiLocality =
   | 'BKC'
   | 'Sewri';
 
-export type PropertyType = 'Penthouse' | 'Sea-Facing Apartment' | 'Duplex' | 'Sky Villa' | 'Luxury Estate';
+export type PropertyType = 'Penthouse' | 'Apartment' | 'Sea-Facing Apartment' | 'Duplex' | 'Sky Villa' | 'Luxury Estate';
 
 export type PropertyCategory = 'buy' | 'new-launches' | 'luxury-collection';
 
