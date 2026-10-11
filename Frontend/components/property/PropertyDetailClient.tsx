@@ -800,7 +800,7 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({
                 Direct Inquiry Desk
               </span>
               <p className="font-sans text-2xl font-bold tracking-tight text-[#15181A]">
-                {property.priceFormatted} onwards
+                {withOnwards(property.priceFormatted)}
               </p>
               <span className="text-xs text-[#5B605F] font-mono block mt-1">
                 MahaRERA: {property.reraId}
