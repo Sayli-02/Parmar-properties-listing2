@@ -1,9 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Phone, ShieldCheck, ArrowRight } from 'lucide-react';
+import React from 'react';
+import { Phone, ArrowRight } from 'lucide-react';
 import type { Property } from '@/types/property';
-import { submitLead } from '@/lib/supabase/leads';
+import { EnquiryForm as SharedForm } from './shared';
 import { withOnwards } from '@/lib/price';
 
 const PHONE_DISPLAY = '+91 (022) 6666 9733';
@@ -11,63 +11,6 @@ const PHONE_TEL = 'tel:+912266669733';
 const PLACEHOLDER = '/placeholder.png';
 const FOCUS = 'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brick';
 const CTA = `inline-flex items-center justify-center gap-2 min-h-12 px-8 bg-brick hover:bg-brickHover text-white text-sm uppercase tracking-widest font-semibold transition-colors ${FOCUS}`;
-const FIELD = `mt-1 w-full min-h-11 px-3 border border-slateText bg-white text-base text-ink ${FOCUS}`;
-
-function EnquiryForm({ property }: { property: Property }) {
-  const [form, setForm] = useState({ name: '', phone: '', email: '' });
-  const [state, setState] = useState<'idle' | 'sending' | 'done' | 'error'>('idle');
-
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setState('sending');
-    // Keep ad attribution (utm_*, gclid) with the lead.
-    const tracking = window.location.search.replace(/^\?/, '');
-    const res = await submitLead({
-      fullName: form.name,
-      phone: form.phone,
-      email: form.email,
-      sourceSlug: 'google_ppc_landing',
-      propertyId: property.id,
-      message: `PPC landing enquiry for ${property.title}${tracking ? ` | ${tracking}` : ''}`,
-    });
-    setState(res.success ? 'done' : 'error');
-  }
-
-  return (
-    <div id="enquire" className="bg-surface text-ink p-6 sm:p-7 shadow-2xl shadow-black/30 scroll-mt-20">
-      <h2 className="font-serif text-2xl sm:text-3xl">Request a private viewing</h2>
-      <p className="text-sm text-slateText mt-2 mb-5">An advisor will call you back with current availability.</p>
-      {state === 'done' ? (
-        <p role="status" className="text-base font-semibold text-emerald-800 flex gap-2">
-          <ShieldCheck className="w-5 h-5 shrink-0" aria-hidden /> Thank you. We will call you shortly.
-        </p>
-      ) : (
-        <form onSubmit={onSubmit} className="space-y-4">
-          <label className="block text-sm font-semibold">
-            Full name
-            <input required autoComplete="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={FIELD} />
-          </label>
-          <label className="block text-sm font-semibold">
-            Mobile number
-            <input required type="tel" autoComplete="tel" inputMode="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={FIELD} />
-          </label>
-          <label className="block text-sm font-semibold">
-            Email <span className="font-normal text-slateText">(optional)</span>
-            <input type="email" autoComplete="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={FIELD} />
-          </label>
-          <button disabled={state === 'sending'} className={`${CTA} w-full disabled:opacity-60`}>
-            {state === 'sending' ? 'Sending…' : 'Request callback'}
-          </button>
-          {state === 'error' ? (
-            <p role="alert" className="text-sm text-brick">
-              We could not send your request. Please call {PHONE_DISPLAY}.
-            </p>
-          ) : null}
-        </form>
-      )}
-    </div>
-  );
-}
 
 /** Premium single-property page for Google PPC traffic: one property, one call to action. Every section appears only when the property has the data for it. */
 export function PpcLanding({ property }: { property: Property }) {
@@ -131,7 +74,7 @@ export function PpcLanding({ property }: { property: Property }) {
             </p>
             <p className="mt-8 text-3xl sm:text-4xl font-semibold">{withOnwards(property.priceFormatted)}</p>
           </div>
-          <EnquiryForm property={property} />
+          <div className="bg-surface text-ink p-6 sm:p-7 shadow-2xl shadow-black/30"><SharedForm property={property} /></div>
         </div>
       </section>
 
