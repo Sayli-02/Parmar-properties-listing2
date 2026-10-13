@@ -6,7 +6,8 @@ import { fetchPropertyBySlug } from '@/lib/supabase/properties';
 export const revalidate = 60;
 
 // Ad landing pages must not compete with the main site in search results.
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const params = await props.params;
   const property = await fetchPropertyBySlug(params.slug);
   if (!property) return { robots: { index: false, follow: false } };
   return {
@@ -16,7 +17,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
-export default async function ProjectLandingPage({ params }: { params: { slug: string } }) {
+export default async function ProjectLandingPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params;
   const property = await fetchPropertyBySlug(params.slug);
   if (!property) notFound();
   return <PpcLanding property={property} />;

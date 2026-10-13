@@ -22,14 +22,14 @@ export function Folio({ property }: { property: Property }) {
         {a ? (
           <div className={`grid gap-2 sm:gap-3 ${b ? 'lg:grid-cols-3' : ''}`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={a} alt={`${property.title}`} className={`w-full object-cover aspect-[4/3] sm:aspect-[16/10] ${b ? 'lg:col-span-2 lg:row-span-2 lg:h-full lg:aspect-auto' : ''}`} />
+            <img src={a} alt={`${property.title}`} className={`w-full object-cover aspect-4/3 sm:aspect-[16/10] ${b ? 'lg:col-span-2 lg:row-span-2 lg:h-full lg:aspect-auto' : ''}`} />
             {b ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={b} alt="" className="hidden lg:block w-full h-full object-cover aspect-[4/3]" />
+              <img src={b} alt="" className="hidden lg:block w-full h-full object-cover aspect-4/3" />
             ) : null}
             {c ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={c} alt="" className="hidden lg:block w-full h-full object-cover aspect-[4/3]" />
+              <img src={c} alt="" className="hidden lg:block w-full h-full object-cover aspect-4/3" />
             ) : null}
           </div>
         ) : null}
@@ -39,7 +39,7 @@ export function Folio({ property }: { property: Property }) {
         <div className="lg:col-start-1">
           <div>
             <p className="text-base text-slateText">{[property.location, property.propertyType].filter(Boolean).join(' · ')}</p>
-            <h1 className="mt-2 font-serif text-5xl sm:text-7xl leading-[1]">{property.title}</h1>
+            <h1 className="mt-2 font-serif text-5xl sm:text-7xl leading-none">{property.title}</h1>
             {property.tagline ? <p className="mt-4 text-xl text-slateText max-w-2xl">{property.tagline}</p> : null}
             <p className="mt-6 font-serif text-4xl sm:text-5xl text-brick">{withOnwards(property.priceFormatted)}</p>
           </div>
@@ -57,7 +57,7 @@ export function Folio({ property }: { property: Property }) {
             {d.facts.map(([k, v]) => (
               <div key={k}>
                 <dt className="text-sm text-slateText">{k}</dt>
-                <dd className="mt-1 font-serif text-2xl break-words">{v}</dd>
+                <dd className="mt-1 font-serif text-2xl wrap-break-word">{v}</dd>
               </div>
             ))}
           </dl>

@@ -48,7 +48,7 @@ async function copyText(text: string): Promise<boolean> {
 
 function CopyButton({ text, label, forName, primary }: { text: string; label: string; forName: string; primary?: boolean }) {
   const [state, setState] = useState<'idle' | 'done' | 'failed'>('idle');
-  const timer = useRef<ReturnType<typeof setTimeout>>();
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
 
   const onClick = async () => {

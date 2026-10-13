@@ -36,7 +36,7 @@ function CommercialCard({ property }: { property: CommercialProperty }) {
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#C5282F] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left z-20" />
 
       {/* Image Container */}
-      <div className="relative aspect-[16/10] w-full bg-[#EDEEE9] overflow-hidden">
+      <div className="relative aspect-16/10 w-full bg-[#EDEEE9] overflow-hidden">
         <Image
           src={property.coverImage}
           alt={property.title}

@@ -55,7 +55,7 @@ export function Express({ property }: { property: Property }) {
           <section aria-label="Gallery" className="grid grid-cols-3 gap-2">
             {d.gallery.slice(0, 3).map((src, i) => (
               // eslint-disable-next-line @next/next/no-img-element
-              <img key={src} src={src} alt={`${property.title}, view ${i + 2}`} loading="lazy" className="w-full object-cover aspect-[4/5] sm:aspect-[4/3]" />
+              <img key={src} src={src} alt={`${property.title}, view ${i + 2}`} loading="lazy" className="w-full object-cover aspect-4/5 sm:aspect-[4/3]" />
             ))}
           </section>
         ) : null}

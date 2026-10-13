@@ -451,7 +451,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange 
                 type="submit"
                 className="w-full h-11 bg-[#C5282F] hover:bg-[#A31D23] text-white text-xs uppercase tracking-[0.16em] font-medium transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-md hover:shadow-lg active:scale-98 rounded-xs"
               >
-                <Search className="w-4 h-4 text-white stroke-[2] shrink-0" />
+                <Search className="w-4 h-4 text-white stroke-2 shrink-0" />
                 <span>SEARCH</span>
               </button>
             </div>
@@ -696,7 +696,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange 
                     }`}
                   >
                     <span>{opt.label}</span>
-                    {searchStatus === opt.val && <Check className="w-3.5 h-3.5 text-white stroke-[2] shrink-0" />}
+                    {searchStatus === opt.val && <Check className="w-3.5 h-3.5 text-white stroke-2 shrink-0" />}
                   </button>
                 ))}
               </div>
@@ -709,7 +709,7 @@ export const HeroCarousel: React.FC<HeroCarouselProps> = ({ onUnlockStateChange 
               type="submit"
               className="w-full h-11 bg-[#C5282F] hover:bg-[#A31D23] text-white text-xs uppercase tracking-[0.16em] font-medium transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-md active:scale-98 rounded-xs"
             >
-              <Search className="w-4 h-4 text-white stroke-[2] shrink-0" />
+              <Search className="w-4 h-4 text-white stroke-2 shrink-0" />
               <span>SEARCH PROPERTIES</span>
             </button>
           </div>

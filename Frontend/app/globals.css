@@ -1,6 +1,37 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@theme {
+  --color-mineral: #EDEEE9; /* page background */
+  --color-surface: #F7F7F4; /* cards and panels */
+  --color-line: #CFD1CA; /* borders and dividers */
+  --color-slateText: #5B605F; /* body text */
+  --color-ink: #15181A; /* headings, primary text, dark bands */
+  --color-brick: #C5282F; /* logo crimson accent */
+  --color-brickHover: #A31D23;
+  --color-brandNavy: #393187; /* logo navy accent */
+  --font-serif: var(--font-playfair), Georgia, serif;
+  --font-sans: var(--font-jakarta), system-ui, -apple-system, sans-serif;
+  --font-heading: var(--font-playfair), Georgia, serif;
+}
+
+/* Tailwind 4 changed a few defaults; keep the Tailwind 3 look this site was built with. */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+  button:not(:disabled),
+  [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-gray-400);
+  }
+}
 
 :root {
   --background: #EDEEE9;

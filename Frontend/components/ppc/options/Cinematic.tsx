@@ -10,12 +10,12 @@ export function Cinematic({ property }: { property: Property }) {
   const d = ppcData(property);
   return (
     <div className="bg-ink text-white font-sans min-h-screen pb-16 md:pb-0">
-      <section className="relative min-h-[100svh] flex flex-col">
+      <section className="relative min-h-svh flex flex-col">
         {d.hero ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={d.hero} alt="" className="absolute inset-0 w-full h-full object-cover" />
         ) : null}
-        <div className="absolute inset-0 bg-gradient-to-b from-ink/60 via-ink/10 to-ink" aria-hidden />
+        <div className="absolute inset-0 bg-linear-to-b from-ink/60 via-ink/10 to-ink" aria-hidden />
         <header className="relative flex items-center justify-between px-4 sm:px-10 py-4">
           <span className="bg-white px-3 py-1.5"><Logo className="h-7 w-auto" /></span>
           <a href={PHONE_TEL} className={`inline-flex items-center gap-2 text-sm font-semibold ${FOCUS}`}>
@@ -38,7 +38,7 @@ export function Cinematic({ property }: { property: Property }) {
           {d.facts.map(([k, v]) => (
             <div key={k}>
               <dt className="text-sm text-white/65">{k}</dt>
-              <dd className="mt-1 font-serif text-2xl sm:text-3xl break-words">{v}</dd>
+              <dd className="mt-1 font-serif text-2xl sm:text-3xl wrap-break-word">{v}</dd>
             </div>
           ))}
         </dl>

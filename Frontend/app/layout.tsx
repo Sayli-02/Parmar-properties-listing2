@@ -6,14 +6,14 @@ import { SiteChrome } from "@/components/layout/SiteChrome";
 const playfair = Playfair_Display({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-heading",
+  variable: "--font-playfair",
   display: "swap",
 });
 
 const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-sans",
+  variable: "--font-jakarta",
   display: "swap",
 });
 

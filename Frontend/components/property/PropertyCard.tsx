@@ -19,7 +19,7 @@ export const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#C5282F] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left z-20" />
 
       {/* Property Image Container */}
-      <div className="relative aspect-[16/10] w-full bg-[#EDEEE9] overflow-hidden">
+      <div className="relative aspect-16/10 w-full bg-[#EDEEE9] overflow-hidden">
         {!imgError && property.coverImage ? (
           <Image
             src={property.coverImage}

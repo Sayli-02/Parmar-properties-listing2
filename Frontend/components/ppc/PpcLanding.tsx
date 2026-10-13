@@ -64,7 +64,7 @@ export function PpcLanding({ property }: { property: Property }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover" />
         ) : null}
-        <div className="absolute inset-0 bg-gradient-to-r from-ink/85 via-ink/55 to-ink/30" aria-hidden />
+        <div className="absolute inset-0 bg-linear-to-r from-ink/85 via-ink/55 to-ink/30" aria-hidden />
         <div className="relative max-w-6xl mx-auto px-4 sm:px-8 py-14 sm:py-24 grid gap-10 lg:grid-cols-[1fr_380px] items-end">
           <div>
             <h1 className="font-serif text-4xl sm:text-6xl leading-[1.05]">{property.title}</h1>
@@ -83,7 +83,7 @@ export function PpcLanding({ property }: { property: Property }) {
           {facts.map(([k, v]) => (
             <div key={k} className="px-4 sm:px-8 py-5 border-b border-line lg:border-b-0">
               <dt className="text-sm text-slateText">{k}</dt>
-              <dd className="mt-1 text-base font-semibold break-words">{v}</dd>
+              <dd className="mt-1 text-base font-semibold wrap-break-word">{v}</dd>
             </div>
           ))}
         </dl>
@@ -120,7 +120,7 @@ export function PpcLanding({ property }: { property: Property }) {
                 src={src}
                 alt={`${property.title}, view ${i + 2}`}
                 loading="lazy"
-                className={`w-full object-cover ${gallery.length === 1 ? 'aspect-[16/9]' : 'aspect-[4/3]'} ${gallery.length > 2 && i === 0 ? 'col-span-2 row-span-2 h-full' : ''}`}
+                className={`w-full object-cover ${gallery.length === 1 ? 'aspect-16/9' : 'aspect-4/3'} ${gallery.length > 2 && i === 0 ? 'col-span-2 row-span-2 h-full' : ''}`}
               />
             ))}
           </section>

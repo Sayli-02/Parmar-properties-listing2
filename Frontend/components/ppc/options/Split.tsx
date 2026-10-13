@@ -15,11 +15,11 @@ export function Split({ property }: { property: Property }) {
           // eslint-disable-next-line @next/next/no-img-element
           <img src={d.hero} alt="" className="absolute inset-0 w-full h-full object-cover" />
         ) : null}
-        <div className="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/10 to-ink/30" aria-hidden />
+        <div className="absolute inset-0 bg-linear-to-t from-ink/90 via-ink/10 to-ink/30" aria-hidden />
         <span className="absolute top-4 left-4 sm:top-8 sm:left-8 bg-white px-3 py-1.5"><Logo className="h-7 w-auto" /></span>
         <div className="absolute bottom-0 inset-x-0 p-5 sm:p-10">
           <p className="text-base text-white/85">{[property.location, property.propertyType].filter(Boolean).join(' · ')}</p>
-          <h1 className="mt-2 font-serif text-5xl sm:text-6xl lg:text-7xl leading-[1]">{property.title}</h1>
+          <h1 className="mt-2 font-serif text-5xl sm:text-6xl lg:text-7xl leading-none">{property.title}</h1>
           <p className="mt-4 text-2xl sm:text-3xl font-semibold">{withOnwards(property.priceFormatted)}</p>
         </div>
       </div>
@@ -38,7 +38,7 @@ export function Split({ property }: { property: Property }) {
 
         <dl className="grid grid-cols-2 gap-x-6 gap-y-6 border-y border-line py-8">
           {d.facts.map(([k, v]) => (
-            <div key={k}><dt className="text-sm text-slateText">{k}</dt><dd className="mt-1 text-lg font-semibold break-words">{v}</dd></div>
+            <div key={k}><dt className="text-sm text-slateText">{k}</dt><dd className="mt-1 text-lg font-semibold wrap-break-word">{v}</dd></div>
           ))}
         </dl>
 
@@ -51,7 +51,7 @@ export function Split({ property }: { property: Property }) {
           <section aria-label="Gallery" className="grid grid-cols-2 gap-2">
             {d.gallery.slice(0, 4).map((src, i) => (
               // eslint-disable-next-line @next/next/no-img-element
-              <img key={src} src={src} alt={`${property.title}, view ${i + 2}`} loading="lazy" className={`w-full object-cover aspect-[4/3] ${i === 0 && d.gallery.length % 2 === 1 ? 'col-span-2' : ''}`} />
+              <img key={src} src={src} alt={`${property.title}, view ${i + 2}`} loading="lazy" className={`w-full object-cover aspect-4/3 ${i === 0 && d.gallery.length % 2 === 1 ? 'col-span-2' : ''}`} />
             ))}
           </section>
         ) : null}

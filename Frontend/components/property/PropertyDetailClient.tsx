@@ -745,13 +745,13 @@ export const PropertyDetailClient: React.FC<PropertyDetailClientProps> = ({
                 <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" />
 
                 {/* Stylized Nautical / Topographic Radar Background */}
-                <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,#CFD1CA_1px,transparent_1px)] [background-size:24px_24px]" />
+                <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,#CFD1CA_1px,transparent_1px)] bg-size-[24px_24px]" />
                 <div className="absolute inset-0 flex items-center justify-center opacity-30 pointer-events-none">
                   <div className="w-48 h-48 border border-white/20 rounded-full" />
                   <div className="absolute w-72 h-72 border border-dashed border-white/15 rounded-full" />
                   <div className="absolute w-96 h-96 border border-white/10 rounded-full" />
-                  <div className="absolute w-full h-[1px] bg-white/10" />
-                  <div className="absolute h-full w-[1px] bg-white/10" />
+                  <div className="absolute w-full h-px bg-white/10" />
+                  <div className="absolute h-full w-px bg-white/10" />
                 </div>
 
                 {/* Location Marker Radar Pulse */}

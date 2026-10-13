@@ -63,7 +63,7 @@ export default function MarketIntelligencePage() {
     <div className="w-full min-h-screen bg-[#EDEEE9] text-[#15181A] pt-24 font-sans">
       {/* Header Banner */}
       <section className="bg-[#15181A] text-white py-16 sm:py-24 px-4 sm:px-6 lg:px-8 border-b border-[#CFD1CA] relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-[radial-gradient(#CFD1CA_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-[radial-gradient(#CFD1CA_1px,transparent_1px)] bg-size-[24px_24px] opacity-10 pointer-events-none" />
 
         <div className="max-w-7xl mx-auto relative">
           <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-white/60 mb-6 font-sans">
@@ -116,7 +116,7 @@ export default function MarketIntelligencePage() {
                         className="object-cover group-hover:scale-105 transition-transform duration-500"
                         sizes="(max-width: 768px) 100vw, 50vw"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                      <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
                       <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between text-white text-[11px] font-mono">
                         <span className="bg-[#C5282F] text-white px-2 py-0.5 uppercase tracking-wider text-[10px] font-bold">
                           {insight.tag}

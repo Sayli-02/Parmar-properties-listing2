@@ -10,7 +10,8 @@ export const dynamic = 'force-dynamic';
 export const metadata = { robots: { index: false, follow: false } };
 
 // Design exploration only: never served in production.
-export default async function PpcPreview({ params }: { params: { v: string; slug: string } }) {
+export default async function PpcPreview(props: { params: Promise<{ v: string; slug: string }> }) {
+  const params = await props.params;
   if (process.env.NODE_ENV === 'production') notFound();
   const property = await fetchPropertyBySlug(params.slug);
   if (!property) notFound();

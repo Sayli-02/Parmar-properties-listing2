@@ -80,8 +80,8 @@ export function WhyParmar() {
     >
       {/* Dynamic Background Architectural Animations */}
       {/* 1. Subtle glowing ambient light orbs */}
-      <div className="absolute -top-36 -left-36 w-96 h-96 bg-[#C5282F]/10 rounded-full blur-[110px] pointer-events-none animate-pulse duration-[8000ms]" />
-      <div className="absolute -bottom-36 -right-36 w-96 h-96 bg-[#C5282F]/08 rounded-full blur-[120px] pointer-events-none animate-pulse duration-[10000ms]" />
+      <div className="absolute -top-36 -left-36 w-96 h-96 bg-[#C5282F]/10 rounded-full blur-[110px] pointer-events-none animate-pulse duration-8000" />
+      <div className="absolute -bottom-36 -right-36 w-96 h-96 bg-[#C5282F]/08 rounded-full blur-[120px] pointer-events-none animate-pulse duration-10000" />
 
       {/* 2. Architectural Blueprint Grid Pattern */}
       <div
@@ -197,13 +197,13 @@ export function WhyParmar() {
                 >
                   {/* Top Animated Shimmer Bar */}
                   <div
-                    className={`absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#C5282F] to-transparent transition-all duration-700 ${
+                    className={`absolute top-0 left-0 right-0 h-[2px] bg-linear-to-r from-transparent via-[#C5282F] to-transparent transition-all duration-700 ${
                       isHovered ? 'opacity-100 scale-x-100' : 'opacity-0 scale-x-0'
                     }`}
                   />
 
                   {/* Ambient Light Sweep Hover Animation */}
-                  <div className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-white/[0.05] to-transparent" />
+                  <div className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out bg-linear-to-r from-transparent via-white/[0.05] to-transparent" />
 
                   {/* Vertical Card Inner Layout: Responsive 3-Part Row */}
                   <div className="grid grid-cols-12 gap-8 items-center">
