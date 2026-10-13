@@ -2,6 +2,8 @@
 
 This document explains the technical mapping between **Frontend TypeScript components**, **Backend Admin forms**, and the **Supabase PostgreSQL database**.
 
+> **Path note (2026-10-13):** `Frontend/` and `backend/` were merged into one app; see the path map in `AGENTS.md`. Types now live in `src/site/types` (public) and `src/types` (admin).
+
 ---
 
 ## 1. Database Table Directory

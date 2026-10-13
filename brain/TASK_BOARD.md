@@ -22,6 +22,11 @@
 
 ### 2. To Do (Upcoming Tasks) 📋
 
+- [ ] Switch Vercel to ONE project for the merged app (Root Directory = repo root), then delete the `parmar-admin` project; add `/admin/**` to Supabase redirect URLs; smoke-test the admin (sign in, edit a property, upload an image).
+- [ ] Optional: tidy ESLint for `src/site` (it was never linted) and re-check the 1 to 2px paragraph line-height difference left by the Tailwind 4 upgrade.
+
+- [ ] Decide whether to put `/ads-manager` behind the admin login (currently open to anyone with the URL; `noindex` only). Raised by the impeccable critique, deferred by the owner.
+
 #### Audit hardening follow-ups
 - [ ] **Before going live:** the 8 listings are currently Published (so /ads-manager works on localhost). Set them back to Draft, or finish images and price decisions first.
 - [ ] Real OTP, then relax migration 013.

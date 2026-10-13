@@ -37,4 +37,4 @@ Thumbs.db
 .vercel/
 
 # Supabase CLI link state (per-developer)
-backend/supabase/.temp/
+supabase/.temp/

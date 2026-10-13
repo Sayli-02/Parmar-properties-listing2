@@ -28,6 +28,55 @@
 
 ## 📜 Activity Stream
 
+### [2026-10-13 15:00] — Claude (AI) & Parmar Properties — Merged Frontend and backend into ONE app (single deployment)
+- **Branch:** `merge/single-app` (local only, not pushed)
+- **What Was Done:**
+  - Stage 1 (own commit): upgraded the public site from Next 14 / React 18 / Tailwind 3 to Next 16 / React 19 / Tailwind 4 so both halves use the same versions. Ran the official Tailwind and Next codemods; moved the Tailwind theme (colours, fonts) into CSS `@theme`; renamed the font CSS variables (`--font-playfair`, `--font-jakarta`) to avoid a clash with Tailwind 4's `--font-sans`; added a small compat layer so borders, button cursors and placeholders look as before.
+  - Stage 2: moved everything into one app at the repo root. Public site is route group `(site)` (own root layout, fonts, CSS); admin is route group `(admin)` under `/admin` (own root layout, fonts, CSS). Site-only code lives in `src/site/`; its imports were rewritten from `@/components/...` etc. to `@/site/components/...`. Admin code stayed in `src/components|lib|types` untouched. `supabase/` moved to the repo root; `public/` merged; one `package.json`, `tsconfig.json`, `next.config.ts`, `.env.example`.
+  - The earlier `/admin` proxy rewrite and `assetPrefix` were dropped (not needed any more).
+  - The public site's Supabase client now never persists a session (it shares a domain with the admin).
+  - Old `Frontend/` and `backend/` folders removed (history preserved by `git mv`).
+- **Files Touched / Created:** whole repo layout; see [`README.md`](../README.md), [`package.json`](../package.json), [`next.config.ts`](../next.config.ts), [`AGENTS.md`](../AGENTS.md).
+- **Current State:** `tsc --noEmit` clean; `next build` builds every site and admin route. Screenshot check of 17 routes (desktop and mobile): public pages are pixel-identical (0.00% difference) to the pre-merge upgraded site, and the admin login is pixel-identical to the original admin. Compared with the ORIGINAL Tailwind 3 site, some paragraphs have a 1 to 2px line-height difference (Tailwind 4 resolves `sm:text-base` + `leading-relaxed` differently). NOT tested: a real signed-in admin session, saving a property, file uploads, or any deployment on Vercel. ESLint was not enforced on the site code.
+- **Next Steps for Next Developer:** (1) In Vercel, ONE project: Root Directory `./`, same two Supabase env vars; point `parmarpropertieslisting.vercel.app` at it; then delete the `parmar-admin` project. (2) Supabase > Authentication > URL Configuration: add `https://parmarpropertieslisting.vercel.app/admin/**`. (3) Sign in at `/admin` and exercise Properties, Leads, uploads and Hero. (4) Staff sessions on the old admin URL are gone; everyone signs in again.
+
+### [2026-10-13 12:00] — Claude (AI) & Parmar Properties — One URL: site/admin opens the admin CMS
+- **Branch:** `claude/gracious-ramanujan-vtxsrx` (local only, not pushed)
+- **What Was Done:**
+  - `Frontend/next.config.mjs`: added rewrites so `/admin`, `/admin/*` and `/admin-static/*` are proxied to the admin app. Target is `ADMIN_ORIGIN`; in `next dev` it defaults to `http://localhost:3001`; in production nothing is proxied until `ADMIN_ORIGIN` is set (so deploying this without the variable changes nothing).
+  - `backend/next.config.ts`: `assetPrefix: "/admin-static"` plus a self-rewrite `/admin-static/*` to `/*`. The admin's JS/CSS no longer sits at `/_next/...`, which would collide with the site's own `/_next`. The admin still works at its own URL.
+  - Cookies/login now live on the site's domain when staff use `<site>/admin`; the admin app's middleware redirects are relative so they stay on that domain.
+- **Files Touched / Created:**
+  - [`Frontend/next.config.mjs`](../Frontend/next.config.mjs)
+  - [`backend/next.config.ts`](../backend/next.config.ts)
+- **Current State:** Verified locally with both apps running (site :3000, admin :3001): `localhost:3000/admin` redirects to `/admin/login`, the sign-in page renders fully styled, and no request failed. Admin production build (`next build` + `next start`) serves its assets under `/admin-static` with 200. NOT tested on Vercel; not tested with a real Supabase login or a signed-in session. `backend/package-lock.json` is out of sync with `package.json` (`npm ci` fails); I installed with `npm install --no-package-lock`.
+- **Next Steps for Next Developer:** (1) In the SITE's Vercel project add env var `ADMIN_ORIGIN=https://<admin project>.vercel.app` (no trailing slash) and redeploy BOTH projects (deploy the admin first because of `assetPrefix`). (2) In Supabase > Authentication > URL Configuration add `https://<site domain>/admin/**` to Redirect URLs so "Forgot password" links work on the new URL. (3) Sign in once on the new URL and open Properties, Leads and a file upload to confirm. (4) Regenerate `backend/package-lock.json`.
+
+### [2026-10-11 20:00] — Claude (AI) & Parmar Properties — Premium per-property landing page (/<slug>/project)
+- **Branch:** `claude/gracious-ramanujan-vtxsrx` (local only, not pushed)
+- **What Was Done:**
+  - Redesigned `PpcLanding.tsx`, the page opened by "Preview" in `/ads-manager`, for every published property: full-bleed hero with the enquiry form beside it (stacked right under the hero on mobile), a key-facts band, overview + highlights, a gallery (uses the property's other photos), residences table, floor plans (only those with an image), amenities, Google Maps link, developer block with RERA QR, closing call-to-action, fixed mobile Call bar.
+  - Every section renders only when the property has that data, so thin listings still look right; no invented content.
+  - Same site palette tokens (`mineral`, `surface`, `line`, `slateText`, `ink`, `brick`) and serif headings; real form labels, focus rings, 44px+ fields.
+  - Form logic unchanged (`submitLead`, source `google_ppc_landing`, utm/gclid kept in the lead message).
+- **Files Touched / Created:**
+  - [`Frontend/components/ppc/PpcLanding.tsx`](../Frontend/components/ppc/PpcLanding.tsx)
+- **Current State:** `tsc --noEmit` clean; impeccable detector 0 findings. Rendered locally at 1280px and 390px against a throwaway fake Supabase server with two sample properties (nothing committed), including a sparse property. Not tested against the live database; the callback form submit was not exercised.
+- **Next Steps for Next Developer:** Check a few real published properties on live data; add a real photo/plan to a draft to see the gallery and floor-plan sections; consider `/impeccable critique` on this page.
+
+### [2026-10-11 18:00] — Claude (AI) & Parmar Properties — /ads-manager: impeccable critique + fixes
+- **Branch:** `claude/gracious-ramanujan-vtxsrx` (local only, not pushed)
+- **What Was Done:**
+  - Ran `/impeccable critique` on `/ads-manager` (dual-agent). Score 21/40, 5 priority issues; archive in `.impeccable/critique/`.
+  - Rewrote `AdsManager.tsx` in place (card layout kept): loading/ready/error states with Retry (a failed fetch no longer reads as "no properties"); copy now confirms in text, falls back to a hidden textarea when `navigator.clipboard` is missing, and reports failure; timers cleared on unmount.
+  - Domain is validated and normalised with `new URL()` (adds `https://`, drops pasted paths); both inputs persist in `localStorage`; campaign slug shown as typed-vs-sent.
+  - One shared tracking-suffix block (identical for every property) instead of a button per row; per row: filled "Copy Final URL", secondary "Copy URL with tracking", "Preview on this site" link; slug is URL-encoded.
+  - Accessibility/type: how-to moved to numbered steps at the top, 14px text, 40px controls, `focus-visible` rings, per-property `aria-label`s, palette tokens (`ink`, `surface`, `line`, `slateText`, `brick`) instead of hard-coded hex.
+- **Files Touched / Created:**
+  - [`Frontend/components/ppc/AdsManager.tsx`](../Frontend/components/ppc/AdsManager.tsx)
+- **Current State:** `npx tsc --noEmit` clean; `impeccable detect` 0 findings; dev server rendered `/ads-manager` at 1280px and 390px with no horizontal overflow. Property rows were NOT rendered (no Supabase env in this session), so the per-row layout is unverified visually. ESLint is not configured in `Frontend`.
+- **Next Steps for Next Developer:** Open `/ads-manager` against a real Supabase project and check the rows. `/ads-manager` has no login check (only `noindex`); decided to leave as is for now.
+
 ### [2026-10-11 23:30] — Claude (AI) & Parmar Properties — Media tab: no reload on reorder, drag-and-swap for images and floor plans
 - **Branch:** `fix/audit-hardening`
 - **What Was Done:**
