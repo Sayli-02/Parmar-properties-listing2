@@ -28,6 +28,18 @@
 
 ## 📜 Activity Stream
 
+### [2026-10-13 12:00] — Claude (AI) & Parmar Properties — One URL: site/admin opens the admin CMS
+- **Branch:** `claude/gracious-ramanujan-vtxsrx` (local only, not pushed)
+- **What Was Done:**
+  - `Frontend/next.config.mjs`: added rewrites so `/admin`, `/admin/*` and `/admin-static/*` are proxied to the admin app. Target is `ADMIN_ORIGIN`; in `next dev` it defaults to `http://localhost:3001`; in production nothing is proxied until `ADMIN_ORIGIN` is set (so deploying this without the variable changes nothing).
+  - `backend/next.config.ts`: `assetPrefix: "/admin-static"` plus a self-rewrite `/admin-static/*` to `/*`. The admin's JS/CSS no longer sits at `/_next/...`, which would collide with the site's own `/_next`. The admin still works at its own URL.
+  - Cookies/login now live on the site's domain when staff use `<site>/admin`; the admin app's middleware redirects are relative so they stay on that domain.
+- **Files Touched / Created:**
+  - [`Frontend/next.config.mjs`](../Frontend/next.config.mjs)
+  - [`backend/next.config.ts`](../backend/next.config.ts)
+- **Current State:** Verified locally with both apps running (site :3000, admin :3001): `localhost:3000/admin` redirects to `/admin/login`, the sign-in page renders fully styled, and no request failed. Admin production build (`next build` + `next start`) serves its assets under `/admin-static` with 200. NOT tested on Vercel; not tested with a real Supabase login or a signed-in session. `backend/package-lock.json` is out of sync with `package.json` (`npm ci` fails); I installed with `npm install --no-package-lock`.
+- **Next Steps for Next Developer:** (1) In the SITE's Vercel project add env var `ADMIN_ORIGIN=https://<admin project>.vercel.app` (no trailing slash) and redeploy BOTH projects (deploy the admin first because of `assetPrefix`). (2) In Supabase > Authentication > URL Configuration add `https://<site domain>/admin/**` to Redirect URLs so "Forgot password" links work on the new URL. (3) Sign in once on the new URL and open Properties, Leads and a file upload to confirm. (4) Regenerate `backend/package-lock.json`.
+
 ### [2026-10-11 20:00] — Claude (AI) & Parmar Properties — Premium per-property landing page (/<slug>/project)
 - **Branch:** `claude/gracious-ramanujan-vtxsrx` (local only, not pushed)
 - **What Was Done:**

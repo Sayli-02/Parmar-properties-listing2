@@ -17,6 +17,13 @@ try {
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["192.168.1.188"],
+  // The public site (Frontend) proxies /admin to this app so staff use one domain. Its own /_next paths would
+  // clash with the site's, so this app serves its JS/CSS under /admin-static; the rewrite below makes that
+  // prefix work when this app is opened directly too.
+  assetPrefix: "/admin-static",
+  async rewrites() {
+    return { beforeFiles: [{ source: "/admin-static/:path*", destination: "/:path*" }], afterFiles: [], fallback: [] };
+  },
   images: {
     remotePatterns,
   },

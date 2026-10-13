@@ -2,6 +2,10 @@
 
 > Added 2026-10-11 with the `fix/audit-hardening` branch. Delete an item once everyone has done it.
 
+## 0. Running site and admin together (one URL)
+
+The admin CMS (`backend/`) is reachable at `<site>/admin`. Locally: start the admin on port 3001 (`cd backend && npm run dev -- -p 3001`), then the site on 3000 (`cd Frontend && npm run dev`), and open `http://localhost:3000/admin`. On Vercel, set `ADMIN_ORIGIN` (the admin project's URL) in the site project. Details: `TEAM_LOG.md` entry "One URL".
+
 ## 1. Your database needs migrations 012 to 015
 
 The code on this branch expects database changes that older Supabase projects do not have. Run these files in order in **your own** Supabase SQL editor (Dashboard > SQL Editor), from `backend/supabase/migrations/`:
