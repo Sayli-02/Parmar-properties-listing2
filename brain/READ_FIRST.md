@@ -2,13 +2,13 @@
 
 > Added 2026-10-11 with the `fix/audit-hardening` branch. Delete an item once everyone has done it.
 
-## 0. Running site and admin together (one URL)
+## 0. One app, one deployment (changed 2026-10-13)
 
-The admin CMS (`backend/`) is reachable at `<site>/admin`. Locally: start the admin on port 3001 (`cd backend && npm run dev -- -p 3001`), then the site on 3000 (`cd Frontend && npm run dev`), and open `http://localhost:3000/admin`. On Vercel, set `ADMIN_ORIGIN` (the admin project's URL) in the site project. Details: `TEAM_LOG.md` entry "One URL".
+`Frontend/` and `backend/` no longer exist. The public site and the admin CMS are ONE Next.js app at the repo root: the site is at `/`, the admin at `/admin`. Run it with `npm install` then `npm run dev` and open `http://localhost:3000` (site) or `http://localhost:3000/admin`. Where things moved: see the "Path note" in `AGENTS.md`. Deploy as a single Vercel project (Root Directory = repo root). The old `parmar-admin` Vercel project is no longer needed.
 
 ## 1. Your database needs migrations 012 to 015
 
-The code on this branch expects database changes that older Supabase projects do not have. Run these files in order in **your own** Supabase SQL editor (Dashboard > SQL Editor), from `backend/supabase/migrations/`:
+The code on this branch expects database changes that older Supabase projects do not have. Run these files in order in **your own** Supabase SQL editor (Dashboard > SQL Editor), from `supabase/migrations/`:
 
 | File | What it does | What breaks without it |
 | :--- | :--- | :--- |
@@ -20,21 +20,21 @@ The code on this branch expects database changes that older Supabase projects do
 Also, in Supabase **Authentication > Providers > Email**, turn off **"Allow new users to sign up"**, then activate real staff with:
 `update public.profiles set is_active = true where email = '...';`
 
-Then run `backend/supabase/tests/012_security.sql` in the SQL editor. It rolls back and should finish without an error.
+Then run `supabase/tests/012_security.sql` in the SQL editor. It rolls back and should finish without an error.
 
 ## 2. Two Supabase projects exist. Do not mix them
 
 - The original team project and a separate project used for the audit work. **No project URL or key is committed.** Each developer's `.env.local` (in `Frontend/` and `backend/`, git-ignored) decides which project their apps use.
 - Never paste keys into the repo, the brain files, or chat. `.env.example` is a template only.
-- `Frontend/next.config.mjs` now allows images from whichever project `NEXT_PUBLIC_SUPABASE_URL` points at (it used to hard-code one project).
+- `next.config.ts` now allows images from whichever project `NEXT_PUBLIC_SUPABASE_URL` points at (it used to hard-code one project).
 
 ## 3. Migration numbers
 
 Migrations 001-015 are taken. If you write a new one, use **016 or higher** and check the branch and open PRs first so two people do not both create the same number. Never edit an existing migration: add a new one.
 
-## 4. `backend/supabase/.temp/` is no longer tracked
+## 4. `supabase/.temp/` is no longer tracked
 
-It holds per-machine Supabase CLI link data and is now in `.gitignore`. After you pull, your local copy may be removed. Run `supabase link --project-ref <your project>` again from `backend/` if you use the CLI.
+It holds per-machine Supabase CLI link data and is now in `.gitignore`. After you pull, your local copy may be removed. Run `supabase link --project-ref <your project>` again from the repo root if you use the CLI.
 
 ## 5. What changed that you will notice
 

@@ -47,8 +47,10 @@ Prepend a new entry at the **very top** of the `## 📜 Activity Stream` section
 ---
 
 ## 🏗️ Repository Architecture Summary
-- `Frontend/`: Public Luxury Portal (Next.js 14 App Router, React 18, Tailwind CSS v3, Zustand).
-- `backend/`: Staff Admin CMS (Next.js 16 App Router, React 19, Supabase SSR, Zod).
-- `backend/supabase/migrations/`: Canonical PostgreSQL database migrations (001 to 008) and seed scripts.
+- One Next.js 16 app (React 19, Tailwind CSS v4) at the repo root. There is no separate Frontend or backend app any more.
+- `src/app/(site)/` + `src/site/`: Public Luxury Portal (Zustand, Supabase anon reads, lead inserts).
+- `src/app/(admin)/` + `src/components`, `src/lib`, `src/types`: Staff Admin CMS at `/admin` (Supabase SSR, Zod, react-hook-form).
+- `supabase/migrations/`: Canonical PostgreSQL database migrations and seed scripts.
 - `brain/`: Shared memory and team state system.
 - `MASTER_BACKEND_SPEC.md`: Master specification for database columns and admin UI controls.
+- Path note: older brain entries mention `Frontend/...` and `backend/...`. Map: `Frontend/app` -> `src/app/(site)`, `Frontend/{components,lib,data,store,types}` -> `src/site/...`, `backend/src/app/admin` -> `src/app/(admin)/admin`, `backend/src/{components,lib,types}` -> `src/...`, `backend/supabase` -> `supabase`.

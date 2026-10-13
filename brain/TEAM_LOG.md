@@ -28,6 +28,18 @@
 
 ## 📜 Activity Stream
 
+### [2026-10-13 15:00] — Claude (AI) & Parmar Properties — Merged Frontend and backend into ONE app (single deployment)
+- **Branch:** `merge/single-app` (local only, not pushed)
+- **What Was Done:**
+  - Stage 1 (own commit): upgraded the public site from Next 14 / React 18 / Tailwind 3 to Next 16 / React 19 / Tailwind 4 so both halves use the same versions. Ran the official Tailwind and Next codemods; moved the Tailwind theme (colours, fonts) into CSS `@theme`; renamed the font CSS variables (`--font-playfair`, `--font-jakarta`) to avoid a clash with Tailwind 4's `--font-sans`; added a small compat layer so borders, button cursors and placeholders look as before.
+  - Stage 2: moved everything into one app at the repo root. Public site is route group `(site)` (own root layout, fonts, CSS); admin is route group `(admin)` under `/admin` (own root layout, fonts, CSS). Site-only code lives in `src/site/`; its imports were rewritten from `@/components/...` etc. to `@/site/components/...`. Admin code stayed in `src/components|lib|types` untouched. `supabase/` moved to the repo root; `public/` merged; one `package.json`, `tsconfig.json`, `next.config.ts`, `.env.example`.
+  - The earlier `/admin` proxy rewrite and `assetPrefix` were dropped (not needed any more).
+  - The public site's Supabase client now never persists a session (it shares a domain with the admin).
+  - Old `Frontend/` and `backend/` folders removed (history preserved by `git mv`).
+- **Files Touched / Created:** whole repo layout; see [`README.md`](../README.md), [`package.json`](../package.json), [`next.config.ts`](../next.config.ts), [`AGENTS.md`](../AGENTS.md).
+- **Current State:** `tsc --noEmit` clean; `next build` builds every site and admin route. Screenshot check of 17 routes (desktop and mobile): public pages are pixel-identical (0.00% difference) to the pre-merge upgraded site, and the admin login is pixel-identical to the original admin. Compared with the ORIGINAL Tailwind 3 site, some paragraphs have a 1 to 2px line-height difference (Tailwind 4 resolves `sm:text-base` + `leading-relaxed` differently). NOT tested: a real signed-in admin session, saving a property, file uploads, or any deployment on Vercel. ESLint was not enforced on the site code.
+- **Next Steps for Next Developer:** (1) In Vercel, ONE project: Root Directory `./`, same two Supabase env vars; point `parmarpropertieslisting.vercel.app` at it; then delete the `parmar-admin` project. (2) Supabase > Authentication > URL Configuration: add `https://parmarpropertieslisting.vercel.app/admin/**`. (3) Sign in at `/admin` and exercise Properties, Leads, uploads and Hero. (4) Staff sessions on the old admin URL are gone; everyone signs in again.
+
 ### [2026-10-13 12:00] — Claude (AI) & Parmar Properties — One URL: site/admin opens the admin CMS
 - **Branch:** `claude/gracious-ramanujan-vtxsrx` (local only, not pushed)
 - **What Was Done:**

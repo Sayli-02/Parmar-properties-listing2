@@ -1,6 +1,7 @@
 # Parmar Properties — Project State & System Status
 
 > **Last Updated:** October 4, 2026  
+> **Layout (2026-10-13):** ONE Next.js 16 app at the repo root: public site `(site)` + admin `/admin` `(admin)`. Sections below that say `/backend` or `/Frontend` describe the same code in its old folders (see the path note in `AGENTS.md`).
 > **Status:** Backend Admin Complete | Frontend UI Complete | Home CMS sections wired (Locations/Hero/Why/Insights) | RLS publication_status migration authored (010, not yet applied)  
 > 🛑 **Before you code, read [`READ_FIRST.md`](./READ_FIRST.md)** (migrations 012-015 are required).  
 > **Repository:** `https://github.com/Sayli-02/Parmar-properties-listing2.git`  
